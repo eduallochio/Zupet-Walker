@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, Alert, ActivityIndicator, Image,
+  TextInput, Alert, ActivityIndicator, Image, Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { Clipboard } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { supabase } from '../../services/supabase';
 
@@ -26,6 +27,7 @@ export default function AddPetScreen() {
   const [restrictions, setRestrictions] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [saving, setSaving]     = useState(false);
+  const [linkCode, setLinkCode] = useState<string | null>(null);
 
   const pickPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -59,6 +61,12 @@ export default function AddPetScreen() {
     } catch { return null; }
   };
 
+  const generateLinkCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const part = (n: number) => Array.from({ length: n }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    return `${part(3)}-${part(4)}`;
+  };
+
   const save = async () => {
     if (!name.trim()) { Alert.alert('Informe o nome do pet.'); return; }
 
@@ -68,6 +76,7 @@ export default function AddPetScreen() {
       if (!user) throw new Error('Não autenticado');
 
       const petId = `walker_${user.id}_${Date.now()}`;
+      const code = generateLinkCode();
 
       let uploadedPhotoUrl: string | null = null;
       if (photoUri) uploadedPhotoUrl = await uploadPhoto(photoUri, petId);
@@ -76,6 +85,7 @@ export default function AddPetScreen() {
         id: petId,
         user_id: user.id,
         walker_owner_id: user.id,
+        pet_link_code: code,
         name: name.trim(),
         species: species.toLowerCase() === 'cão' ? 'dog' : species.toLowerCase() === 'gato' ? 'cat' : 'other',
         breed: breed.trim() || null,
@@ -89,14 +99,25 @@ export default function AddPetScreen() {
 
       if (error) throw error;
 
-      Alert.alert('Pet cadastrado!', `${name.trim()} foi adicionado à sua lista.`, [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      setLinkCode(code);
     } catch (e: any) {
       Alert.alert('Erro', e.message ?? 'Não foi possível salvar o pet.');
     } finally {
       setSaving(false);
     }
+  };
+
+  const copyCode = () => {
+    if (!linkCode) return;
+    Clipboard.setString(linkCode);
+    Alert.alert('Copiado!', 'Código copiado para a área de transferência.');
+  };
+
+  const shareCode = async () => {
+    if (!linkCode) return;
+    await Share.share({
+      message: `Use o código *${linkCode}* no app Zupet (tutor) para vincular ${name.trim()} à sua conta.`,
+    });
   };
 
   return (
@@ -105,9 +126,49 @@ export default function AddPetScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>Cadastrar Pet</Text>
+        <Text style={styles.title}>{linkCode ? 'Pet cadastrado!' : 'Cadastrar Pet'}</Text>
         <View style={{ width: 36 }} />
       </View>
+
+      {/* Tela de sucesso com o código */}
+      {linkCode ? (
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          <View style={styles.successIcon}>
+            <Ionicons name="checkmark-circle" size={64} color={Colors.primary} />
+          </View>
+          <Text style={styles.successTitle}>{name.trim()} cadastrado!</Text>
+          <Text style={styles.successSub}>
+            Compartilhe o código abaixo com o tutor para que ele possa vincular o pet à conta do Zupet.
+          </Text>
+
+          <View style={styles.codeBox}>
+            <Text style={styles.codeLabel}>CÓDIGO DE VÍNCULO</Text>
+            <Text style={styles.codeValue}>{linkCode}</Text>
+            <View style={styles.codeActions}>
+              <TouchableOpacity style={styles.codeBtn} onPress={copyCode} activeOpacity={0.8}>
+                <Ionicons name="copy-outline" size={18} color={Colors.primary} />
+                <Text style={styles.codeBtnText}>Copiar</Text>
+              </TouchableOpacity>
+              <View style={styles.codeDivider} />
+              <TouchableOpacity style={styles.codeBtn} onPress={shareCode} activeOpacity={0.8}>
+                <Ionicons name="share-outline" size={18} color={Colors.primary} />
+                <Text style={styles.codeBtnText}>Compartilhar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.infoBox}>
+            <Ionicons name="information-circle-outline" size={16} color={Colors.primary} />
+            <Text style={styles.infoText}>
+              O tutor digita este código em "Adicionar pet" no app Zupet. Os dados são importados automaticamente e os registros são associados.
+            </Text>
+          </View>
+
+          <TouchableOpacity style={styles.saveBtn} onPress={() => router.back()} activeOpacity={0.85}>
+            <Text style={styles.saveBtnText}>Voltar para meus pets</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      ) : (
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Foto */}
@@ -250,6 +311,7 @@ export default function AddPetScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -310,4 +372,20 @@ const styles = StyleSheet.create({
   },
   saveBtnDisabled: { backgroundColor: Colors.border },
   saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+  // Tela de sucesso
+  successIcon: { alignItems: 'center', marginBottom: 8, marginTop: 8 },
+  successTitle: { fontSize: 22, fontWeight: '800', color: Colors.text, textAlign: 'center' },
+  successSub: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
+
+  codeBox: {
+    backgroundColor: Colors.card, borderRadius: 16, borderWidth: 1.5,
+    borderColor: Colors.primary, overflow: 'hidden', alignItems: 'center', paddingTop: 20, paddingBottom: 0,
+  },
+  codeLabel: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary, letterSpacing: 1, marginBottom: 8 },
+  codeValue: { fontSize: 36, fontWeight: '900', color: Colors.primary, letterSpacing: 6, marginBottom: 16 },
+  codeActions: { flexDirection: 'row', width: '100%', borderTopWidth: 1, borderTopColor: Colors.border },
+  codeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },
+  codeDivider: { width: 1, backgroundColor: Colors.border },
+  codeBtnText: { fontSize: 14, fontWeight: '700', color: Colors.primary },
 });
