@@ -36,7 +36,7 @@ export default function WalkStartScreen() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const [linkedRes, ownRes] = await Promise.all([
+      const [linkedRes, ownRes, mergedRes] = await Promise.all([
         supabase
           .from('walker_pet_links')
           .select('pet_id, pet:pets(id,name,breed,photo_uri)')
@@ -47,6 +47,12 @@ export default function WalkStartScreen() {
           .select('id,name,breed,photo_uri')
           .eq('walker_owner_id', user.id)
           .is('merged_into', null),
+        // Pets do tutor que foram importados a partir de pets cadastrados por este walker
+        supabase
+          .from('pets')
+          .select('merged_into')
+          .eq('walker_owner_id', user.id)
+          .not('merged_into', 'is', null),
       ]);
 
       const linked: WalkPet[] = (linkedRes.data ?? []).map((r: any) => ({
@@ -61,10 +67,26 @@ export default function WalkStartScreen() {
         source: 'own' as const,
       }));
 
+      // Buscar dados reais dos pets do tutor que vieram de merge
+      const mergedIntoIds = (mergedRes.data ?? []).map((r: any) => r.merged_into).filter(Boolean);
+      let mergedPets: WalkPet[] = [];
+      if (mergedIntoIds.length > 0) {
+        const { data: tutorPetsData } = await supabase
+          .from('pets')
+          .select('id,name,breed,photo_uri')
+          .in('id', mergedIntoIds);
+        mergedPets = (tutorPetsData ?? []).map((p: any) => ({
+          pet_id: p.id,
+          pet: { id: p.id, name: p.name, breed: p.breed, photo_uri: p.photo_uri },
+          source: 'own' as const,
+        }));
+      }
+
       const linkedIds = new Set(linked.map((l) => l.pet_id));
       const uniqueOwn = own.filter((o) => !linkedIds.has(o.pet_id));
+      const uniqueMerged = mergedPets.filter((m) => !linkedIds.has(m.pet_id));
 
-      setPets([...linked, ...uniqueOwn]);
+      setPets([...linked, ...uniqueOwn, ...uniqueMerged]);
       setLoading(false);
     };
 

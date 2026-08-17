@@ -145,13 +145,33 @@ export default function PetsScreen() {
   const fetchOwnPets = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase
+
+    // Pets ainda não mesclados (cadastrados pelo walker sem tutor ainda)
+    const { data: unmerged } = await supabase
       .from('pets')
       .select('id,name,breed,photo_uri,species,gender')
       .eq('walker_owner_id', user.id)
       .is('merged_into', null)
       .order('name');
-    setOwnPets((data as OwnPet[]) ?? []);
+
+    // Pets do walker que foram mesclados — buscar dados do pet do tutor no lugar
+    const { data: mergedRows } = await supabase
+      .from('pets')
+      .select('merged_into')
+      .eq('walker_owner_id', user.id)
+      .not('merged_into', 'is', null);
+
+    const mergedIds = (mergedRows ?? []).map((r: any) => r.merged_into).filter(Boolean);
+    let mergedTutorPets: OwnPet[] = [];
+    if (mergedIds.length > 0) {
+      const { data: tutorPets } = await supabase
+        .from('pets')
+        .select('id,name,breed,photo_uri,species,gender')
+        .in('id', mergedIds);
+      mergedTutorPets = (tutorPets as OwnPet[]) ?? [];
+    }
+
+    setOwnPets([...(unmerged as OwnPet[] ?? []), ...mergedTutorPets]);
   }, []);
 
   const deleteOwnPet = (pet: OwnPet) => {
