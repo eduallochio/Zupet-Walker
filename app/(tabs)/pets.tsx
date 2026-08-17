@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ScrollView, Share, Clipboard } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -8,6 +8,7 @@ import { supabase } from '../../services/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { PetCard } from '../../components/pets/PetCard';
 import { PetDetailModal } from '../../components/pets/PetDetailModal';
+import { OwnPetModal } from '../../components/pets/OwnPetModal';
 import type { LinkedPet } from '../../types/walker';
 import { sendPushToOwner } from '../../services/ownerPushService';
 
@@ -28,6 +29,7 @@ export default function PetsScreen() {
   const walkerProfile = useAuthStore((s) => s.walkerProfile);
   const [pets, setPets] = useState<LinkedPet[]>([]);
   const [ownPets, setOwnPets] = useState<OwnPet[]>([]);
+  const [selectedOwnPet, setSelectedOwnPet] = useState<OwnPet | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterTab>('todos');
@@ -329,42 +331,27 @@ export default function PetsScreen() {
                 <Text style={styles.sectionTitle}>MEUS PETS ({ownPets.length})</Text>
               </View>
               {ownPets.map((pet) => (
-                <View key={pet.id} style={styles.ownCard}>
+                <TouchableOpacity
+                  key={pet.id} style={styles.ownCard}
+                  onPress={() => setSelectedOwnPet(pet)} activeOpacity={0.75}
+                >
                   <View style={styles.petAvatar}>
                     <Ionicons name="paw" size={18} color={Colors.primary} />
                   </View>
-                  <View style={{ flex: 1, gap: 4 }}>
+                  <View style={{ flex: 1, gap: 2 }}>
                     <Text style={styles.pendingPetName}>{pet.name}</Text>
                     <Text style={styles.pendingPetMeta}>
                       {pet.breed ?? 'Raça não informada'}
                       {pet.species ? ` · ${pet.species === 'dog' ? 'Cão' : pet.species === 'cat' ? 'Gato' : 'Outro'}` : ''}
                     </Text>
                     {pet.pet_link_code ? (
-                      <View style={styles.ownCodeRow}>
-                        <Text style={styles.ownCode}>{pet.pet_link_code}</Text>
-                        <TouchableOpacity
-                          onPress={() => { Clipboard.setString(pet.pet_link_code!); Alert.alert('Copiado!', 'Código copiado.'); }}
-                          style={styles.ownCodeBtn} activeOpacity={0.7}
-                        >
-                          <Ionicons name="copy-outline" size={13} color={Colors.primary} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={() => Share.share({ message: `Use o código *${pet.pet_link_code}* no app Zupet (tutor) para vincular ${pet.name}.` })}
-                          style={styles.ownCodeBtn} activeOpacity={0.7}
-                        >
-                          <Ionicons name="share-outline" size={13} color={Colors.primary} />
-                        </TouchableOpacity>
-                      </View>
+                      <Text style={styles.ownCode}>{pet.pet_link_code}</Text>
                     ) : (
                       <Text style={styles.ownMergedBadge}>Vinculado ao tutor</Text>
                     )}
                   </View>
-                  {pet.pet_link_code && (
-                    <TouchableOpacity onPress={() => deleteOwnPet(pet)} style={styles.ownDeleteBtn} activeOpacity={0.7}>
-                      <Ionicons name="trash-outline" size={16} color={Colors.textSecondary} />
-                    </TouchableOpacity>
-                  )}
-                </View>
+                  <Ionicons name="chevron-forward" size={16} color={Colors.textSecondary} />
+                </TouchableOpacity>
               ))}
             </View>
           )}
@@ -392,6 +379,7 @@ export default function PetsScreen() {
         </ScrollView>
       )}
 
+      <OwnPetModal pet={selectedOwnPet} onClose={() => setSelectedOwnPet(null)} />
       <PetDetailModal pet={selectedPet} onClose={() => setSelectedPet(null)} />
     </SafeAreaView>
   );
@@ -491,9 +479,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: Colors.border,
   },
   ownDeleteBtn: { padding: 6 },
-  ownCodeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  ownCode: { fontSize: 12, fontWeight: '800', color: Colors.primary, letterSpacing: 2 },
-  ownCodeBtn: { padding: 4 },
+  ownCode: { fontSize: 11, fontWeight: '800', color: Colors.primary, letterSpacing: 2 },
   ownMergedBadge: { fontSize: 11, fontWeight: '600', color: '#4CAF50' },
 
   // List
