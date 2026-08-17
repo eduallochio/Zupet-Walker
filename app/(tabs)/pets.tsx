@@ -22,6 +22,7 @@ type OwnPet = {
   species: string | null;
   gender: string | null;
   pet_link_code: string | null;
+  isMerged?: boolean;
 };
 
 export default function PetsScreen() {
@@ -171,7 +172,7 @@ export default function PetsScreen() {
         .from('pets')
         .select('id,name,breed,photo_uri,species,gender')
         .in('id', mergedIds);
-      mergedTutorPets = (tutorPets as OwnPet[]) ?? [];
+      mergedTutorPets = ((tutorPets ?? []) as OwnPet[]).map((p) => ({ ...p, isMerged: true }));
     }
 
     setOwnPets([...(unmerged as OwnPet[] ?? []), ...mergedTutorPets]);
@@ -344,11 +345,11 @@ export default function PetsScreen() {
                       {pet.breed ?? 'Raça não informada'}
                       {pet.species ? ` · ${pet.species === 'dog' ? 'Cão' : pet.species === 'cat' ? 'Gato' : 'Outro'}` : ''}
                     </Text>
-                    {pet.pet_link_code ? (
-                      <Text style={styles.ownCode}>{pet.pet_link_code}</Text>
-                    ) : (
+                    {pet.isMerged ? (
                       <Text style={styles.ownMergedBadge}>Vinculado ao tutor</Text>
-                    )}
+                    ) : pet.pet_link_code ? (
+                      <Text style={styles.ownCode}>{pet.pet_link_code}</Text>
+                    ) : null}
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={Colors.textSecondary} />
                 </TouchableOpacity>

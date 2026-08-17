@@ -12,6 +12,7 @@ type OwnPet = {
   species: string | null;
   gender: string | null;
   pet_link_code: string | null;
+  isMerged?: boolean;
 };
 
 type Props = {
@@ -22,7 +23,7 @@ type Props = {
 export function OwnPetModal({ pet, onClose }: Props) {
   if (!pet) return null;
 
-  const isMerged = !pet.pet_link_code;
+  const isMerged = !!pet.isMerged;
 
   const copyCode = () => {
     if (!pet.pet_link_code) return;
