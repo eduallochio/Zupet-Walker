@@ -86,6 +86,7 @@ export default function AddPetScreen() {
         user_id: user.id,
         walker_owner_id: user.id,
         pet_link_code: code,
+        is_memorial: false,
         name: name.trim(),
         species: species.toLowerCase() === 'cão' ? 'dog' : species.toLowerCase() === 'gato' ? 'cat' : 'other',
         breed: breed.trim() || null,
