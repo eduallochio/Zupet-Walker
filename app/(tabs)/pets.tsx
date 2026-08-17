@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ScrollView, Share, Clipboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -20,6 +20,7 @@ type OwnPet = {
   photo_uri: string | null;
   species: string | null;
   gender: string | null;
+  pet_link_code: string | null;
 };
 
 export default function PetsScreen() {
@@ -149,7 +150,7 @@ export default function PetsScreen() {
     // Pets ainda não mesclados (cadastrados pelo walker sem tutor ainda)
     const { data: unmerged } = await supabase
       .from('pets')
-      .select('id,name,breed,photo_uri,species,gender')
+      .select('id,name,breed,photo_uri,species,gender,pet_link_code')
       .eq('walker_owner_id', user.id)
       .is('merged_into', null)
       .order('name');
@@ -332,16 +333,37 @@ export default function PetsScreen() {
                   <View style={styles.petAvatar}>
                     <Ionicons name="paw" size={18} color={Colors.primary} />
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <View style={{ flex: 1, gap: 4 }}>
                     <Text style={styles.pendingPetName}>{pet.name}</Text>
                     <Text style={styles.pendingPetMeta}>
                       {pet.breed ?? 'Raça não informada'}
                       {pet.species ? ` · ${pet.species === 'dog' ? 'Cão' : pet.species === 'cat' ? 'Gato' : 'Outro'}` : ''}
                     </Text>
+                    {pet.pet_link_code ? (
+                      <View style={styles.ownCodeRow}>
+                        <Text style={styles.ownCode}>{pet.pet_link_code}</Text>
+                        <TouchableOpacity
+                          onPress={() => { Clipboard.setString(pet.pet_link_code!); Alert.alert('Copiado!', 'Código copiado.'); }}
+                          style={styles.ownCodeBtn} activeOpacity={0.7}
+                        >
+                          <Ionicons name="copy-outline" size={13} color={Colors.primary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => Share.share({ message: `Use o código *${pet.pet_link_code}* no app Zupet (tutor) para vincular ${pet.name}.` })}
+                          style={styles.ownCodeBtn} activeOpacity={0.7}
+                        >
+                          <Ionicons name="share-outline" size={13} color={Colors.primary} />
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <Text style={styles.ownMergedBadge}>Vinculado ao tutor</Text>
+                    )}
                   </View>
-                  <TouchableOpacity onPress={() => deleteOwnPet(pet)} style={styles.ownDeleteBtn} activeOpacity={0.7}>
-                    <Ionicons name="trash-outline" size={16} color={Colors.textSecondary} />
-                  </TouchableOpacity>
+                  {pet.pet_link_code && (
+                    <TouchableOpacity onPress={() => deleteOwnPet(pet)} style={styles.ownDeleteBtn} activeOpacity={0.7}>
+                      <Ionicons name="trash-outline" size={16} color={Colors.textSecondary} />
+                    </TouchableOpacity>
+                  )}
                 </View>
               ))}
             </View>
@@ -469,6 +491,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: Colors.border,
   },
   ownDeleteBtn: { padding: 6 },
+  ownCodeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  ownCode: { fontSize: 12, fontWeight: '800', color: Colors.primary, letterSpacing: 2 },
+  ownCodeBtn: { padding: 4 },
+  ownMergedBadge: { fontSize: 11, fontWeight: '600', color: '#4CAF50' },
 
   // List
   empty: { alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 40, paddingTop: 32 },
