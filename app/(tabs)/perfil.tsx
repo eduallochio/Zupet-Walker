@@ -10,7 +10,6 @@ import { ProfileServices } from '../../components/profile/ProfileServices';
 import { ProfileRatings } from '../../components/profile/ProfileRatings';
 import { ProfilePaymentsCard } from '../../components/profile/ProfilePaymentsCard';
 import { ProfilePlanCard } from '../../components/profile/ProfilePlanCard';
-import { ProfileSettings } from '../../components/profile/ProfileSettings';
 
 export default function PerfilScreen() {
   const fetchWalkerProfile = useAuthStore((s) => s.fetchWalkerProfile);
@@ -36,7 +35,6 @@ export default function PerfilScreen() {
         <ProfileRatings />
         <ProfilePaymentsCard />
         <ProfilePlanCard />
-        <ProfileSettings />
       </ScrollView>
     </SafeAreaView>
   );

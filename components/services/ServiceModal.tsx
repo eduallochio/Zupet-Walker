@@ -115,10 +115,14 @@ export default function ServiceModal({ visible, initial, onClose, onSave, onDele
   const [form, setForm] = useState<ServiceForm>(
     initial ? fromInitial(initial) : defaultForm('walk')
   );
+  const [priceText, setPriceText] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (initial) setForm(fromInitial(initial));
+    if (initial) {
+      setForm(fromInitial(initial));
+      setPriceText({});
+    }
   }, [initial]);
 
   const handleSave = async () => {
@@ -211,18 +215,29 @@ export default function ServiceModal({ visible, initial, onClose, onSave, onDele
               </Text>
               <View style={styles.priceGrid}>
                 {([
-                  { key: 'price',      label: 'Por sessão' },
-                  { key: 'price_daily',     label: 'Diário'     },
-                  { key: 'price_weekly',    label: 'Semanal'    },
-                  { key: 'price_biweekly',  label: 'Quinzenal'  },
-                  { key: 'price_monthly',   label: 'Mensal'     },
+                  { key: 'price',          label: 'Por sessão' },
+                  { key: 'price_daily',    label: 'Diário'     },
+                  { key: 'price_weekly',   label: 'Semanal'    },
+                  { key: 'price_biweekly', label: 'Quinzenal'  },
+                  { key: 'price_monthly',  label: 'Mensal'     },
                 ] as { key: keyof ServiceForm; label: string }[]).map(({ key, label }) => (
                   <View key={key} style={styles.priceCell}>
                     <Text style={styles.priceCellLabel}>{label}</Text>
                     <TextInput
                       style={styles.priceCellInput}
-                      value={(form[key] as number) > 0 ? String(form[key]) : ''}
-                      onChangeText={(t) => setForm((f) => ({ ...f, [key]: parseFloat(t.replace(',', '.')) || 0 }))}
+                      value={priceText[key] ?? ((form[key] as number) > 0 ? String(form[key]) : '')}
+                      onChangeText={(t) => {
+                        const clean = t.replace(/[^0-9.,]/g, '');
+                        setPriceText((p) => ({ ...p, [key]: clean }));
+                        const num = parseFloat(clean.replace(',', '.')) || 0;
+                        setForm((f) => ({ ...f, [key]: num }));
+                      }}
+                      onBlur={() => {
+                        const raw = priceText[key] ?? '';
+                        const num = parseFloat(raw.replace(',', '.')) || 0;
+                        setForm((f) => ({ ...f, [key]: num }));
+                        setPriceText((p) => ({ ...p, [key]: num > 0 ? String(num) : '' }));
+                      }}
                       placeholder="0"
                       placeholderTextColor={Colors.textSecondary}
                       keyboardType="decimal-pad"
