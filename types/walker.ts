@@ -100,15 +100,3 @@ export type WalkSchedule = {
   proposed_by: 'walker' | 'owner';
 };
 
-export type EarningStatus = 'received' | 'pending';
-
-export type WalkEarning = {
-  id?: string;
-  session_id: string;
-  walker_id: string;
-  pet_id: string;
-  amount: number;
-  status: EarningStatus;
-  notes?: string;
-  recorded_at: string;
-};

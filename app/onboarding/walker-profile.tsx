@@ -113,6 +113,12 @@ export default function WalkerProfileOnboarding() {
     if (step === 4 && availableDays.length === 0) {
       Alert.alert('Selecione ao menos um dia disponível'); return;
     }
+    if (step === 4) {
+      const timeRe = /^([01]\d|2[0-3]):([0-5]\d)$/;
+      if (!timeRe.test(startTime)) { Alert.alert('Horário inválido', 'Digite o horário de início no formato HH:mm (ex: 08:00)'); return; }
+      if (!timeRe.test(endTime))   { Alert.alert('Horário inválido', 'Digite o horário de término no formato HH:mm (ex: 18:00)'); return; }
+      if (startTime >= endTime)    { Alert.alert('Horário inválido', 'O horário de término deve ser após o início'); return; }
+    }
     setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   };
 

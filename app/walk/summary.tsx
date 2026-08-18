@@ -8,6 +8,7 @@ import { useWalkStore } from '../../stores/walkStore';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../services/supabase';
 import type { WalkSession } from '../../types/walker';
+import { sendPushToOwner } from '../../services/ownerPushService';
 
 type SaveState = 'saving' | 'saved' | 'error';
 
@@ -92,13 +93,16 @@ export default function WalkSummaryScreen() {
             }).select('id').single();
 
             // Notificar o tutor que o passeio foi concluído
+            const notifTitle = 'Passeio concluído! 🐾';
+            const notifBody  = `${walkerProfile.name ?? 'Seu walker'} finalizou o passeio: ${durationMinutes} min · ${(Math.round(activeWalk.distance_meters) / 1000).toFixed(1)} km`;
             await supabase.from('notifications').insert({
               user_id: owner_id,
               type:    'walk_report',
-              title:   'Passeio concluído! 🐾',
-              body:    `${walkerProfile.name ?? 'Seu walker'} finalizou o passeio: ${durationMinutes} min · ${(Math.round(activeWalk.distance_meters) / 1000).toFixed(1)} km`,
+              title:   notifTitle,
+              body:    notifBody,
               data:    { report_id: reportData?.id, session_id: data.id },
             });
+            sendPushToOwner(owner_id, notifTitle, notifBody, { report_id: reportData?.id, session_id: data.id });
           }
         }
 

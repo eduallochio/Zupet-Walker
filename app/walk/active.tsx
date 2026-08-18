@@ -38,11 +38,14 @@ export default function ActiveWalkScreen() {
   const activeWalk    = useWalkStore((s) => s.activeWalk);
   const endWalk       = useWalkStore((s) => s.endWalk);
   const addEvent      = useWalkStore((s) => s.addEvent);
+  const setNotes      = useWalkStore((s) => s.setNotes);
 
   const [, setTick]   = useState(0);
   const [pets, setPets] = useState<PetInfo[]>([]);
   const [noteModal, setNoteModal] = useState<{ petId: string } | null>(null);
   const [noteText, setNoteText]   = useState('');
+  const [walkNoteModal, setWalkNoteModal] = useState(false);
+  const [walkNoteText, setWalkNoteText]   = useState('');
 
   // Se não tem passeio ativo, redireciona para seleção
   useEffect(() => {
@@ -118,6 +121,13 @@ export default function ActiveWalkScreen() {
         </View>
         <Text style={styles.timer}>{formatElapsed(activeWalk.started_at)}</Text>
         <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={[styles.walkNoteBtn, activeWalk.notes ? styles.walkNoteBtnActive : null]}
+            onPress={() => { setWalkNoteText(activeWalk.notes ?? ''); setWalkNoteModal(true); }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="document-text-outline" size={16} color="#fff" />
+          </TouchableOpacity>
           <Ionicons name="paw" size={14} color="rgba(255,255,255,0.7)" />
           <Text style={styles.petsCount}>{activeWalk.pet_ids.length} pets</Text>
         </View>
@@ -192,7 +202,40 @@ export default function ActiveWalkScreen() {
         <Text style={styles.finishText}>Finalizar passeio</Text>
       </TouchableOpacity>
 
-      {/* Modal de nota */}
+      {/* Modal de nota geral do passeio */}
+      <Modal visible={walkNoteModal} transparent animationType="slide" onRequestClose={() => setWalkNoteModal(false)}>
+        <KeyboardAvoidingView style={styles.modalBg} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Nota geral do passeio</Text>
+            <TextInput
+              style={styles.noteInput}
+              placeholder="Observações gerais sobre o passeio..."
+              placeholderTextColor={Colors.textSecondary}
+              value={walkNoteText}
+              onChangeText={setWalkNoteText}
+              multiline
+              autoFocus
+              maxLength={500}
+            />
+            <View style={styles.modalBtns}>
+              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setWalkNoteModal(false)}>
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveBtn}
+                onPress={() => {
+                  setNotes(walkNoteText.trim());
+                  setWalkNoteModal(false);
+                }}
+              >
+                <Text style={styles.modalSaveText}>Salvar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Modal de nota por pet */}
       <Modal visible={!!noteModal} transparent animationType="slide" onRequestClose={() => setNoteModal(null)}>
         <KeyboardAvoidingView style={styles.modalBg} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.modalCard}>
@@ -236,8 +279,13 @@ const styles = StyleSheet.create({
   liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' },
   liveText: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.85)', letterSpacing: 1 },
   timer: { fontSize: 40, fontWeight: '800', color: '#fff', fontVariant: ['tabular-nums'] },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   petsCount: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '600' },
+  walkNoteBtn: {
+    padding: 6, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  walkNoteBtnActive: { backgroundColor: 'rgba(255,255,255,0.4)' },
 
   statsBar: {
     flexDirection: 'row', backgroundColor: Colors.card,
