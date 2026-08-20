@@ -105,8 +105,32 @@ export default function ActiveWalkScreen() {
       return;
     }
     const result = await ImagePicker.launchCameraAsync({ allowsEditing: false, quality: 0.7 });
-    if (!result.canceled && result.assets[0]) {
-      addPhoto(result.assets[0].uri);
+    if (result.canceled || !result.assets[0]) return;
+
+    const uri = result.assets[0].uri;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const ext = uri.split('.').pop() ?? 'jpg';
+      const path = `${user.id}/${Date.now()}.${ext}`;
+
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      const { error } = await supabase.storage
+        .from('walk-photos')
+        .upload(path, blob, { contentType: `image/${ext}`, upsert: false });
+
+      if (error) throw error;
+
+      const { data: signedData } = await supabase.storage
+        .from('walk-photos')
+        .createSignedUrl(path, 60 * 60 * 24 * 365); // 1 ano
+
+      addPhoto(signedData?.signedUrl ?? uri);
+    } catch {
+      Alert.alert('Erro', 'Não foi possível salvar a foto. Tente novamente.');
     }
   };
 
@@ -370,7 +394,6 @@ const styles = StyleSheet.create({
     padding: 16, paddingTop: 8,
   },
   cameraBtn: {
-    display: 'none', // oculto até o banco suportar fotos
     width: 52, height: 52, borderRadius: 14,
     backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border,
     alignItems: 'center', justifyContent: 'center',
