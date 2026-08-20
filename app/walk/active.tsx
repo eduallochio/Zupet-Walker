@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Alert, Modal, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -38,6 +39,7 @@ export default function ActiveWalkScreen() {
   const activeWalk    = useWalkStore((s) => s.activeWalk);
   const endWalk       = useWalkStore((s) => s.endWalk);
   const addEvent      = useWalkStore((s) => s.addEvent);
+  const addPhoto      = useWalkStore((s) => s.addPhoto);
   const setNotes      = useWalkStore((s) => s.setNotes);
 
   const [, setTick]   = useState(0);
@@ -94,6 +96,18 @@ export default function ActiveWalkScreen() {
     addEvent(noteModal.petId, 'note', noteText.trim());
     setNoteModal(null);
     setNoteText('');
+  };
+
+  const handleTakePhoto = async () => {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Permissão necessária', 'Permita acesso à câmera nas configurações.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({ allowsEditing: false, quality: 0.7 });
+    if (!result.canceled && result.assets[0]) {
+      addPhoto(result.assets[0].uri);
+    }
   };
 
   const handleFinish = () =>
@@ -196,11 +210,23 @@ export default function ActiveWalkScreen() {
         ))}
       </ScrollView>
 
-      {/* Botão finalizar */}
-      <TouchableOpacity style={styles.finishBtn} onPress={handleFinish} activeOpacity={0.85}>
-        <Ionicons name="stop-circle-outline" size={20} color="#fff" />
-        <Text style={styles.finishText}>Finalizar passeio</Text>
-      </TouchableOpacity>
+      {/* Barra de ações */}
+      <View style={styles.actionBar}>
+        {/* Botão câmera — oculto até o banco suportar fotos */}
+        <TouchableOpacity style={styles.cameraBtn} onPress={handleTakePhoto} activeOpacity={0.85}>
+          <Ionicons name="camera-outline" size={20} color={Colors.primary} />
+          {(activeWalk.photos?.length ?? 0) > 0 && (
+            <View style={styles.photoBadge}>
+              <Text style={styles.photoBadgeText}>{activeWalk.photos!.length}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.finishBtn} onPress={handleFinish} activeOpacity={0.85}>
+          <Ionicons name="stop-circle-outline" size={20} color="#fff" />
+          <Text style={styles.finishText}>Finalizar passeio</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Modal de nota geral do passeio */}
       <Modal visible={walkNoteModal} transparent animationType="slide" onRequestClose={() => setWalkNoteModal(false)}>
@@ -339,8 +365,24 @@ const styles = StyleSheet.create({
   },
   countText: { fontSize: 11, fontWeight: '800', color: '#fff' },
 
+  actionBar: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    padding: 16, paddingTop: 8,
+  },
+  cameraBtn: {
+    display: 'none', // oculto até o banco suportar fotos
+    width: 52, height: 52, borderRadius: 14,
+    backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  photoBadge: {
+    position: 'absolute', top: -4, right: -4,
+    backgroundColor: Colors.primary, borderRadius: 8,
+    minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3,
+  },
+  photoBadgeText: { fontSize: 10, fontWeight: '800', color: '#fff' },
   finishBtn: {
-    margin: 16,
+    flex: 1,
     backgroundColor: Colors.error, borderRadius: 14, padding: 16,
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8,
   },
