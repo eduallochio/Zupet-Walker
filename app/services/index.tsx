@@ -22,6 +22,8 @@ export default function ServicesScreen() {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingService, setEditingService] = useState<(WalkerService & { isNew?: boolean }) | null>(null);
+  const [showPrices, setShowPrices] = useState<boolean>((walkerProfile as any)?.show_prices ?? true);
+  const [savingPrices, setSavingPrices] = useState(false);
 
   const fetchServices = useCallback(async () => {
     if (!walkerProfile) return;
@@ -97,6 +99,17 @@ export default function ServicesScreen() {
 
   const cat = (type: ServiceType) => SERVICE_CATALOG.find((c) => c.type === type) ?? SERVICE_CATALOG[0];
 
+  const toggleShowPrices = async (val: boolean) => {
+    if (!walkerProfile) return;
+    setShowPrices(val);
+    setSavingPrices(true);
+    await supabase
+      .from('walker_profiles')
+      .update({ show_prices: val })
+      .eq('id', walkerProfile.id);
+    setSavingPrices(false);
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
@@ -111,6 +124,29 @@ export default function ServicesScreen() {
         <ActivityIndicator size="large" color={Colors.primary} style={{ flex: 1 }} />
       ) : (
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+
+          {/* Configuração de visibilidade de preços */}
+          <View style={styles.visibilityCard}>
+            <View style={styles.visibilityInfo}>
+              <Ionicons name="eye-outline" size={20} color={showPrices ? Colors.primary : Colors.textSecondary} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.visibilityTitle}>Mostrar preços publicamente</Text>
+                <Text style={styles.visibilityDesc}>
+                  {showPrices
+                    ? 'Os preços aparecem na landing page e no perfil público.'
+                    : 'Os preços ficam ocultos — tutores precisam entrar em contato.'}
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={showPrices}
+              onValueChange={toggleShowPrices}
+              trackColor={{ true: Colors.primary, false: Colors.border }}
+              thumbColor="#fff"
+              disabled={savingPrices}
+              style={{ transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }] }}
+            />
+          </View>
 
           {/* Serviços cadastrados */}
           {services.length > 0 && (
@@ -319,4 +355,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.success, alignItems: 'center', justifyContent: 'center',
   },
   catalogHint: { fontSize: 12, color: Colors.textSecondary, lineHeight: 18 },
+
+  visibilityCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: Colors.card, borderRadius: 14,
+    borderWidth: 1, borderColor: Colors.border,
+    padding: 14,
+  },
+  visibilityInfo: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  visibilityTitle: { fontSize: 14, fontWeight: '700', color: Colors.text, marginBottom: 2 },
+  visibilityDesc: { fontSize: 12, color: Colors.textSecondary, lineHeight: 17 },
 });
