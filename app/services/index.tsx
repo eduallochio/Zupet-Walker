@@ -22,18 +22,28 @@ export default function ServicesScreen() {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingService, setEditingService] = useState<(WalkerService & { isNew?: boolean }) | null>(null);
-  const [showPrices, setShowPrices] = useState<boolean>((walkerProfile as any)?.show_prices ?? true);
+  const [showPrices, setShowPrices] = useState<boolean>(true);
   const [savingPrices, setSavingPrices] = useState(false);
 
   const fetchServices = useCallback(async () => {
     if (!walkerProfile) return;
-    const { data } = await supabase
-      .from('walker_services')
-      .select('*')
-      .eq('walker_id', walkerProfile.id)
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: true });
-    setServices((data ?? []) as WalkerService[]);
+    const [servicesRes, profileRes] = await Promise.all([
+      supabase
+        .from('walker_services')
+        .select('*')
+        .eq('walker_id', walkerProfile.id)
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('walker_profiles')
+        .select('show_prices')
+        .eq('id', walkerProfile.id)
+        .maybeSingle(),
+    ]);
+    setServices((servicesRes.data ?? []) as WalkerService[]);
+    if (profileRes.data) {
+      setShowPrices(profileRes.data.show_prices ?? true);
+    }
   }, [walkerProfile]);
 
   useEffect(() => { fetchServices().finally(() => setLoading(false)); }, [fetchServices]);

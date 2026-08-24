@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, RefreshControl, Share, Alert, Image,
+  ActivityIndicator, RefreshControl, Share, Alert, Image, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,27 @@ import { useRouter } from 'expo-router';
 import { Colors } from '../constants/colors';
 import { supabase } from '../services/supabase';
 import { useAuthStore } from '../stores/authStore';
+
+type SocialLinks = {
+  instagram?: string; tiktok?: string; youtube?: string;
+  linkedin?: string; facebook?: string; whatsapp?: string;
+};
+
+const SOCIAL_CONFIG: { key: keyof SocialLinks; icon: string; color: string; prefix: string; isPhone?: boolean }[] = [
+  { key: 'instagram', icon: 'logo-instagram', color: '#E1306C', prefix: 'https://instagram.com/' },
+  { key: 'tiktok',   icon: 'logo-tiktok',    color: '#010101', prefix: 'https://tiktok.com/@' },
+  { key: 'youtube',  icon: 'logo-youtube',   color: '#FF0000', prefix: 'https://youtube.com/@' },
+  { key: 'linkedin', icon: 'logo-linkedin',  color: '#0077B5', prefix: 'https://linkedin.com/in/' },
+  { key: 'facebook', icon: 'logo-facebook',  color: '#1877F2', prefix: 'https://facebook.com/' },
+  { key: 'whatsapp', icon: 'logo-whatsapp',  color: '#25D366', prefix: 'https://wa.me/', isPhone: true },
+];
+
+function formatPrice(value: number | string | null): string {
+  if (value == null) return 'Consultar';
+  const n = Number(value);
+  if (isNaN(n)) return 'Consultar';
+  return n % 1 === 0 ? `R$ ${n.toFixed(0)}` : `R$ ${n.toFixed(2).replace('.', ',')}`;
+}
 
 type InviteCode = {
   id: string;
@@ -28,7 +49,7 @@ type LinkedPet = {
 };
 
 type WalkerService = {
-  id: string; type: string; label: string; price: number;
+  id: string; type: string; label: string; price: number | null; price_daily: number | null;
   active: boolean; duration_minutes?: number; available_slots?: Record<string, string[]>;
 };
 
@@ -43,13 +64,14 @@ export default function WalkerConnectScreen() {
   const [codes, setCodes]         = useState<InviteCode[]>([]);
   const [links, setLinks]         = useState<LinkedPet[]>([]);
   const [services, setServices]   = useState<WalkerService[]>([]);
+  const [showPrices, setShowPrices] = useState(true);
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [generating, setGenerating] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!walkerProfile) return;
-    const [codesRes, linksRes, servicesRes] = await Promise.all([
+    const [codesRes, linksRes, servicesRes, profileRes] = await Promise.all([
       supabase
         .from('walker_invite_codes')
         .select('id, code, expires_at, used_count, max_uses, created_at')
@@ -64,13 +86,19 @@ export default function WalkerConnectScreen() {
         .order('linked_at', { ascending: false }),
       supabase
         .from('walker_services')
-        .select('id, type, label, price, active, duration_minutes, available_slots')
+        .select('id, type, label, price, price_daily, active, duration_minutes, available_slots')
         .eq('walker_id', walkerProfile.id)
         .eq('active', true),
+      supabase
+        .from('walker_profiles')
+        .select('show_prices')
+        .eq('id', walkerProfile.id)
+        .maybeSingle(),
     ]);
     setCodes((codesRes.data as InviteCode[]) ?? []);
     setLinks((linksRes.data as LinkedPet[]) ?? []);
     setServices((servicesRes.data as WalkerService[]) ?? []);
+    setShowPrices(profileRes.data?.show_prices ?? true);
   }, [walkerProfile]);
 
   useEffect(() => { fetchData().finally(() => setLoading(false)); }, [fetchData]);
@@ -189,6 +217,33 @@ export default function WalkerConnectScreen() {
                   <Text style={styles.profileBioEmpty}>Sem bio ainda. Adicione uma na edição de perfil.</Text>
                 )}
 
+                {/* Redes sociais */}
+                {(() => {
+                  const social = (walkerProfile as any)?.social_links as SocialLinks | null;
+                  const active = SOCIAL_CONFIG.filter((s) => social?.[s.key]);
+                  if (!active.length) return null;
+                  return (
+                    <View style={styles.socialRow}>
+                      {active.map(({ key, icon, color, prefix, isPhone }) => {
+                        const raw = (social![key] as string).replace(/^@/, '');
+                        const handle = isPhone ? raw.replace(/\D/g, '') : raw;
+                        const displayLabel = isPhone ? handle : `@${handle}`;
+                        return (
+                          <TouchableOpacity
+                            key={key}
+                            style={[styles.socialBtn, { backgroundColor: `${color}15`, borderColor: `${color}30` }]}
+                            onPress={() => Linking.openURL(`${prefix}${handle}`)}
+                            activeOpacity={0.75}
+                          >
+                            <Ionicons name={icon as any} size={16} color={color} />
+                            <Text style={[styles.socialHandle, { color }]}>{displayLabel}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  );
+                })()}
+
                 {services.length > 0 && (
                   <View style={styles.serviceList}>
                     <Text style={styles.serviceListLabel}>SERVIÇOS DISPONÍVEIS</Text>
@@ -196,6 +251,10 @@ export default function WalkerConnectScreen() {
                       const slotCount = s.available_slots
                         ? Object.values(s.available_slots).reduce((acc, arr) => acc + arr.length, 0)
                         : 0;
+                      const isDaily = ['hotel', 'day_care', 'boarding', 'daycare'].includes(s.type);
+                      const displayPrice = isDaily && s.price_daily != null && Number(s.price_daily) > 0
+                        ? s.price_daily : s.price;
+                      const priceLabel = `${formatPrice(displayPrice)}${isDaily ? '/dia' : ''}`;
                       return (
                         <View key={s.id} style={styles.serviceRow}>
                           <Text style={styles.serviceRowIcon}>{SERVICE_ICONS[s.type] ?? '🐾'}</Text>
@@ -207,7 +266,9 @@ export default function WalkerConnectScreen() {
                               </Text>
                             )}
                           </View>
-                          <Text style={styles.serviceRowPrice}>R$ {s.price.toFixed(0)}</Text>
+                          {showPrices && (
+                            <Text style={styles.serviceRowPrice}>{priceLabel}</Text>
+                          )}
                         </View>
                       );
                     })}
@@ -362,6 +423,14 @@ const styles = StyleSheet.create({
   profileRatingText: { fontSize: 13, fontWeight: '700', color: Colors.text },
   profileBio: { fontSize: 13, color: Colors.textSecondary, lineHeight: 19 },
   profileBioEmpty: { fontSize: 13, color: Colors.border, fontStyle: 'italic' },
+  socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  socialBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    borderRadius: 20, borderWidth: 1,
+    paddingHorizontal: 10, paddingVertical: 5,
+  },
+  socialHandle: { fontSize: 12, fontWeight: '600' },
+
   serviceList: { gap: 8, marginTop: 4 },
   serviceListLabel: { fontSize: 10, fontWeight: '700', color: Colors.textSecondary, letterSpacing: 0.8, marginBottom: 2 },
   serviceRow: {
