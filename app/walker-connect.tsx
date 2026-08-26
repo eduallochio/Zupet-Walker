@@ -217,6 +217,18 @@ export default function WalkerConnectScreen() {
                   <Text style={styles.profileBioEmpty}>Sem bio ainda. Adicione uma na edição de perfil.</Text>
                 )}
 
+                {/* Diferenciais do serviço */}
+                {(walkerProfile as any)?.summary_items?.length > 0 && (
+                  <View style={{ marginTop: 12, gap: 6 }}>
+                    {((walkerProfile as any).summary_items as string[]).map((item: string, i: number) => (
+                      <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+                        <Text style={{ color: Colors.primary, fontSize: 14, lineHeight: 20 }}>✓</Text>
+                        <Text style={{ flex: 1, fontSize: 13, color: Colors.text, lineHeight: 20 }}>{item}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
                 {/* Redes sociais */}
                 {(() => {
                   const social = (walkerProfile as any)?.social_links as SocialLinks | null;
