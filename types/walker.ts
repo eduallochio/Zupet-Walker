@@ -26,6 +26,10 @@ export type WalkerProfile = {
   terms_accepted_at?: string;
   updated_at?: string;
   created_at: string;
+  summary_items?: string[];
+  max_distance_km?: number;
+  accepted_sizes?: string[];
+  accepts_last_minute?: boolean;
 };
 
 export type PetStatus = 'pending' | 'active' | 'inactive';
