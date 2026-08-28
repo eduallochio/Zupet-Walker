@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
@@ -19,7 +19,18 @@ type Schedule = {
   status: ScheduleStatus;
   notes?: string;
   owner_id: string;
+  service_id?: string | null;
+  service_type?: string;
   petNames?: string[];
+};
+
+const SERVICE_TYPE_LABELS: Record<string, string> = {
+  walk:      'Passeio',
+  daycare:   'Creche',
+  boarding:  'Hospedagem',
+  training:  'Adestramento',
+  bath:      'Banho e Tosa',
+  vet_visit: 'Visita ao Vet',
 };
 
 const statusConfig: Record<ScheduleStatus, { label: string; color: string; border: string }> = {
@@ -57,11 +68,13 @@ export default function AgendaScreen() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const weekDays = buildWeekDays();
 
+  const [paymentModal, setPaymentModal] = useState<{ item: Schedule; saving: boolean } | null>(null);
+
   const fetchSchedules = useCallback(async () => {
     if (!walkerProfile) return;
     const { data } = await supabase
       .from('walk_schedules')
-      .select('id, scheduled_at, duration_minutes, pet_ids, status, notes, owner_id')
+      .select('id, scheduled_at, duration_minutes, pet_ids, status, notes, owner_id, service_id, walker_services(type)')
       .eq('walker_id', walkerProfile.id)
       .order('scheduled_at', { ascending: true });
 
@@ -78,9 +91,10 @@ export default function AgendaScreen() {
       petMap = Object.fromEntries((petsData as PetInfo[] ?? []).map((p) => [p.id, p.name]));
     }
 
-    const enriched = rows.map((s) => ({
+    const enriched = rows.map((s: any) => ({
       ...s,
-      petNames: (s.pet_ids ?? []).map((id) => petMap[id] ?? '—'),
+      service_type: s.walker_services?.type ?? 'walk',
+      petNames: (s.pet_ids ?? []).map((id: string) => petMap[id] ?? '—'),
     }));
     schedulesRef.current = enriched;
     setSchedules(enriched);
@@ -114,8 +128,70 @@ export default function AgendaScreen() {
               prev.map((s) => s.id === id ? { ...s, status: newStatus } : s)
             );
 
-            // Notificar o tutor (usa ref para evitar stale closure)
+            // Atualiza blocked_slots do serviço ao aceitar ou cancelar
             const schedule = schedulesRef.current.find((s) => s.id === id);
+            if (schedule?.service_id) {
+              const scheduledDate = new Date(schedule.scheduled_at);
+              const dateKey = scheduledDate.toISOString().split('T')[0];
+              const timeSlot = `${String(scheduledDate.getHours()).padStart(2, '0')}:${String(scheduledDate.getMinutes()).padStart(2, '0')}`;
+
+              const [{ data: svcData }, { count: confirmedCount }] = await Promise.all([
+                supabase.from('walker_services').select('blocked_slots, max_pets, price, label, type').eq('id', schedule.service_id).maybeSingle(),
+                supabase.from('walk_schedules')
+                  .select('id', { count: 'exact', head: true })
+                  .eq('service_id', schedule.service_id)
+                  .eq('status', 'confirmed')
+                  .gte('scheduled_at', `${dateKey}T00:00:00`)
+                  .lt('scheduled_at', `${dateKey}T23:59:59`)
+                  .eq('scheduled_at', schedule.scheduled_at),
+              ]);
+
+              if (svcData) {
+                const blocked: Record<string, string[]> = svcData.blocked_slots ?? {};
+                const daySlots: string[] = blocked[dateKey] ?? [];
+                const maxPets: number = svcData.max_pets ?? 1;
+
+                if (newStatus === 'confirmed') {
+                  // Bloqueia o slot somente quando atingir a capacidade máxima
+                  const totalConfirmed = (confirmedCount ?? 0) + 1; // +1 incluindo o que acabou de ser aceito
+                  if (totalConfirmed >= maxPets && !daySlots.includes(timeSlot)) {
+                    blocked[dateKey] = [...daySlots, timeSlot];
+                  }
+                } else {
+                  // Ao cancelar/recusar, libera o slot
+                  blocked[dateKey] = daySlots.filter((s) => s !== timeSlot);
+                  if (blocked[dateKey].length === 0) delete blocked[dateKey];
+                }
+
+                await supabase
+                  .from('walker_services')
+                  .update({ blocked_slots: blocked })
+                  .eq('id', schedule.service_id);
+              }
+
+              // Ao aceitar, cria registro financeiro pendente (reutiliza svcData já carregado)
+              if (newStatus === 'confirmed' && walkerProfile && svcData) {
+                const { data: existing } = await supabase
+                  .from('walker_payments')
+                  .select('id')
+                  .eq('schedule_id', id)
+                  .maybeSingle();
+                if (!existing) {
+                  await supabase.from('walker_payments').insert({
+                    walker_id:    walkerProfile.id,
+                    owner_id:     schedule.owner_id,
+                    schedule_id:  id,
+                    service_type: (svcData as any).type ?? schedule.service_type ?? 'walk',
+                    description:  (svcData as any).label ?? SERVICE_TYPE_LABELS[schedule.service_type ?? 'walk'] ?? 'Serviço',
+                    amount:       (svcData as any).price ?? 0,
+                    billing_type: 'per_session',
+                    status:       'pending',
+                  });
+                }
+              }
+            }
+
+            // Notificar o tutor (usa ref para evitar stale closure)
             if (schedule?.owner_id && walkerProfile?.name) {
               const scheduledDate = new Date(schedule.scheduled_at).toLocaleDateString('pt-BR', {
                 day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
@@ -143,6 +219,64 @@ export default function AgendaScreen() {
         },
       ]
     );
+  };
+
+  const finalizeService = (item: Schedule) => {
+    setPaymentModal({ item, saving: false });
+  };
+
+  const doFinalize = async (paymentMethod: 'cash' | 'pix' | 'card' | 'skip') => {
+    if (!paymentModal) return;
+    const item = paymentModal.item;
+    setPaymentModal((prev) => prev ? { ...prev, saving: true } : null);
+
+    try {
+      const { error } = await supabase
+        .from('walk_schedules')
+        .update({ status: 'done', updated_at: new Date().toISOString() })
+        .eq('id', item.id);
+      if (error) throw error;
+
+      setSchedules((prev) => prev.map((s) => s.id === item.id ? { ...s, status: 'done' } : s));
+
+      // Atualizar registro financeiro pendente com método e status paid
+      if (paymentMethod !== 'skip' && walkerProfile) {
+        await supabase.from('walker_payments')
+          .update({
+            payment_method: paymentMethod,
+            status:         'paid',
+            paid_at:        new Date().toISOString(),
+          })
+          .eq('schedule_id', item.id);
+      }
+
+      // Notificar tutor para avaliar
+      if (item.owner_id && walkerProfile?.name) {
+        const serviceLabel = SERVICE_TYPE_LABELS[item.service_type ?? 'walk'] ?? 'Serviço';
+        const title = `${serviceLabel} concluído!`;
+        const body  = `${walkerProfile.name} concluiu o serviço. Avalie como foi!`;
+        await Promise.all([
+          supabase.from('notifications').insert({
+            user_id: item.owner_id,
+            type:    'service_done',
+            title,
+            body,
+            data:    { schedule_id: item.id, walker_id: walkerProfile.id, service_type: item.service_type ?? 'walk' },
+          }),
+          sendPushToOwner(item.owner_id, title, body, {
+            type:         'service_done',
+            schedule_id:  item.id,
+            walker_id:    walkerProfile.id,
+            service_type: item.service_type ?? 'walk',
+          }),
+        ]);
+      }
+
+      setPaymentModal(null);
+    } catch {
+      Alert.alert('Erro', 'Não foi possível finalizar o serviço.');
+      setPaymentModal((prev) => prev ? { ...prev, saving: false } : null);
+    }
   };
 
   const daySchedules = schedules.filter((s) => isSameDay(new Date(s.scheduled_at), selectedDay));
@@ -223,6 +357,11 @@ export default function AgendaScreen() {
                         <View style={[styles.statusChip, { backgroundColor: `${cfg.color}18` }]}>
                           <Text style={[styles.statusText, { color: cfg.color }]}>{cfg.label}</Text>
                         </View>
+                        {item.service_type && item.service_type !== 'walk' && (
+                          <View style={styles.serviceChip}>
+                            <Text style={styles.serviceChipText}>{SERVICE_TYPE_LABELS[item.service_type]}</Text>
+                          </View>
+                        )}
                       </View>
                       <View style={styles.cardPets}>
                         <Ionicons name="paw-outline" size={12} color={Colors.textSecondary} />
@@ -255,6 +394,18 @@ export default function AgendaScreen() {
                           </TouchableOpacity>
                         </View>
                       )}
+
+                      {/* Botão finalizar — para serviços não-passeio confirmados */}
+                      {item.status === 'confirmed' && item.service_type && item.service_type !== 'walk' && (
+                        <TouchableOpacity
+                          style={styles.finalizeBtn}
+                          onPress={() => finalizeService(item)}
+                          activeOpacity={0.75}
+                        >
+                          <Ionicons name="checkmark-circle-outline" size={14} color="#fff" />
+                          <Text style={[styles.actionBtnText, { color: '#fff' }]}>Finalizar serviço</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   </View>
                 );
@@ -284,6 +435,46 @@ export default function AgendaScreen() {
           </View>
         )}
       </ScrollView>
+      {/* Modal de pagamento ao finalizar serviço */}
+      <Modal visible={!!paymentModal} transparent animationType="slide" onRequestClose={() => setPaymentModal(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Finalizar serviço</Text>
+            <Text style={styles.modalSub}>Como foi recebido o pagamento?</Text>
+
+            {(['cash', 'pix', 'card'] as const).map((method) => {
+              const labels = { cash: '💵 Dinheiro', pix: '📲 PIX', card: '💳 Cartão' };
+              return (
+                <TouchableOpacity
+                  key={method}
+                  style={styles.paymentBtn}
+                  onPress={() => doFinalize(method)}
+                  disabled={paymentModal?.saving}
+                  activeOpacity={0.8}
+                >
+                  {paymentModal?.saving
+                    ? <ActivityIndicator size="small" color={Colors.primary} />
+                    : <Text style={styles.paymentBtnText}>{labels[method]}</Text>
+                  }
+                </TouchableOpacity>
+              );
+            })}
+
+            <TouchableOpacity
+              style={styles.skipBtn}
+              onPress={() => doFinalize('skip')}
+              disabled={paymentModal?.saving}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.skipBtnText}>Finalizar sem lançar no financeiro</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setPaymentModal(null)} style={styles.cancelBtn}>
+              <Text style={styles.cancelBtnText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -349,6 +540,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.success,
   },
   actionBtnText: { fontSize: 12, fontWeight: '700' },
+  finalizeBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
+    paddingVertical: 7, borderRadius: 10, marginTop: 4,
+    backgroundColor: Colors.primary,
+  },
+  serviceChip: {
+    marginLeft: 6, backgroundColor: `${Colors.primary}15`,
+    borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2,
+  },
+  serviceChipText: { fontSize: 10, fontWeight: '600', color: Colors.primary },
 
   upcomingRow: { flexDirection: 'row', gap: 10 },
   upcomingChip: {
@@ -362,4 +563,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 2,
   },
   upcomingCountText: { fontSize: 11, fontWeight: '700', color: Colors.primary },
+
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalBox: {
+    backgroundColor: Colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: 24, paddingBottom: 40, gap: 12,
+  },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: Colors.text, textAlign: 'center' },
+  modalSub: { fontSize: 13, color: Colors.textSecondary, textAlign: 'center', marginBottom: 4 },
+  paymentBtn: {
+    backgroundColor: Colors.card, borderRadius: 14, borderWidth: 1.5, borderColor: Colors.border,
+    paddingVertical: 16, alignItems: 'center',
+  },
+  paymentBtnText: { fontSize: 16, fontWeight: '700', color: Colors.text },
+  skipBtn: { paddingVertical: 12, alignItems: 'center' },
+  skipBtnText: { fontSize: 13, color: Colors.textSecondary, textDecorationLine: 'underline' },
+  cancelBtn: { paddingVertical: 10, alignItems: 'center' },
+  cancelBtnText: { fontSize: 14, fontWeight: '600', color: Colors.error },
 });

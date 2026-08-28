@@ -22,11 +22,13 @@ const STATUS_COLOR: Record<string, string> = {
   proposed:  Colors.warning,
   confirmed: Colors.success,
   cancelled: Colors.error,
+  done:      Colors.textSecondary,
 };
 const STATUS_LABEL: Record<string, string> = {
   proposed:  'Aguardando',
   confirmed: 'Confirmado',
   cancelled: 'Cancelado',
+  done:      'Concluído',
 };
 
 export function TodaySchedule() {
