@@ -26,13 +26,16 @@ function AuthGuard() {
       return;
     }
 
-    if (!walkerProfile && !inOnboarding) {
-      router.replace('/onboarding/walker-profile');
+    const inNotWalker = segments[0] === 'auth' && segments[1] === 'not-a-walker';
+
+    if (!walkerProfile && !inOnboarding && !inNotWalker) {
+      router.replace('/auth/not-a-walker');
       return;
     }
 
     if (walkerProfile && (inAuth || inOnboarding)) {
       router.replace('/(tabs)');
+      return;
     }
   }, [session, loading, profileLoading, walkerProfile, segments]);
 
@@ -43,6 +46,7 @@ export default function RootLayout() {
   const router = useRouter();
   const setSession = useAuthStore((s) => s.setSession);
   const fetchWalkerProfile = useAuthStore((s) => s.fetchWalkerProfile);
+  const forceReady = useAuthStore((s) => s.forceReady);
   const walkerProfile = useAuthStore((s) => s.walkerProfile);
   const notifCleanup = useRef<(() => void) | null>(null);
   // Guarda o último uid para evitar fetchWalkerProfile duplicado quando
@@ -69,7 +73,11 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
+    // Fallback: se o Supabase não responder em 8s, desbloqueia o AuthGuard
+    const timeout = setTimeout(() => forceReady(), 8000);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(timeout);
       setSession(session);
       safeFetchProfile(session?.user?.id);
     });
@@ -110,6 +118,7 @@ export default function RootLayout() {
     const linkSub = Linking.addEventListener('url', handleDeepLink);
 
     return () => {
+      clearTimeout(timeout);
       subscription.unsubscribe();
       linkSub.remove();
     };
@@ -127,6 +136,7 @@ export default function RootLayout() {
         <Stack.Screen name="profile/edit" />
         <Stack.Screen name="auth/login" />
         <Stack.Screen name="auth/callback" />
+        <Stack.Screen name="auth/not-a-walker" />
         <Stack.Screen name="auth/walker-callback" />
         <Stack.Screen name="onboarding/walker-profile" />
         <Stack.Screen name="invite/index" />

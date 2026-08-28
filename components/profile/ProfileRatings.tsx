@@ -6,11 +6,21 @@ import { Colors } from '../../constants/colors';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../services/supabase';
 
+const SERVICE_LABELS: Record<string, string> = {
+  walk:      '🦮 Passeio',
+  daycare:   '🏠 Creche',
+  boarding:  '🌙 Hospedagem',
+  training:  '🎯 Adestramento',
+  bath:      '🛁 Banho e Tosa',
+  vet_visit: '🏥 Visita ao Vet',
+};
+
 type Rating = {
   id: string;
   rating: number;
   comment: string | null;
   created_at: string;
+  service_type: string | null;
   owner_name: string | null;
 };
 
@@ -46,7 +56,7 @@ export function ProfileRatings() {
     (async () => {
       const { data } = await supabase
         .from('walker_ratings')
-        .select('id, rating, comment, created_at, owner_id')
+        .select('id, rating, comment, created_at, owner_id, service_type')
         .eq('walker_id', walkerProfile.id)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -63,7 +73,7 @@ export function ProfileRatings() {
         if (profiles) profiles.forEach((p: any) => { namesMap[p.user_id] = p.name; });
       }
 
-      setRatings(data.map((r: any) => ({ ...r, owner_name: namesMap[r.owner_id] ?? null })));
+      setRatings(data.map((r: any) => ({ ...r, owner_name: namesMap[r.owner_id] ?? null, service_type: r.service_type ?? 'walk' })));
       setLoading(false);
     })();
     return () => { active = false; };
@@ -105,7 +115,12 @@ export function ProfileRatings() {
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.ownerName}>{r.owner_name ?? 'Tutor'}</Text>
-                      <Text style={styles.ratingDate}>{formatDate(r.created_at)}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 1 }}>
+                        <Text style={styles.ratingDate}>{formatDate(r.created_at)}</Text>
+                        {r.service_type && r.service_type !== 'walk' && (
+                          <Text style={styles.serviceTag}>{SERVICE_LABELS[r.service_type] ?? r.service_type}</Text>
+                        )}
+                      </View>
                     </View>
                     <StarRow value={r.rating} />
                   </View>
@@ -148,7 +163,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   ownerName: { fontSize: 13, fontWeight: '700', color: Colors.text },
-  ratingDate: { fontSize: 11, color: Colors.textSecondary, marginTop: 1 },
+  ratingDate: { fontSize: 11, color: Colors.textSecondary },
+  serviceTag: { fontSize: 10, color: Colors.primary, fontWeight: '600' },
   comment: { fontSize: 13, color: Colors.textSecondary, lineHeight: 20, fontStyle: 'italic', marginLeft: 42 },
 
   emptyCard: {

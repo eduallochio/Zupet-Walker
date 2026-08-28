@@ -41,6 +41,7 @@ export default function EditProfileScreen() {
   const [tiktok, setTiktok]       = useState<string>(socialRaw.tiktok ?? '');
   const [youtube, setYoutube]     = useState<string>(socialRaw.youtube ?? '');
   const [linkedin, setLinkedin]   = useState<string>(socialRaw.linkedin ?? '');
+  const [whatsapp, setWhatsapp]   = useState<string>(socialRaw.whatsapp ?? '');
   const [facebook, setFacebook]   = useState<string>(socialRaw.facebook ?? '');
 
   const [saving, setSaving] = useState(false);
@@ -93,13 +94,32 @@ export default function EditProfileScreen() {
     let avatarUrl: string | null = walkerProfile.avatar_url ?? null;
     if (avatarUri && avatarUri !== walkerProfile.avatar_url &&
         (avatarUri.startsWith('file://') || avatarUri.startsWith('content://'))) {
-      const ext  = avatarUri.split('.').pop()?.split('?')[0] ?? 'jpg';
+      const ext  = 'jpg'; // sempre salva como jpg para consistência
+      const mime = 'image/jpeg';
       const path = `${walkerProfile.user_id}/avatar.${ext}`;
-      const blob = await (await fetch(avatarUri)).blob();
-      const { error: upErr } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: `image/${ext}` });
-      if (upErr) { setSaving(false); Alert.alert('Erro ao enviar foto', upErr.message); return; }
-      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-      avatarUrl = data.publicUrl;
+
+      try {
+        // Lê o arquivo como ArrayBuffer — funciona de forma confiável no Android/iOS
+        const response = await fetch(avatarUri);
+        const arrayBuffer = await response.arrayBuffer();
+
+        const { error: upErr } = await supabase.storage
+          .from('avatars')
+          .upload(path, arrayBuffer, { upsert: true, contentType: mime });
+
+        if (upErr) {
+          setSaving(false);
+          Alert.alert('Erro ao enviar foto', upErr.message);
+          return;
+        }
+        const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+        // Adiciona cache-buster para forçar reload da imagem no app
+        avatarUrl = `${data.publicUrl}?t=${Date.now()}`;
+      } catch (e: any) {
+        setSaving(false);
+        Alert.alert('Erro ao enviar foto', e?.message ?? 'Tente novamente');
+        return;
+      }
     } else if (avatarUri && avatarUri !== walkerProfile.avatar_url) {
       avatarUrl = avatarUri;
     }
@@ -123,6 +143,7 @@ export default function EditProfileScreen() {
         ...(tiktok.trim()    ? { tiktok: tiktok.trim() }       : {}),
         ...(youtube.trim()   ? { youtube: youtube.trim() }     : {}),
         ...(linkedin.trim()  ? { linkedin: linkedin.trim() }   : {}),
+        ...(whatsapp.trim()  ? { whatsapp: whatsapp.trim() }   : {}),
         ...(facebook.trim()  ? { facebook: facebook.trim() }   : {}),
       },
       updated_at:        new Date().toISOString(),
@@ -282,6 +303,7 @@ export default function EditProfileScreen() {
               { label: 'TikTok',    placeholder: '@seuusuario', value: tiktok,    onChange: setTiktok,    icon: '🎵' },
               { label: 'YouTube',   placeholder: 'youtube.com/seucanal', value: youtube, onChange: setYoutube, icon: '▶️' },
               { label: 'LinkedIn',  placeholder: 'linkedin.com/in/seuperfil', value: linkedin, onChange: setLinkedin, icon: '💼' },
+              { label: 'WhatsApp',  placeholder: '5527999999999 (com DDI+DDD)', value: whatsapp, onChange: setWhatsapp, icon: '💬' },
               { label: 'Facebook',  placeholder: 'facebook.com/seuperfil', value: facebook, onChange: setFacebook, icon: '👤' },
             ].map(item => (
               <View key={item.label} style={styles.field}>

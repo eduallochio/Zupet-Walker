@@ -9,6 +9,7 @@ import { useAuthStore } from '../../stores/authStore';
 export function ProfileHeader() {
   const router = useRouter();
   const walkerProfile = useAuthStore((s) => s.walkerProfile);
+  const userEmail = useAuthStore((s) => s.session?.user?.email ?? null);
   const signOut = useAuthStore((s) => s.signOut);
   const [settingsVisible, setSettingsVisible] = useState(false);
 
@@ -128,6 +129,21 @@ export function ProfileHeader() {
 
             <View style={styles.sheetDivider} />
 
+            {userEmail && (
+              <>
+                <View style={styles.sheetRow}>
+                  <View style={[styles.sheetIcon, { backgroundColor: `${Colors.primary}18` }]}>
+                    <Ionicons name="mail-outline" size={18} color={Colors.primary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.sheetLabel}>Conta</Text>
+                    <Text style={styles.sheetEmail} numberOfLines={1}>{userEmail}</Text>
+                  </View>
+                </View>
+                <View style={styles.sheetDivider} />
+              </>
+            )}
+
             <TouchableOpacity style={styles.sheetRow} onPress={handleSignOut} activeOpacity={0.7}>
               <View style={[styles.sheetIcon, { backgroundColor: '#EF444418' }]}>
                 <Ionicons name="log-out-outline" size={18} color={Colors.error} />
@@ -233,5 +249,6 @@ const styles = StyleSheet.create({
   },
   sheetLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: Colors.text },
   sheetVersion: { fontSize: 13, color: Colors.textSecondary },
+  sheetEmail: { fontSize: 12, color: Colors.textSecondary, marginTop: 1 },
   sheetDivider: { height: 1, backgroundColor: Colors.border, marginLeft: 48 },
 });

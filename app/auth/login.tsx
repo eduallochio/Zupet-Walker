@@ -6,10 +6,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
+import Constants from 'expo-constants';
 import { supabase } from '../../services/supabase';
 import { Colors } from '../../constants/colors';
 
-// URL fixa — Linking.createURL pode pegar o scheme errado em builds nativas
+// No Expo Go o scheme customizado não funciona — login social requer APK/build nativa
+const IS_EXPO_GO = Constants.appOwnership === 'expo';
 const REDIRECT_URL = 'zupet-walker://auth/callback';
 
 export default function LoginScreen() {
@@ -39,6 +41,13 @@ export default function LoginScreen() {
   };
 
   const handleGoogle = async () => {
+    if (IS_EXPO_GO) {
+      Alert.alert(
+        'Não disponível no Expo Go',
+        'O login com Google requer um build nativo do app. Use e-mail e senha para testar.',
+      );
+      return;
+    }
     setSocialLoading('google');
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -50,6 +59,13 @@ export default function LoginScreen() {
   };
 
   const handleApple = async () => {
+    if (IS_EXPO_GO) {
+      Alert.alert(
+        'Não disponível no Expo Go',
+        'O login com Apple requer um build nativo do app. Use e-mail e senha para testar.',
+      );
+      return;
+    }
     setSocialLoading('apple');
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'apple',

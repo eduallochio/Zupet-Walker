@@ -7,6 +7,7 @@ type AuthStore = {
   session: Session | null;
   user: User | null;
   walkerProfile: WalkerProfile | null;
+  isTutor: boolean;
   loading: boolean;
   profileLoading: boolean;
   setSession: (session: Session | null) => void;
@@ -20,6 +21,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   session: null,
   user: null,
   walkerProfile: null,
+  isTutor: false,
   loading: true,
   profileLoading: false,
 
@@ -32,7 +34,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   signOut: async () => {
     await supabase.auth.signOut();
-    set({ session: null, user: null, walkerProfile: null });
+    set({ session: null, user: null, walkerProfile: null, isTutor: false });
   },
 
   fetchWalkerProfile: async (userId?: string) => {
@@ -40,11 +42,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     if (!uid) { set({ profileLoading: false }); return; }
     set({ profileLoading: true });
     try {
-      const { data } = await supabase
-        .from('walker_profiles')
-        .select('*')
-        .eq('user_id', uid)
-        .maybeSingle();
+      const [walkerRes, tutorRes] = await Promise.all([
+        supabase.from('walker_profiles').select('*').eq('user_id', uid).maybeSingle(),
+        supabase.from('user_profiles').select('id').eq('user_id', uid).maybeSingle(),
+      ]);
+      const { data } = walkerRes;
+      set({ isTutor: !!tutorRes.data });
 
       if (data && !data.avatar_url) {
         const socialAvatar =

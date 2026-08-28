@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { supabase } from '../services/supabase';
 import { Colors } from '../constants/colors';
 import NotificationItem, { NotificationData } from '../components/notifications/NotificationItem';
@@ -28,7 +28,12 @@ export default function NotificationsScreen() {
     setItems((data ?? []) as NotificationData[]);
   }, []);
 
+  const initialLoad = useRef(true);
   useEffect(() => { fetchNotifs().finally(() => setLoading(false)); }, [fetchNotifs]);
+  useFocusEffect(useCallback(() => {
+    if (initialLoad.current) { initialLoad.current = false; return; }
+    fetchNotifs();
+  }, [fetchNotifs]));
 
   const onRefresh = async () => { setRefreshing(true); await fetchNotifs(); setRefreshing(false); };
 
