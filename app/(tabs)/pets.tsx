@@ -11,6 +11,7 @@ import { PetDetailModal } from '../../components/pets/PetDetailModal';
 import { OwnPetModal } from '../../components/pets/OwnPetModal';
 import type { LinkedPet } from '../../types/walker';
 import { sendPushToOwner } from '../../services/ownerPushService';
+import { getLimits } from '../../lib/plan';
 
 type FilterTab = 'todos' | 'active' | 'pending';
 
@@ -78,19 +79,19 @@ export default function PetsScreen() {
     setRespondingId(pet.id);
     try {
       if (accept) {
-        // Verificar limite do plano antes de aceitar
-        if (walkerProfile?.id) {
-          const { data: limitData } = await supabase
-            .rpc('check_walker_pet_limit', { p_walker_id: walkerProfile.id });
-          const limit = limitData as { allowed: boolean; current: number; limit: number; plan: string } | null;
-          if (limit && !limit.allowed) {
-            Alert.alert(
-              'Limite atingido',
-              `Você já tem ${limit.current} pets vinculados (limite do plano ${limit.plan === 'premium' ? 'Premium' : 'Gratuito'}: ${limit.limit}). Faça upgrade para o plano Premium para aceitar mais pets.`,
-              [{ text: 'Entendido' }]
-            );
-            return;
-          }
+        // Verificar limite de pets vinculados por tutores
+        const limits = getLimits(walkerProfile);
+        const activePets = pets.filter((p) => p.status === 'active').length;
+        if (activePets >= limits.linkedPets) {
+          const isPro = walkerProfile?.plan === 'pro';
+          Alert.alert(
+            'Limite atingido',
+            isPro
+              ? `Você já tem ${activePets} pets vinculados.`
+              : `Você já tem ${activePets} pets vinculados (limite do plano Free: ${limits.linkedPets}). Faça upgrade para o plano Pro para aceitar mais pets.`,
+            [{ text: 'Entendido' }]
+          );
+          return;
         }
 
         const { error } = await supabase
@@ -241,7 +242,22 @@ export default function PetsScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Pets</Text>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.addPetBtn} onPress={() => router.push('/pets/add')} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.addPetBtn}
+            activeOpacity={0.8}
+            onPress={() => {
+              const limits = getLimits(walkerProfile);
+              if (ownPets.length >= limits.ownPets) {
+                Alert.alert(
+                  'Limite atingido',
+                  `Você já tem ${ownPets.length} pets cadastrados (limite do plano Free: ${limits.ownPets}). Faça upgrade para o plano Pro para cadastrar mais.`,
+                  [{ text: 'Entendido' }]
+                );
+                return;
+              }
+              router.push('/pets/add');
+            }}
+          >
             <Ionicons name="add" size={16} color={Colors.primary} />
             <Text style={styles.addPetBtnText}>Cadastrar</Text>
           </TouchableOpacity>

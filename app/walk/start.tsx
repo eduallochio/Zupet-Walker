@@ -8,6 +8,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useWalkStore } from '../../stores/walkStore';
 import { supabase } from '../../services/supabase';
 import type { LinkedPet } from '../../types/walker';
+import { maxPetsPerWalk } from '../../lib/plan';
 
 type WalkPet = {
   pet_id: string;
@@ -94,10 +95,24 @@ export default function WalkStartScreen() {
   }, [walkerProfile, activeWalk]);
 
   const toggle = (petId: string) => {
+    const limit = maxPetsPerWalk(walkerProfile);
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(petId)) next.delete(petId);
-      else next.add(petId);
+      if (next.has(petId)) {
+        next.delete(petId);
+      } else {
+        if (next.size >= limit) {
+          Alert.alert(
+            'Limite de pets por passeio',
+            walkerProfile?.plan === 'pro'
+              ? `Você configurou o máximo de ${limit} pet${limit !== 1 ? 's' : ''} por passeio.`
+              : `No plano Free você pode levar até ${limit} pets por passeio. Faça upgrade para o plano Pro para aumentar esse limite.`,
+            [{ text: 'Entendido' }]
+          );
+          return prev;
+        }
+        next.add(petId);
+      }
       return next;
     });
   };

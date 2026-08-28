@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { supabase } from '../../services/supabase';
 import { useAuthStore } from '../../stores/authStore';
+import { getLimits } from '../../lib/plan';
 
 type WalkReport = {
   id: string;
@@ -55,11 +56,20 @@ export default function HistoricoScreen() {
   const fetchData = useCallback(async () => {
     if (!walkerProfile) return;
 
-    const reportsRes = await supabase
+    const limits = getLimits(walkerProfile);
+    const historyQuery = supabase
       .from('walk_reports')
       .select('id, session_id, duration_minutes, distance_meters, pee_count, poop_count, note_count, notes, photos, sent_at, pet_ids, owner_id')
       .eq('walker_id', walkerProfile.id)
       .order('sent_at', { ascending: false });
+
+    if (isFinite(limits.reportDays)) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - limits.reportDays);
+      historyQuery.gte('sent_at', cutoff.toISOString());
+    }
+
+    const reportsRes = await historyQuery;
 
     const raw = (reportsRes.data ?? []) as WalkReport[];
 
@@ -112,6 +122,15 @@ export default function HistoricoScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Histórico</Text>
       </View>
+
+      {walkerProfile?.plan !== 'pro' && (
+        <View style={styles.planBanner}>
+          <Ionicons name="lock-closed-outline" size={14} color="#F59E0B" />
+          <Text style={styles.planBannerText}>
+            Plano Free: histórico dos últimos 7 dias. Faça upgrade para ver todo o histórico.
+          </Text>
+        </View>
+      )}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -277,6 +296,14 @@ export default function HistoricoScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
+  planBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginHorizontal: 20, marginBottom: 4, marginTop: 4,
+    backgroundColor: 'rgba(245,158,11,0.1)', borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 8,
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.25)',
+  },
+  planBannerText: { flex: 1, fontSize: 12, color: '#F59E0B', fontWeight: '500' },
   title: { fontSize: 22, fontWeight: '800', color: Colors.text },
   scroll: { paddingHorizontal: 20, paddingBottom: 40, gap: 14 },
 
