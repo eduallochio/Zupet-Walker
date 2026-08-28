@@ -44,6 +44,9 @@ export default function EditProfileScreen() {
   const [whatsapp, setWhatsapp]   = useState<string>(socialRaw.whatsapp ?? '');
   const [facebook, setFacebook]   = useState<string>(socialRaw.facebook ?? '');
 
+  const [username, setUsername] = useState<string>((walkerProfile as any)?.username ?? '');
+  const [usernameError, setUsernameError] = useState('');
+
   const [saving, setSaving] = useState(false);
 
   // ── Busca CEP automaticamente ──────────────────────────────────────────────
@@ -124,6 +127,15 @@ export default function EditProfileScreen() {
       avatarUrl = avatarUri;
     }
 
+    // Validar username se preenchido
+    const usernameClean = username.trim().toLowerCase();
+    if (usernameClean && !/^[a-z0-9][a-z0-9\-]{1,28}[a-z0-9]$/.test(usernameClean)) {
+      setSaving(false);
+      setUsernameError('Use apenas letras minúsculas, números e hífens (3-30 caracteres).');
+      return;
+    }
+    setUsernameError('');
+
     const updates = {
       name:              name.trim(),
       phone:             phone.trim() || null,
@@ -138,6 +150,7 @@ export default function EditProfileScreen() {
       city:              city.trim(),
       state:             state.trim() || null,
       service_radius_km: radiusKm ? parseInt(radiusKm) : 5,
+      username:          usernameClean || null,
       social_links: {
         ...(instagram.trim() ? { instagram: instagram.trim() } : {}),
         ...(tiktok.trim()    ? { tiktok: tiktok.trim() }       : {}),
@@ -292,6 +305,37 @@ export default function EditProfileScreen() {
             </View>
 
           </View>
+
+          {/* ── Link Público Pro ── */}
+          {(walkerProfile as any)?.plan === 'pro' && (
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>PERFIL PÚBLICO (PRO)</Text>
+              <Text style={styles.sectionHint}>Defina um link personalizado para compartilhar nas redes sociais</Text>
+              <View style={styles.field}>
+                <Text style={styles.label}>🔗  Seu link (username)</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.card, borderRadius: 12, borderWidth: 1.5, borderColor: usernameError ? '#F87171' : Colors.border, paddingHorizontal: 14, paddingVertical: 13 }}>
+                  <Text style={{ fontSize: 14, color: Colors.textSecondary }}>zupet.io/w/</Text>
+                  <TextInput
+                    style={{ flex: 1, fontSize: 15, color: Colors.text }}
+                    value={username}
+                    onChangeText={v => { setUsername(v.toLowerCase()); setUsernameError(''); }}
+                    placeholder="meu-nome"
+                    placeholderTextColor={Colors.textSecondary}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="url"
+                  />
+                </View>
+                {usernameError ? (
+                  <Text style={{ fontSize: 11, color: '#F87171', marginTop: 3 }}>{usernameError}</Text>
+                ) : username.trim() ? (
+                  <Text style={{ fontSize: 11, color: Colors.textSecondary, marginTop: 3 }}>
+                    walker.zupet.io/w/{username.trim().toLowerCase()}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          )}
 
           {/* ── Redes Sociais ── */}
           <View style={styles.section}>
