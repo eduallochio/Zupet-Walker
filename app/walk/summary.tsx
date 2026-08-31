@@ -68,21 +68,32 @@ export default function WalkSummaryScreen() {
         if (activeWalk.pet_ids.length > 0) {
           const { data: links } = await supabase
             .from('walker_pet_links')
-            .select('owner_id')
+            .select('owner_id, pet_id')
             .in('pet_id', activeWalk.pet_ids)
             .eq('walker_id', walkerProfile.id);
 
-          const ownerIds = [...new Set((links ?? []).map((l: any) => l.owner_id))];
-          const peeCount  = activeWalk.events.filter((e) => e.type === 'pee').length;
-          const poopCount = activeWalk.events.filter((e) => e.type === 'poop').length;
-          const noteCount = activeWalk.events.filter((e) => e.type === 'note').length;
+          // Mapear owner_id → pet_ids desse tutor
+          const ownerPetMap: Record<string, string[]> = {};
+          for (const link of (links ?? []) as { owner_id: string; pet_id: string }[]) {
+            if (!ownerPetMap[link.owner_id]) ownerPetMap[link.owner_id] = [];
+            ownerPetMap[link.owner_id].push(link.pet_id);
+          }
+          const ownerIds = Object.keys(ownerPetMap);
 
           for (const owner_id of ownerIds) {
+            const ownerPetIds = ownerPetMap[owner_id];
+            const ownerEvents = activeWalk.events.filter(
+              (e) => !e.pet_id || ownerPetIds.includes(e.pet_id)
+            );
+            const peeCount  = ownerEvents.filter((e) => e.type === 'pee').length;
+            const poopCount = ownerEvents.filter((e) => e.type === 'poop').length;
+            const noteCount = ownerEvents.filter((e) => e.type === 'note').length;
+
             const { data: reportData } = await supabase.from('walk_reports').insert({
               session_id:       data.id,
               walker_id:        walkerProfile.id,
               owner_id,
-              pet_ids:          activeWalk.pet_ids,
+              pet_ids:          ownerPetIds,
               duration_minutes: durationMinutes,
               distance_meters:  Math.round(activeWalk.distance_meters),
               pee_count:        peeCount,

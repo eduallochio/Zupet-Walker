@@ -236,14 +236,13 @@ export default function ActiveWalkScreen() {
 
       {/* Barra de ações */}
       <View style={styles.actionBar}>
-        {/* Botão câmera — oculto até o banco suportar fotos */}
-        <TouchableOpacity style={styles.cameraBtn} onPress={handleTakePhoto} activeOpacity={0.85}>
-          <Ionicons name="camera-outline" size={20} color={Colors.primary} />
-          {(activeWalk.photos?.length ?? 0) > 0 && (
-            <View style={styles.photoBadge}>
-              <Text style={styles.photoBadgeText}>{activeWalk.photos!.length}</Text>
-            </View>
-          )}
+        {/* Câmera desabilitada — storage não disponível no plano atual */}
+        <TouchableOpacity
+          style={[styles.cameraBtn, styles.cameraBtnDisabled]}
+          onPress={() => Alert.alert('Em breve', 'O envio de fotos estará disponível em breve.')}
+          activeOpacity={0.6}
+        >
+          <Ionicons name="camera-outline" size={20} color={Colors.textSecondary} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.finishBtn} onPress={handleFinish} activeOpacity={0.85}>
@@ -397,6 +396,9 @@ const styles = StyleSheet.create({
     width: 52, height: 52, borderRadius: 14,
     backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border,
     alignItems: 'center', justifyContent: 'center',
+  },
+  cameraBtnDisabled: {
+    opacity: 0.4,
   },
   photoBadge: {
     position: 'absolute', top: -4, right: -4,

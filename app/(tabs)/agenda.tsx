@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Modal, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
@@ -69,6 +69,7 @@ export default function AgendaScreen() {
   const weekDays = buildWeekDays();
 
   const [paymentModal, setPaymentModal] = useState<{ item: Schedule; saving: boolean } | null>(null);
+  const [historyModal, setHistoryModal] = useState(false);
 
   const fetchSchedules = useCallback(async () => {
     if (!walkerProfile) return;
@@ -296,9 +297,10 @@ export default function AgendaScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Agenda</Text>
-          <View style={styles.totalBadge}>
+          <TouchableOpacity style={styles.totalBadge} onPress={() => setHistoryModal(true)} activeOpacity={0.75}>
             <Text style={styles.totalText}>{schedules.filter((s) => s.status !== 'cancelled').length} agendamentos</Text>
-          </View>
+            <Ionicons name="time-outline" size={13} color={Colors.primary} />
+          </TouchableOpacity>
         </View>
 
         {/* Seletor de dias */}
@@ -435,6 +437,61 @@ export default function AgendaScreen() {
           </View>
         )}
       </ScrollView>
+      {/* Modal histórico de agendamentos */}
+      <Modal visible={historyModal} transparent animationType="slide" onRequestClose={() => setHistoryModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalBox, { maxHeight: '85%' }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <Text style={styles.modalTitle}>Histórico</Text>
+              <TouchableOpacity onPress={() => setHistoryModal(false)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                <Ionicons name="close" size={22} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <Text style={[styles.modalSub, { marginBottom: 12 }]}>Todos os agendamentos</Text>
+            <FlatList
+              data={[...schedules].sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+              ListEmptyComponent={<Text style={{ color: Colors.textSecondary, textAlign: 'center', marginTop: 20 }}>Nenhum agendamento ainda.</Text>}
+              renderItem={({ item }) => {
+                const cfg = statusConfig[item.status];
+                const time = new Date(item.scheduled_at);
+                return (
+                  <View style={[styles.card, { borderLeftColor: cfg.border }]}>
+                    <View style={styles.cardLeft}>
+                      <Text style={styles.cardTime}>{time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</Text>
+                      <Text style={styles.cardDur}>{time.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</Text>
+                    </View>
+                    <View style={styles.cardBody}>
+                      <View style={styles.cardTop}>
+                        <View style={[styles.statusChip, { backgroundColor: `${cfg.color}18` }]}>
+                          <Text style={[styles.statusText, { color: cfg.color }]}>{cfg.label}</Text>
+                        </View>
+                        {item.service_type && item.service_type !== 'walk' && (
+                          <View style={styles.serviceChip}>
+                            <Text style={styles.serviceChipText}>{SERVICE_TYPE_LABELS[item.service_type]}</Text>
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.cardPets}>
+                        <Ionicons name="paw-outline" size={12} color={Colors.textSecondary} />
+                        <Text style={styles.cardPetsText}>
+                          {item.petNames && item.petNames.length > 0
+                            ? item.petNames.join(', ')
+                            : `${item.pet_ids.length} pet${item.pet_ids.length !== 1 ? 's' : ''}`}
+                        </Text>
+                      </View>
+                      {item.notes ? <Text style={styles.cardNotes} numberOfLines={1}>{item.notes}</Text> : null}
+                    </View>
+                  </View>
+                );
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
+
       {/* Modal de pagamento ao finalizar serviço */}
       <Modal visible={!!paymentModal} transparent animationType="slide" onRequestClose={() => setPaymentModal(null)}>
         <View style={styles.modalOverlay}>
@@ -487,7 +544,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12,
   },
   title: { fontSize: 22, fontWeight: '800', color: Colors.text },
-  totalBadge: { backgroundColor: `${Colors.primary}18`, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
+  totalBadge: { backgroundColor: `${Colors.primary}18`, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 5 },
   totalText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
 
   dayScroll: { paddingHorizontal: 16, gap: 8, marginBottom: 8 },

@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "io.zupet.walker",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Usado para tirar fotos durante os passeios e para o seu perfil de walker.",
@@ -36,7 +36,8 @@
         "android.permission.CAMERA",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_BACKGROUND_LOCATION"
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -88,8 +89,10 @@
     "extra": {
       "privacyPolicyUrl": "https://walker.zupet.io/privacidade",
       "eas": {
-        "projectId": ""
-      }
-    }
+        "projectId": "e2d81550-850d-4338-b75a-5b39574657cd"
+      },
+      "router": {}
+    },
+    "owner": "eduallochios-organization"
   }
 }

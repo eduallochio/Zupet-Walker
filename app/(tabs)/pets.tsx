@@ -94,6 +94,24 @@ export default function PetsScreen() {
           return;
         }
 
+        // Verificar se o pet já tem vínculo ativo com outro walker
+        const { data: existingLink } = await supabase
+          .from('walker_pet_links')
+          .select('id, walker_id')
+          .eq('pet_id', pet.pet_id)
+          .eq('status', 'active')
+          .neq('walker_id', walkerProfile?.id ?? '')
+          .maybeSingle();
+
+        if (existingLink) {
+          Alert.alert(
+            'Pet já vinculado',
+            `${pet.pet?.name ?? 'Este pet'} já possui um walker ativo. O tutor precisa desvincular o walker atual antes de vincular outro.`,
+            [{ text: 'Entendido' }]
+          );
+          return;
+        }
+
         const { error } = await supabase
           .from('walker_pet_links')
           .update({ status: 'active' })

@@ -36,6 +36,20 @@ export function setNotificationRouter(router: RouterLike) {
   _router = router;
 }
 
+function navigateFromNotificationData(data: Record<string, any>) {
+  if (!_router) return;
+  const type = data?.type as string | undefined;
+  if (type === 'pet_link_request' || type === 'pet_link_accepted' || type === 'pet_link_rejected') {
+    _router.push('/(tabs)/pets');
+  } else if (type === 'walk_report' || type === 'walk_session') {
+    _router.push('/(tabs)');
+  } else if (type === 'payment') {
+    _router.push('/payments');
+  } else {
+    _router.push('/notifications');
+  }
+}
+
 export function addNotificationListeners(): () => void {
   if (isExpoGo) return () => {};
   const Notifications = getNotifications();
@@ -44,20 +58,22 @@ export function addNotificationListeners(): () => void {
 
   const resp = Notifications.addNotificationResponseReceivedListener((response) => {
     const data = response.notification.request.content.data as Record<string, any>;
-    if (!_router) return;
-    const type = data?.type as string | undefined;
-    if (type === 'pet_link_request' || type === 'pet_link_accepted' || type === 'pet_link_rejected') {
-      _router.push('/(tabs)/pets');
-    } else if (type === 'walk_report' || type === 'walk_session') {
-      _router.push('/(tabs)');
-    } else if (type === 'payment') {
-      _router.push('/payments');
-    } else {
-      _router.push('/notifications');
-    }
+    navigateFromNotificationData(data);
   });
 
   return () => { recv.remove(); resp.remove(); };
+}
+
+// Chamado após o router estar pronto — lida com notificações que abriram o app do estado fechado
+export async function handleInitialNotificationResponse(): Promise<void> {
+  if (isExpoGo) return;
+  try {
+    const Notifications = getNotifications();
+    const response = await Notifications.getLastNotificationResponseAsync();
+    if (!response) return;
+    const data = response.notification.request.content.data as Record<string, any>;
+    navigateFromNotificationData(data);
+  } catch {}
 }
 
 export function removeNotificationListeners() {

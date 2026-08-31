@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Linking from 'expo-linking';
 import { supabase } from '../services/supabase';
 import { useAuthStore } from '../stores/authStore';
-import { registerPushToken, addNotificationListeners, removeNotificationListeners, setNotificationRouter } from '../services/notificationService';
+import { registerPushToken, addNotificationListeners, removeNotificationListeners, setNotificationRouter, handleInitialNotificationResponse } from '../services/notificationService';
 
 function AuthGuard() {
   const router = useRouter();
@@ -71,6 +71,12 @@ export default function RootLayout() {
     notifCleanup.current = addNotificationListeners();
     return () => { notifCleanup.current?.(); };
   }, []);
+
+  // Trata notificação que abriu o app do estado fechado — só navega após perfil carregado
+  useEffect(() => {
+    if (!walkerProfile?.id) return;
+    handleInitialNotificationResponse();
+  }, [walkerProfile?.id]);
 
   useEffect(() => {
     // Fallback: se o Supabase não responder em 8s, desbloqueia o AuthGuard

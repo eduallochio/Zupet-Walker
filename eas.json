@@ -1,7 +1,8 @@
 {
   "cli": {
     "version": ">= 10.0.0",
-    "appVersionSource": "local"
+    "appVersionSource": "local",
+    "promptToConfigurePushNotifications": false
   },
   "build": {
     "development": {
@@ -47,7 +48,7 @@
       },
       "ios": {
         "appleId": "eduallochio2@outlook.com",
-        "ascAppId": "PREENCHER_APOS_REGISTRAR_NO_APP_STORE_CONNECT",
+        "ascAppId": "6805629952",
         "appleTeamId": "N653AFFA77"
       }
     }
