@@ -25,9 +25,20 @@ type WalkReport = {
   pet_ids: string[] | null;
   owner_name?: string;
   owner_id: string;
+  service_type?: string;  // 'walk' para walk_reports, outro tipo para schedules
+  source: 'report' | 'schedule';
 };
 
 type LinkedPet = { id: string; name: string };
+
+const SERVICE_TYPE_LABELS: Record<string, string> = {
+  walk:      'Passeio',
+  daycare:   'Creche',
+  boarding:  'Hospedagem',
+  training:  'Adestramento',
+  bath:      'Banho e Tosa',
+  vet_visit: 'Visita ao Vet',
+};
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', {
@@ -49,41 +60,78 @@ export default function HistoricoScreen() {
   const [reports, setReports]         = useState<WalkReport[]>([]);
   const [pets, setPets]               = useState<LinkedPet[]>([]);
   const [petNamesMap, setPetNamesMap] = useState<Record<string, string>>({});
-  const [selectedPet, setSelectedPet] = useState<string | null>(null);
-  const [loading, setLoading]         = useState(true);
-  const [refreshing, setRefreshing]   = useState(false);
+  const [selectedPet, setSelectedPet]           = useState<string | null>(null);
+  const [selectedService, setSelectedService]   = useState<string | null>(null);
+  const [loading, setLoading]                   = useState(true);
+  const [refreshing, setRefreshing]             = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!walkerProfile) return;
 
     const limits = getLimits(walkerProfile);
+
+    // 1. walk_reports (passeios com GPS)
     const historyQuery = supabase
       .from('walk_reports')
       .select('id, session_id, duration_minutes, distance_meters, pee_count, poop_count, note_count, notes, photos, sent_at, pet_ids, owner_id')
       .eq('walker_id', walkerProfile.id)
       .order('sent_at', { ascending: false });
-
     if (isFinite(limits.reportDays)) {
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - limits.reportDays);
       historyQuery.gte('sent_at', cutoff.toISOString());
     }
 
-    const reportsRes = await historyQuery;
+    // 2. schedules concluídos de outros tipos de serviço
+    const schedulesQuery = supabase
+      .from('walk_schedules')
+      .select('id, scheduled_at, duration_minutes, pet_ids, notes, owner_id, walker_services(type)')
+      .eq('walker_id', walkerProfile.id)
+      .eq('status', 'done')
+      .order('scheduled_at', { ascending: false });
 
-    const raw = (reportsRes.data ?? []) as WalkReport[];
+    const [reportsRes, schedulesRes] = await Promise.all([historyQuery, schedulesQuery]);
 
-    // Coletar todos os pet_ids únicos de todos os reports
+    const rawReports: WalkReport[] = ((reportsRes.data ?? []) as any[]).map((r) => ({
+      ...r,
+      service_type: 'walk',
+      source: 'report' as const,
+      pee_count: r.pee_count ?? 0,
+      poop_count: r.poop_count ?? 0,
+      note_count: r.note_count ?? 0,
+      photos: r.photos ?? [],
+    }));
+
+    // Schedules concluídos que NÃO são passeio (passeio já vem pelo walk_reports)
+    const rawSchedules: WalkReport[] = ((schedulesRes.data ?? []) as any[])
+      .filter((s) => s.walker_services?.type && s.walker_services.type !== 'walk')
+      .map((s) => ({
+        id: `sched_${s.id}`,
+        session_id: null,
+        duration_minutes: s.duration_minutes ?? null,
+        distance_meters: null,
+        pee_count: 0,
+        poop_count: 0,
+        note_count: 0,
+        notes: s.notes ?? null,
+        photos: [],
+        sent_at: s.scheduled_at,
+        pet_ids: s.pet_ids ?? [],
+        owner_id: s.owner_id,
+        service_type: s.walker_services?.type ?? 'other',
+        source: 'schedule' as const,
+      }));
+
+    const raw = [...rawReports, ...rawSchedules].sort(
+      (a, b) => new Date(b.sent_at).getTime() - new Date(a.sent_at).getTime()
+    );
+
+    // Pet IDs únicos
     const allPetIds = [...new Set(raw.flatMap((r) => r.pet_ids ?? []))];
-
-    // Buscar nomes direto da tabela pets (não só os ativos)
     let petList: LinkedPet[] = [];
     let namesMap: Record<string, string> = {};
     if (allPetIds.length > 0) {
-      const { data: petsData } = await supabase
-        .from('pets')
-        .select('id, name')
-        .in('id', allPetIds);
+      const { data: petsData } = await supabase.from('pets').select('id, name').in('id', allPetIds);
       (petsData ?? []).forEach((p: any) => { namesMap[p.id] = p.name; });
       petList = (petsData ?? []).map((p: any) => ({ id: p.id, name: p.name }));
     }
@@ -94,8 +142,7 @@ export default function HistoricoScreen() {
     const ownerIds = [...new Set(raw.map((r) => r.owner_id))];
     let ownerNamesMap: Record<string, string> = {};
     if (ownerIds.length > 0) {
-      const { data: owners } = await supabase
-        .from('user_profiles').select('user_id,name').in('user_id', ownerIds);
+      const { data: owners } = await supabase.from('user_profiles').select('user_id,name').in('user_id', ownerIds);
       (owners ?? []).forEach((o: any) => { ownerNamesMap[o.user_id] = o.name; });
     }
 
@@ -105,13 +152,19 @@ export default function HistoricoScreen() {
   useEffect(() => { fetchData().finally(() => setLoading(false)); }, [fetchData]);
   const onRefresh = async () => { setRefreshing(true); await fetchData(); setRefreshing(false); };
 
-  // Filtro por pet
-  const filtered = useMemo(() =>
-    selectedPet
-      ? reports.filter((r) => r.pet_ids?.includes(selectedPet))
-      : reports,
-    [reports, selectedPet]
-  );
+  // Tipos de serviço presentes no histórico
+  const serviceTypes = useMemo(() => {
+    const types = [...new Set(reports.map((r) => r.service_type ?? 'walk'))];
+    return types;
+  }, [reports]);
+
+  // Filtro por pet e por tipo de serviço
+  const filtered = useMemo(() => {
+    let result = reports;
+    if (selectedService) result = result.filter((r) => (r.service_type ?? 'walk') === selectedService);
+    if (selectedPet) result = result.filter((r) => r.pet_ids?.includes(selectedPet));
+    return result;
+  }, [reports, selectedPet, selectedService]);
 
   // Totais do filtro atual
   const totalMinutes  = filtered.reduce((s, r) => s + (r.duration_minutes ?? 0), 0);
@@ -142,7 +195,7 @@ export default function HistoricoScreen() {
           <View style={styles.statCard}>
             <Ionicons name="paw-outline" size={16} color={Colors.primary} />
             <Text style={styles.statValue}>{filtered.length}</Text>
-            <Text style={styles.statLabel}>passeios</Text>
+            <Text style={styles.statLabel}>serviços</Text>
           </View>
           <View style={styles.statCard}>
             <Ionicons name="time-outline" size={16} color={Colors.primary} />
@@ -155,6 +208,29 @@ export default function HistoricoScreen() {
             <Text style={styles.statLabel}>percorridos</Text>
           </View>
         </View>
+
+        {/* Filtro por tipo de serviço — só aparece se houver mais de 1 tipo */}
+        {serviceTypes.length > 1 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+            <TouchableOpacity
+              style={[styles.filterChip, selectedService === null && styles.filterChipActive]}
+              onPress={() => setSelectedService(null)}
+            >
+              <Text style={[styles.filterChipText, selectedService === null && styles.filterChipTextActive]}>Todos</Text>
+            </TouchableOpacity>
+            {serviceTypes.map((type) => (
+              <TouchableOpacity
+                key={type}
+                style={[styles.filterChip, selectedService === type && styles.filterChipActive]}
+                onPress={() => setSelectedService(selectedService === type ? null : type)}
+              >
+                <Text style={[styles.filterChipText, selectedService === type && styles.filterChipTextActive]}>
+                  {SERVICE_TYPE_LABELS[type] ?? type}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
 
         {/* Filtro por pet */}
         {pets.length > 0 && (
@@ -191,12 +267,12 @@ export default function HistoricoScreen() {
           <View style={styles.empty}>
             <Ionicons name="paw-outline" size={48} color={Colors.border} />
             <Text style={styles.emptyTitle}>
-              {selectedPet ? 'Nenhum passeio com este pet' : 'Nenhum passeio ainda'}
+              {selectedPet ? 'Nenhum serviço com este pet' : 'Nenhum serviço ainda'}
             </Text>
             <Text style={styles.emptyText}>
               {selectedPet
-                ? 'Nenhum passeio registrado para este pet. Tente outro filtro.'
-                : 'Quando você finalizar um passeio, ele aparecerá aqui.'}
+                ? 'Nenhum serviço registrado para este pet. Tente outro filtro.'
+                : 'Quando você finalizar um serviço, ele aparecerá aqui.'}
             </Text>
           </View>
         ) : (
@@ -205,8 +281,8 @@ export default function HistoricoScreen() {
               <TouchableOpacity
                 key={report.id}
                 style={styles.card}
-                activeOpacity={0.75}
-                onPress={() => router.push(`/walk-report-detail?id=${report.id}` as any)}
+                activeOpacity={report.source === 'report' ? 0.75 : 1}
+                onPress={() => report.source === 'report' && router.push(`/walk-report-detail?id=${report.id}` as any)}
               >
                 {/* Topo */}
                 <View style={styles.cardTop}>
@@ -217,9 +293,16 @@ export default function HistoricoScreen() {
                     <Text style={styles.cardOwner}>{report.owner_name}</Text>
                     <Text style={styles.cardDate}>{formatDate(report.sent_at)}</Text>
                   </View>
-                  <View style={styles.completedBadge}>
-                    <Ionicons name="checkmark-circle" size={13} color="#10B981" />
-                    <Text style={styles.completedText}>Concluído</Text>
+                  <View style={styles.badgeRow}>
+                    {report.service_type && report.service_type !== 'walk' && (
+                      <View style={styles.serviceTypeBadge}>
+                        <Text style={styles.serviceTypeText}>{SERVICE_TYPE_LABELS[report.service_type] ?? report.service_type}</Text>
+                      </View>
+                    )}
+                    <View style={styles.completedBadge}>
+                      <Ionicons name="checkmark-circle" size={13} color="#10B981" />
+                      <Text style={styles.completedText}>Concluído</Text>
+                    </View>
                   </View>
                 </View>
 
@@ -251,10 +334,12 @@ export default function HistoricoScreen() {
                       <Text style={styles.chipText}>{(report.distance_meters / 1000).toFixed(2)} km</Text>
                     </View>
                   )}
-                  <View style={styles.chip}>
-                    <Ionicons name="chevron-forward" size={12} color={Colors.textSecondary} />
-                    <Text style={styles.chipText}>Ver detalhes</Text>
-                  </View>
+                  {report.source === 'report' && (
+                    <View style={styles.chip}>
+                      <Ionicons name="chevron-forward" size={12} color={Colors.textSecondary} />
+                      <Text style={styles.chipText}>Ver detalhes</Text>
+                    </View>
+                  )}
                 </View>
 
                 {/* Eventos */}
@@ -340,6 +425,12 @@ const styles = StyleSheet.create({
   },
   cardOwner: { fontSize: 14, fontWeight: '700', color: Colors.text },
   cardDate: { fontSize: 11, color: Colors.textSecondary, marginTop: 1 },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  serviceTypeBadge: {
+    backgroundColor: `${Colors.primary}15`, borderRadius: 20,
+    paddingHorizontal: 8, paddingVertical: 3,
+  },
+  serviceTypeText: { fontSize: 11, fontWeight: '600', color: Colors.primary },
   completedBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: '#10B98115', borderRadius: 20,
