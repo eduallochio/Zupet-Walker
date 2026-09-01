@@ -39,7 +39,9 @@ export function setNotificationRouter(router: RouterLike) {
 function navigateFromNotificationData(data: Record<string, any>) {
   if (!_router) return;
   const type = data?.type as string | undefined;
-  if (type === 'pet_link_request' || type === 'pet_link_accepted' || type === 'pet_link_rejected') {
+  if (type === 'new_schedule') {
+    _router.push('/(tabs)/agenda');
+  } else if (type === 'pet_link_request' || type === 'pet_link_accepted' || type === 'pet_link_rejected') {
     _router.push('/(tabs)/pets');
   } else if (type === 'walk_report' || type === 'walk_session') {
     _router.push('/(tabs)');
