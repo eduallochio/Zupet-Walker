@@ -514,13 +514,13 @@ export default function AgendaScreen() {
                 <Ionicons name="close" size={22} color={Colors.textSecondary} />
               </TouchableOpacity>
             </View>
-            <Text style={[styles.modalSub, { marginBottom: 12 }]}>Todos os agendamentos</Text>
+            <Text style={[styles.modalSub, { marginBottom: 12 }]}>Serviços concluídos</Text>
             <FlatList
-              data={[...schedules].sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())}
+              data={[...schedules].filter((s) => s.status === 'done').sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())}
               keyExtractor={(item) => item.id}
               showsVerticalScrollIndicator={false}
               ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-              ListEmptyComponent={<Text style={{ color: Colors.textSecondary, textAlign: 'center', marginTop: 20 }}>Nenhum agendamento ainda.</Text>}
+              ListEmptyComponent={<Text style={{ color: Colors.textSecondary, textAlign: 'center', marginTop: 20 }}>Nenhum serviço concluído ainda.</Text>}
               renderItem={({ item }) => {
                 const cfg = statusConfig[item.status];
                 const time = new Date(item.scheduled_at);
@@ -535,9 +535,9 @@ export default function AgendaScreen() {
                         <View style={[styles.statusChip, { backgroundColor: `${cfg.color}18` }]}>
                           <Text style={[styles.statusText, { color: cfg.color }]}>{cfg.label}</Text>
                         </View>
-                        {item.service_type && item.service_type !== 'walk' && (
+                        {item.service_type && (
                           <View style={styles.serviceChip}>
-                            <Text style={styles.serviceChipText}>{SERVICE_TYPE_LABELS[item.service_type]}</Text>
+                            <Text style={styles.serviceChipText}>{SERVICE_TYPE_LABELS[item.service_type] ?? item.service_type}</Text>
                           </View>
                         )}
                       </View>
