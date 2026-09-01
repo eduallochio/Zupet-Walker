@@ -33,6 +33,15 @@ const BILLING_LABEL: Record<string, string> = {
   monthly:     'Mensal',
 };
 
+const SERVICE_TYPE_LABEL: Record<string, string> = {
+  walk:      'Passeio',
+  bath:      'Banho e Tosa',
+  boarding:  'Hospedagem',
+  daycare:   'Creche',
+  vet_visit: 'Visita ao Vet',
+  training:  'Adestramento',
+};
+
 const STATUS_COLOR: Record<string, string> = {
   pending:   '#F59E0B',
   paid:      '#10B981',
@@ -208,7 +217,7 @@ export default function PaymentsScreen() {
               <View key={payment.id} style={[styles.card, { borderLeftColor: STATUS_COLOR[payment.status] }]}>
                 <View style={styles.cardTop}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.cardDesc}>{payment.description ?? payment.service_type ?? '—'}</Text>
+                    <Text style={styles.cardDesc}>{payment.description ?? SERVICE_TYPE_LABEL[payment.service_type ?? ''] ?? payment.service_type ?? '—'}</Text>
                     <Text style={styles.cardOwner}>{payment.owner_name}</Text>
                   </View>
                   <View style={styles.cardRight}>
