@@ -54,6 +54,8 @@ function formatDuration(min: number) {
   return m > 0 ? `${h}h ${m}min` : `${h}h`;
 }
 
+const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
 export default function HistoricoScreen() {
   const router = useRouter();
   const walkerProfile = useAuthStore((s) => s.walkerProfile);
@@ -66,44 +68,68 @@ export default function HistoricoScreen() {
   const [refreshing, setRefreshing]             = useState(false);
   const [monthEarnings, setMonthEarnings]       = useState<{ current: number; prev: number; count: number } | null>(null);
 
+  const now = new Date();
+  const [viewYear, setViewYear]   = useState(now.getFullYear());
+  const [viewMonth, setViewMonth] = useState(now.getMonth());
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewYear((y) => y - 1); setViewMonth(11); }
+    else setViewMonth((m) => m - 1);
+  };
+  const nextMonth = () => {
+    const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth();
+    if (isCurrentMonth) return; // não avança além do mês atual
+    if (viewMonth === 11) { setViewYear((y) => y + 1); setViewMonth(0); }
+    else setViewMonth((m) => m + 1);
+  };
+  const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth();
+
   const fetchData = useCallback(async () => {
     if (!walkerProfile) return;
 
     const limits = getLimits(walkerProfile);
 
-    // 1. walk_reports (passeios com GPS)
+    const monthStart = new Date(viewYear, viewMonth, 1);
+    const monthEnd   = new Date(viewYear, viewMonth + 1, 0, 23, 59, 59, 999);
+
+    // 1. walk_reports (passeios com GPS) — filtrados pelo mês selecionado
     const historyQuery = supabase
       .from('walk_reports')
       .select('id, session_id, duration_minutes, distance_meters, pee_count, poop_count, note_count, notes, photos, sent_at, pet_ids, owner_id')
       .eq('walker_id', walkerProfile.id)
+      .gte('sent_at', monthStart.toISOString())
+      .lte('sent_at', monthEnd.toISOString())
       .order('sent_at', { ascending: false });
+    // plano free só limita em meses recentes (não bloqueia por data de mês selecionado)
     if (isFinite(limits.reportDays)) {
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - limits.reportDays);
-      historyQuery.gte('sent_at', cutoff.toISOString());
+      if (monthStart < cutoff) historyQuery.gte('sent_at', cutoff.toISOString());
     }
 
-    // 2. schedules concluídos de outros tipos de serviço
+    // 2. schedules concluídos no mês selecionado
     const schedulesQuery = supabase
       .from('walk_schedules')
       .select('id, scheduled_at, duration_minutes, pet_ids, notes, owner_id, walker_services(type)')
       .eq('walker_id', walkerProfile.id)
       .eq('status', 'done')
+      .gte('scheduled_at', monthStart.toISOString())
+      .lte('scheduled_at', monthEnd.toISOString())
       .order('scheduled_at', { ascending: false });
 
-    // 3. Pagamentos para resumo mensal
-    const now = new Date();
-    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const firstOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+    // 3. Pagamentos do mês selecionado e do mês anterior (para comparação)
+    const firstOfPrevMonth = new Date(viewYear, viewMonth - 1, 1).toISOString();
     const paymentsQuery = supabase
       .from('walker_payments')
       .select('amount, status, paid_at, created_at')
       .eq('walker_id', walkerProfile.id)
       .in('status', ['paid', 'pending'])
-      .gte('created_at', firstOfPrevMonth);
+      .gte('created_at', firstOfPrevMonth)
+      .lte('created_at', monthEnd.toISOString());
 
     const [reportsRes, schedulesRes, paymentsRes] = await Promise.all([historyQuery, schedulesQuery, paymentsQuery]);
 
+    const firstOfMonth = monthStart.toISOString();
     const payments = (paymentsRes.data ?? []) as { amount: number; status: string; paid_at: string | null; created_at: string }[];
     const currentMonthTotal = payments
       .filter((p) => p.created_at >= firstOfMonth)
@@ -169,9 +195,15 @@ export default function HistoricoScreen() {
     }
 
     setReports(raw.map((r) => ({ ...r, owner_name: ownerNamesMap[r.owner_id] ?? '—' })));
-  }, [walkerProfile]);
+  }, [walkerProfile, viewYear, viewMonth]);
 
-  useEffect(() => { fetchData().finally(() => setLoading(false)); }, [fetchData]);
+  useEffect(() => {
+    setLoading(true);
+    setSelectedPet(null);
+    setSelectedService(null);
+    fetchData().finally(() => setLoading(false));
+  }, [fetchData]);
+
   const onRefresh = async () => { setRefreshing(true); await fetchData(); setRefreshing(false); };
 
   // Tipos de serviço presentes no histórico
@@ -196,6 +228,15 @@ export default function HistoricoScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Histórico</Text>
+        <View style={styles.monthNav}>
+          <TouchableOpacity onPress={prevMonth} style={styles.monthNavBtn}>
+            <Ionicons name="chevron-back" size={20} color={Colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.monthNavLabel}>{MONTHS_PT[viewMonth]} {viewYear}</Text>
+          <TouchableOpacity onPress={nextMonth} style={styles.monthNavBtn} disabled={isCurrentMonth}>
+            <Ionicons name="chevron-forward" size={20} color={isCurrentMonth ? Colors.border : Colors.text} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {walkerProfile?.plan !== 'pro' && (
@@ -218,7 +259,7 @@ export default function HistoricoScreen() {
             <View style={styles.monthCardTop}>
               <View>
                 <Text style={styles.monthLabel}>
-                  {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                  {new Date(viewYear, viewMonth, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
                 </Text>
                 <Text style={styles.monthValue}>
                   {monthEarnings.current.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -444,7 +485,10 @@ export default function HistoricoScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
+  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12, gap: 12 },
+  monthNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.card, borderRadius: 12, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 4, paddingVertical: 2 },
+  monthNavBtn: { padding: 8 },
+  monthNavLabel: { fontSize: 15, fontWeight: '700', color: Colors.text },
 
   monthCard: {
     backgroundColor: Colors.primary, borderRadius: 18,
