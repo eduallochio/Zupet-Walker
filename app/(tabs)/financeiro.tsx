@@ -64,6 +64,7 @@ export default function HistoricoScreen() {
   const [selectedService, setSelectedService]   = useState<string | null>(null);
   const [loading, setLoading]                   = useState(true);
   const [refreshing, setRefreshing]             = useState(false);
+  const [monthEarnings, setMonthEarnings]       = useState<{ current: number; prev: number; count: number } | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!walkerProfile) return;
@@ -90,7 +91,28 @@ export default function HistoricoScreen() {
       .eq('status', 'done')
       .order('scheduled_at', { ascending: false });
 
-    const [reportsRes, schedulesRes] = await Promise.all([historyQuery, schedulesQuery]);
+    // 3. Pagamentos para resumo mensal
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const firstOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+    const paymentsQuery = supabase
+      .from('walker_payments')
+      .select('amount, status, paid_at, created_at')
+      .eq('walker_id', walkerProfile.id)
+      .in('status', ['paid', 'pending'])
+      .gte('created_at', firstOfPrevMonth);
+
+    const [reportsRes, schedulesRes, paymentsRes] = await Promise.all([historyQuery, schedulesQuery, paymentsQuery]);
+
+    const payments = (paymentsRes.data ?? []) as { amount: number; status: string; paid_at: string | null; created_at: string }[];
+    const currentMonthTotal = payments
+      .filter((p) => p.created_at >= firstOfMonth)
+      .reduce((sum, p) => sum + (p.amount ?? 0), 0);
+    const prevMonthTotal = payments
+      .filter((p) => p.created_at >= firstOfPrevMonth && p.created_at < firstOfMonth)
+      .reduce((sum, p) => sum + (p.amount ?? 0), 0);
+    const currentMonthCount = payments.filter((p) => p.created_at >= firstOfMonth).length;
+    setMonthEarnings({ current: currentMonthTotal, prev: prevMonthTotal, count: currentMonthCount });
 
     const rawReports: WalkReport[] = ((reportsRes.data ?? []) as any[]).map((r) => ({
       ...r,
@@ -190,7 +212,49 @@ export default function HistoricoScreen() {
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
       >
-        {/* Totais */}
+        {/* Resumo mensal */}
+        {monthEarnings !== null && (
+          <View style={styles.monthCard}>
+            <View style={styles.monthCardTop}>
+              <View>
+                <Text style={styles.monthLabel}>
+                  {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                </Text>
+                <Text style={styles.monthValue}>
+                  {monthEarnings.current.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </Text>
+                <Text style={styles.monthSub}>{monthEarnings.count} serviço{monthEarnings.count !== 1 ? 's' : ''} no mês</Text>
+              </View>
+              {monthEarnings.prev > 0 && (
+                <View style={[
+                  styles.monthDelta,
+                  { backgroundColor: monthEarnings.current >= monthEarnings.prev ? '#10B98115' : '#EF444415' },
+                ]}>
+                  <Ionicons
+                    name={monthEarnings.current >= monthEarnings.prev ? 'trending-up' : 'trending-down'}
+                    size={14}
+                    color={monthEarnings.current >= monthEarnings.prev ? '#10B981' : '#EF4444'}
+                  />
+                  <Text style={[
+                    styles.monthDeltaText,
+                    { color: monthEarnings.current >= monthEarnings.prev ? '#10B981' : '#EF4444' },
+                  ]}>
+                    {monthEarnings.prev > 0
+                      ? `${((monthEarnings.current - monthEarnings.prev) / monthEarnings.prev * 100).toFixed(0)}%`
+                      : '—'}
+                  </Text>
+                </View>
+              )}
+            </View>
+            {monthEarnings.prev > 0 && (
+              <Text style={styles.monthPrev}>
+                Mês anterior: {monthEarnings.prev.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {/* Totais do filtro */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Ionicons name="paw-outline" size={16} color={Colors.primary} />
@@ -381,6 +445,18 @@ export default function HistoricoScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
+
+  monthCard: {
+    backgroundColor: Colors.primary, borderRadius: 18,
+    padding: 18, gap: 10,
+  },
+  monthCardTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  monthLabel: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.75)', textTransform: 'capitalize', marginBottom: 4 },
+  monthValue: { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  monthSub: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  monthDelta: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  monthDeltaText: { fontSize: 13, fontWeight: '700' },
+  monthPrev: { fontSize: 12, color: 'rgba(255,255,255,0.65)' },
   planBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     marginHorizontal: 20, marginBottom: 4, marginTop: 4,

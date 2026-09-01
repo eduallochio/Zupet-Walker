@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Modal, FlatList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
@@ -9,7 +9,7 @@ import { sendPushToOwner } from '../../services/ownerPushService';
 
 type ScheduleStatus = 'proposed' | 'confirmed' | 'cancelled' | 'done' | 'overdue';
 
-type PetInfo = { id: string; name: string };
+type PetInfo = { id: string; name: string; avatar_url?: string | null };
 
 type Schedule = {
   id: string;
@@ -22,6 +22,7 @@ type Schedule = {
   service_id?: string | null;
   service_type?: string;
   petNames?: string[];
+  petAvatars?: (string | null)[];
 };
 
 const SERVICE_TYPE_LABELS: Record<string, string> = {
@@ -94,19 +95,20 @@ export default function AgendaScreen() {
 
     // Resolve nomes dos pets para todos os schedules em uma única query
     const allPetIds = [...new Set(rows.flatMap((s) => s.pet_ids ?? []))];
-    let petMap: Record<string, string> = {};
+    let petMap: Record<string, PetInfo> = {};
     if (allPetIds.length > 0) {
       const { data: petsData } = await supabase
         .from('pets')
-        .select('id, name')
+        .select('id, name, avatar_url')
         .in('id', allPetIds);
-      petMap = Object.fromEntries((petsData as PetInfo[] ?? []).map((p) => [p.id, p.name]));
+      petMap = Object.fromEntries((petsData as PetInfo[] ?? []).map((p) => [p.id, p]));
     }
 
     const enriched = rows.map((s: any) => ({
       ...s,
       service_type: s.walker_services?.type ?? 'walk',
-      petNames: (s.pet_ids ?? []).map((id: string) => petMap[id] ?? '—'),
+      petNames: (s.pet_ids ?? []).map((id: string) => petMap[id]?.name ?? '—'),
+      petAvatars: (s.pet_ids ?? []).map((id: string) => petMap[id]?.avatar_url ?? null),
     }));
     schedulesRef.current = enriched;
     setSchedules(enriched);
@@ -351,7 +353,15 @@ export default function AgendaScreen() {
                         )}
                       </View>
                       <View style={styles.cardPets}>
-                        <Ionicons name="paw-outline" size={12} color={Colors.textSecondary} />
+                        {(item.petAvatars ?? []).slice(0, 3).map((uri, i) =>
+                          uri ? (
+                            <Image key={i} source={{ uri }} style={styles.petAvatar} />
+                          ) : (
+                            <View key={i} style={styles.petAvatarPlaceholder}>
+                              <Ionicons name="paw" size={10} color={Colors.primary} />
+                            </View>
+                          )
+                        )}
                         <Text style={styles.cardPetsText}>
                           {item.petNames && item.petNames.length > 0
                             ? item.petNames.join(', ')
@@ -433,7 +443,15 @@ export default function AgendaScreen() {
                         )}
                       </View>
                       <View style={styles.cardPets}>
-                        <Ionicons name="paw-outline" size={12} color={Colors.textSecondary} />
+                        {(item.petAvatars ?? []).slice(0, 3).map((uri, i) =>
+                          uri ? (
+                            <Image key={i} source={{ uri }} style={styles.petAvatar} />
+                          ) : (
+                            <View key={i} style={styles.petAvatarPlaceholder}>
+                              <Ionicons name="paw" size={10} color={Colors.primary} />
+                            </View>
+                          )
+                        )}
                         <Text style={styles.cardPetsText}>
                           {item.petNames && item.petNames.length > 0
                             ? item.petNames.join(', ')
@@ -542,7 +560,15 @@ export default function AgendaScreen() {
                         )}
                       </View>
                       <View style={styles.cardPets}>
-                        <Ionicons name="paw-outline" size={12} color={Colors.textSecondary} />
+                        {(item.petAvatars ?? []).slice(0, 3).map((uri, i) =>
+                          uri ? (
+                            <Image key={i} source={{ uri }} style={styles.petAvatar} />
+                          ) : (
+                            <View key={i} style={styles.petAvatarPlaceholder}>
+                              <Ionicons name="paw" size={10} color={Colors.primary} />
+                            </View>
+                          )
+                        )}
                         <Text style={styles.cardPetsText}>
                           {item.petNames && item.petNames.length > 0
                             ? item.petNames.join(', ')
@@ -647,8 +673,14 @@ const styles = StyleSheet.create({
   cardTop: { flexDirection: 'row', alignItems: 'center' },
   statusChip: { borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3 },
   statusText: { fontSize: 11, fontWeight: '600' },
-  cardPets: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  cardPetsText: { fontSize: 12, color: Colors.textSecondary },
+  cardPets: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  cardPetsText: { fontSize: 12, color: Colors.textSecondary, flexShrink: 1 },
+  petAvatar: { width: 20, height: 20, borderRadius: 10, borderWidth: 1, borderColor: Colors.border },
+  petAvatarPlaceholder: {
+    width: 20, height: 20, borderRadius: 10,
+    backgroundColor: `${Colors.primary}18`,
+    alignItems: 'center', justifyContent: 'center',
+  },
   cardNotes: { fontSize: 12, color: Colors.textSecondary },
 
   actionRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
