@@ -15,6 +15,12 @@ export function ProfileAvailability() {
 
   const hasData = availDays.length > 0 || startTime;
 
+  const blockedDays: string[] = (walkerProfile as any)?.blocked_days ?? [];
+  const upcomingBlocked = blockedDays
+    .filter((k) => new Date(k) >= new Date(new Date().toDateString()))
+    .sort()
+    .slice(0, 2);
+
   return (
     <View style={styles.section}>
       <View style={styles.titleRow}>
@@ -53,6 +59,28 @@ export function ProfileAvailability() {
           )}
         </View>
       )}
+
+      {/* Dias de folga */}
+      <TouchableOpacity style={styles.vacationBtn} onPress={() => router.push('/blocked-days' as any)} activeOpacity={0.8}>
+        <Ionicons name="close-circle-outline" size={16} color={Colors.error} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.vacationText}>
+            {upcomingBlocked.length === 0
+              ? 'Gerenciar dias de folga'
+              : `${blockedDays.filter((k) => new Date(k) >= new Date(new Date().toDateString())).length} dia(s) bloqueado(s)`
+            }
+          </Text>
+          {upcomingBlocked.length > 0 && (
+            <Text style={styles.vacationSub}>
+              {upcomingBlocked.map((k) => {
+                const d = new Date(k + 'T12:00:00');
+                return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+              }).join(', ')}
+            </Text>
+          )}
+        </View>
+        <Ionicons name="chevron-forward" size={14} color={Colors.error} />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -85,4 +113,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14,
   },
   emptyText: { flex: 1, fontSize: 13, color: Colors.textSecondary },
+
+  vacationBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: `${Colors.error}08`, borderRadius: 12,
+    borderWidth: 1, borderColor: `${Colors.error}25`,
+    padding: 12, marginTop: 8,
+  },
+  vacationText: { fontSize: 13, fontWeight: '600', color: Colors.error },
+  vacationSub: { fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
 });
