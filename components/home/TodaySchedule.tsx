@@ -6,12 +6,23 @@ import { Colors } from '../../constants/colors';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../services/supabase';
 
+const SERVICE_TYPE_LABELS: Record<string, string> = {
+  walk:     'Passeio',
+  daycare:  'Creche',
+  boarding: 'Hospedagem',
+  grooming: 'Banho e tosa',
+  training: 'Adestramento',
+  vet:      'Veterinário',
+  other:    'Outro',
+};
+
 type Schedule = {
   id: string;
   scheduled_at: string;
   status: string;
   pet_ids: string[];
   notes: string | null;
+  service_type?: string;
 };
 
 function formatTime(iso: string) {
@@ -44,14 +55,17 @@ export function TodaySchedule() {
 
     supabase
       .from('walk_schedules')
-      .select('id, scheduled_at, status, pet_ids, notes')
+      .select('id, scheduled_at, status, pet_ids, notes, walker_services(type)')
       .eq('walker_id', walkerProfile.id)
       .gte('scheduled_at', todayStart.toISOString())
       .lte('scheduled_at', todayEnd.toISOString())
       .neq('status', 'cancelled')
       .order('scheduled_at', { ascending: true })
       .then(({ data }) => {
-        setSchedules((data ?? []) as Schedule[]);
+        setSchedules(((data ?? []) as any[]).map((r) => ({
+          ...r,
+          service_type: (r.walker_services as any)?.type ?? 'walk',
+        })));
         setLoading(false);
       });
   }, [walkerProfile?.id]);
@@ -74,7 +88,16 @@ export function TodaySchedule() {
             <View key={s.id} style={[styles.row, i < schedules.length - 1 && styles.rowBorder]}>
               <View style={[styles.dot, { backgroundColor: color }]} />
               <View style={styles.rowBody}>
-                <Text style={styles.time}>{formatTime(s.scheduled_at)}</Text>
+                <View style={styles.timeRow}>
+                  <Text style={styles.time}>{formatTime(s.scheduled_at)}</Text>
+                  {s.service_type && s.service_type !== 'walk' && (
+                    <View style={styles.typeChip}>
+                      <Text style={styles.typeChipText}>
+                        {SERVICE_TYPE_LABELS[s.service_type] ?? s.service_type}
+                      </Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={styles.petCount}>
                   {s.pet_ids.length} pet{s.pet_ids.length !== 1 ? 's' : ''}
                   {s.notes ? ` · ${s.notes}` : ''}
@@ -107,7 +130,13 @@ const styles = StyleSheet.create({
   rowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
   dot: { width: 8, height: 8, borderRadius: 4 },
   rowBody: { flex: 1 },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   time: { fontSize: 14, fontWeight: '700', color: Colors.text },
+  typeChip: {
+    backgroundColor: `${Colors.primary}15`, borderRadius: 10,
+    paddingHorizontal: 7, paddingVertical: 2,
+  },
+  typeChipText: { fontSize: 10, fontWeight: '600', color: Colors.primary },
   petCount: { fontSize: 12, color: Colors.textSecondary, marginTop: 1 },
   statusChip: { borderRadius: 20, paddingHorizontal: 9, paddingVertical: 4 },
   statusText: { fontSize: 11, fontWeight: '600' },

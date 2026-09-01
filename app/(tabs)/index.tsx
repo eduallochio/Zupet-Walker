@@ -10,12 +10,30 @@ import { supabase } from '../../services/supabase';
 import { TodaySchedule } from '../../components/home/TodaySchedule';
 import type { LinkedPet } from '../../types/walker';
 
+const SERVICE_TYPE_LABELS: Record<string, string> = {
+  walk:      'Passeio',
+  daycare:   'Creche',
+  boarding:  'Hospedagem',
+  grooming:  'Banho e tosa',
+  training:  'Adestramento',
+  vet:       'Veterinário',
+  other:     'Outro',
+};
+
 function getGreeting() {
   const h = new Date().getHours();
   if (h < 12) return 'Bom dia';
   if (h < 18) return 'Boa tarde';
   return 'Boa noite';
 }
+
+type NextSchedule = {
+  id: string;
+  scheduled_at: string;
+  service_type: string;
+  pet_ids: string[];
+  petNames: string[];
+};
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -24,7 +42,9 @@ export default function HomeScreen() {
   const firstName     = walkerProfile?.name?.split(' ')[0] ?? 'Walker';
 
   const [pets, setPets] = useState<LinkedPet[]>([]);
-  const [totalSessions, setTotalSessions] = useState(0);
+  const [totalServices, setTotalServices] = useState(0);
+  const [weekEarnings, setWeekEarnings]   = useState<number | null>(null);
+  const [nextSchedule, setNextSchedule]   = useState<NextSchedule | null>(null);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -44,7 +64,11 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!walkerProfile) return;
     (async () => {
-      const [petsRes, sessionsRes] = await Promise.all([
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // domingo
+      weekStart.setHours(0, 0, 0, 0);
+
+      const [petsRes, sessionsRes, schedulesRes, paymentsRes, nextRes] = await Promise.all([
         supabase
           .from('walker_pet_links')
           .select('id, walker_id, pet_id, owner_id, status, linked_at, pet:pets(id,name,breed,photo_uri)')
@@ -54,8 +78,29 @@ export default function HomeScreen() {
           .from('walk_sessions')
           .select('id', { count: 'exact', head: true })
           .eq('walker_id', walkerProfile.id),
+        supabase
+          .from('walk_schedules')
+          .select('id', { count: 'exact', head: true })
+          .eq('walker_id', walkerProfile.id)
+          .eq('status', 'done'),
+        supabase
+          .from('walker_payments')
+          .select('amount')
+          .eq('walker_id', walkerProfile.id)
+          .in('status', ['paid', 'pending'])
+          .gte('created_at', weekStart.toISOString()),
+        supabase
+          .from('walk_schedules')
+          .select('id, scheduled_at, service_id, pet_ids, walker_services(type)')
+          .eq('walker_id', walkerProfile.id)
+          .eq('status', 'confirmed')
+          .gt('scheduled_at', new Date().toISOString())
+          .order('scheduled_at', { ascending: true })
+          .limit(1),
       ]);
+
       if (__DEV__ && petsRes.error) console.warn('[HomeScreen] pets query error:', petsRes.error);
+
       const rows = (petsRes.data as any[]) ?? [];
       const ownerIds = [...new Set(rows.map((r) => r.owner_id).filter(Boolean))];
       let ownersMap: Record<string, any> = {};
@@ -67,7 +112,33 @@ export default function HomeScreen() {
         if (owners) owners.forEach((o: any) => { ownersMap[o.user_id] = o; });
       }
       setPets(rows.map((r) => ({ ...r, owner: ownersMap[r.owner_id] ?? null })) as LinkedPet[]);
-      setTotalSessions(sessionsRes.count ?? 0);
+
+      const total = (sessionsRes.count ?? 0) + (schedulesRes.count ?? 0);
+      setTotalServices(total);
+
+      const earnings = ((paymentsRes.data ?? []) as any[]).reduce((s, p) => s + (p.amount ?? 0), 0);
+      setWeekEarnings(earnings);
+
+      // Próximo agendamento confirmado
+      const nextRow = ((nextRes.data ?? []) as any[])[0];
+      if (nextRow) {
+        const petIds: string[] = nextRow.pet_ids ?? [];
+        let petNames: string[] = [];
+        if (petIds.length > 0) {
+          const { data: petsData } = await supabase.from('pets').select('id, name').in('id', petIds);
+          petNames = (petsData ?? []).map((p: any) => p.name);
+        }
+        setNextSchedule({
+          id: nextRow.id,
+          scheduled_at: nextRow.scheduled_at,
+          service_type: (nextRow.walker_services as any)?.type ?? 'walk',
+          pet_ids: petIds,
+          petNames,
+        });
+      } else {
+        setNextSchedule(null);
+      }
+
       setLoading(false);
     })();
   }, [walkerProfile]);
@@ -122,14 +193,72 @@ export default function HomeScreen() {
             <Text style={styles.statLabel}>Pets ativos</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{totalSessions}</Text>
-            <Text style={styles.statLabel}>Passeios</Text>
+            <Text style={styles.statValue}>{totalServices}</Text>
+            <Text style={styles.statLabel}>Serviços</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{walkerProfile?.rating?.toFixed(1) ?? '—'}</Text>
             <Text style={styles.statLabel}>Avaliação</Text>
           </View>
         </View>
+
+        {/* Ganhos da semana */}
+        {weekEarnings !== null && (
+          <TouchableOpacity
+            style={styles.earningsCard}
+            onPress={() => router.push('/(tabs)/financeiro')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.earningsLeft}>
+              <Ionicons name="wallet-outline" size={18} color={Colors.primary} />
+              <View>
+                <Text style={styles.earningsLabel}>Ganhos esta semana</Text>
+                <Text style={styles.earningsValue}>
+                  R$ {weekEarnings.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.primary} />
+          </TouchableOpacity>
+        )}
+
+        {/* Próximo serviço confirmado */}
+        {nextSchedule && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>PRÓXIMO SERVIÇO</Text>
+            <TouchableOpacity
+              style={styles.nextCard}
+              onPress={() => router.push('/(tabs)/agenda')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.nextIconWrap}>
+                <Ionicons
+                  name={nextSchedule.service_type === 'walk' ? 'footsteps-outline' : 'briefcase-outline'}
+                  size={20}
+                  color={Colors.primary}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.nextType}>
+                  {SERVICE_TYPE_LABELS[nextSchedule.service_type] ?? nextSchedule.service_type}
+                </Text>
+                <Text style={styles.nextTime}>
+                  {new Date(nextSchedule.scheduled_at).toLocaleDateString('pt-BR', {
+                    weekday: 'short', day: '2-digit', month: 'short',
+                  })} às {new Date(nextSchedule.scheduled_at).toLocaleTimeString('pt-BR', {
+                    hour: '2-digit', minute: '2-digit',
+                  })}
+                </Text>
+                {nextSchedule.petNames.length > 0 && (
+                  <Text style={styles.nextPets}>{nextSchedule.petNames.join(', ')}</Text>
+                )}
+              </View>
+              <View style={styles.nextBadge}>
+                <Text style={styles.nextBadgeText}>Confirmado</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Agenda de hoje */}
         <TodaySchedule />
@@ -230,4 +359,33 @@ const styles = StyleSheet.create({
   petInfo: { flex: 1 },
   petName: { fontSize: 14, fontWeight: '600', color: Colors.text },
   petBreed: { fontSize: 12, color: Colors.textSecondary, marginTop: 1 },
+
+  earningsCard: {
+    marginHorizontal: 20,
+    backgroundColor: `${Colors.primary}10`,
+    borderRadius: 14, borderWidth: 1, borderColor: `${Colors.primary}30`,
+    padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+  },
+  earningsLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  earningsLabel: { fontSize: 12, color: Colors.textSecondary },
+  earningsValue: { fontSize: 18, fontWeight: '800', color: Colors.primary, marginTop: 1 },
+
+  nextCard: {
+    backgroundColor: Colors.card, borderRadius: 14,
+    borderWidth: 1, borderColor: Colors.border,
+    padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12,
+  },
+  nextIconWrap: {
+    width: 42, height: 42, borderRadius: 21,
+    backgroundColor: `${Colors.primary}15`,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  nextType: { fontSize: 14, fontWeight: '700', color: Colors.text },
+  nextTime: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  nextPets: { fontSize: 12, color: Colors.primary, marginTop: 2, fontWeight: '500' },
+  nextBadge: {
+    backgroundColor: `${Colors.success}18`, borderRadius: 20,
+    paddingHorizontal: 9, paddingVertical: 4,
+  },
+  nextBadgeText: { fontSize: 11, fontWeight: '600', color: Colors.success },
 });
