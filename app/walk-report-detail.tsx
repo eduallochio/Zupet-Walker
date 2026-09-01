@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity,
-  Image,
+  Image, Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -116,13 +116,36 @@ export default function WalkReportDetailScreen() {
     })();
   }, [id]);
 
+  const shareReport = async () => {
+    if (!report) return;
+    const petList = (report.pet_ids ?? []).map((pid) => petNames[pid] ?? pid).join(', ');
+    const dur = report.duration_minutes != null ? formatDuration(report.duration_minutes) : null;
+    const dist = report.distance_meters != null && report.distance_meters > 0
+      ? `${(report.distance_meters / 1000).toFixed(2)} km`
+      : null;
+
+    const lines = [
+      `🐾 Relatório do passeio — ${formatDate(report.sent_at)}`,
+      petList ? `Pets: ${petList}` : null,
+      dur ? `⏱ Duração: ${dur}` : null,
+      dist ? `📍 Distância: ${dist}` : null,
+      report.pee_count > 0 ? `💧 Xixi: ${report.pee_count}x` : null,
+      report.poop_count > 0 ? `💩 Cocô: ${report.poop_count}x` : null,
+      report.notes ? `📝 ${report.notes}` : null,
+    ].filter(Boolean).join('\n');
+
+    await Share.share({ message: lines });
+  };
+
   const Header = () => (
     <View style={styles.header}>
       <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
         <Ionicons name="arrow-back" size={22} color={Colors.text} />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>Detalhes do Passeio</Text>
-      <View style={{ width: 38 }} />
+      <TouchableOpacity onPress={shareReport} style={styles.backBtn}>
+        <Ionicons name="share-outline" size={22} color={Colors.primary} />
+      </TouchableOpacity>
     </View>
   );
 
