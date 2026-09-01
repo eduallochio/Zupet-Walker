@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Modal, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Modal, FlatList, Image, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
@@ -7,7 +7,7 @@ import { supabase } from '../../services/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { sendPushToOwner } from '../../services/ownerPushService';
 
-type ScheduleStatus = 'proposed' | 'confirmed' | 'cancelled' | 'done' | 'overdue';
+type ScheduleStatus = 'proposed' | 'confirmed' | 'cancelled' | 'done' | 'overdue' | 'rescheduled';
 
 type PetInfo = { id: string; name: string; avatar_url?: string | null };
 
@@ -39,7 +39,8 @@ const statusConfig: Record<ScheduleStatus, { label: string; color: string; borde
   proposed:  { label: 'Pendente',   color: Colors.warning, border: Colors.warning },
   cancelled: { label: 'Cancelado',  color: Colors.error,   border: Colors.error   },
   done:      { label: 'Concluído',  color: Colors.textSecondary, border: Colors.border },
-  overdue:   { label: 'Atrasado',   color: Colors.error,   border: Colors.error   },
+  overdue:      { label: 'Atrasado',      color: Colors.error,   border: Colors.error   },
+  rescheduled:  { label: 'Reagendando',  color: Colors.primary, border: Colors.primary },
 };
 
 function buildWeekDays(overdueSchedules: Schedule[]) {
@@ -82,6 +83,10 @@ export default function AgendaScreen() {
 
   const [paymentModal, setPaymentModal] = useState<{ item: Schedule; saving: boolean } | null>(null);
   const [historyModal, setHistoryModal] = useState(false);
+  const [rescheduleModal, setRescheduleModal] = useState<{ item: Schedule; saving: boolean } | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [rescheduleTime, setRescheduleTime] = useState('');
+  const [rescheduleNotes, setRescheduleNotes] = useState('');
 
   const fetchSchedules = useCallback(async () => {
     if (!walkerProfile) return;
@@ -237,6 +242,75 @@ export default function AgendaScreen() {
 
   const finalizeService = (item: Schedule) => {
     setPaymentModal({ item, saving: false });
+  };
+
+  const openReschedule = (item: Schedule) => {
+    const d = new Date(item.scheduled_at);
+    setRescheduleDate(d.toLocaleDateString('pt-BR'));
+    setRescheduleTime(`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`);
+    setRescheduleNotes('');
+    setRescheduleModal({ item, saving: false });
+  };
+
+  const doReschedule = async () => {
+    if (!rescheduleModal || !walkerProfile) return;
+    const item = rescheduleModal.item;
+
+    // Valida data e hora no formato dd/mm/aaaa e HH:mm
+    const [day, month, year] = rescheduleDate.split('/').map(Number);
+    const [hour, minute] = rescheduleTime.split(':').map(Number);
+    if (!day || !month || !year || isNaN(hour) || isNaN(minute)) {
+      Alert.alert('Data inválida', 'Informe a data (dd/mm/aaaa) e hora (HH:mm) corretamente.');
+      return;
+    }
+    const proposed = new Date(year, month - 1, day, hour, minute);
+    if (proposed <= new Date()) {
+      Alert.alert('Data inválida', 'O novo horário deve ser no futuro.');
+      return;
+    }
+
+    setRescheduleModal((prev) => prev ? { ...prev, saving: true } : null);
+    try {
+      const { error } = await supabase
+        .from('walk_schedules')
+        .update({
+          status: 'rescheduled',
+          reschedule_proposed_at: proposed.toISOString(),
+          reschedule_notes: rescheduleNotes || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', item.id);
+      if (error) throw error;
+
+      setSchedules((prev) => prev.map((s) => s.id === item.id ? { ...s, status: 'rescheduled' as any } : s));
+
+      // Notifica tutor
+      if (item.owner_id && walkerProfile.name) {
+        const dateLabel = proposed.toLocaleDateString('pt-BR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+        const title = '🔄 Reagendamento proposto';
+        const body  = `${walkerProfile.name} propôs um novo horário: ${dateLabel}. Abra o app para aceitar.`;
+        await Promise.all([
+          supabase.from('notifications').insert({
+            user_id: item.owner_id,
+            type: 'reschedule_proposed',
+            title,
+            body,
+            data: { schedule_id: item.id, walker_id: walkerProfile.id, new_date: proposed.toISOString() },
+          }),
+          sendPushToOwner(item.owner_id, title, body, {
+            type: 'reschedule_proposed',
+            schedule_id: item.id,
+            new_date: proposed.toISOString(),
+          }),
+        ]);
+      }
+
+      setRescheduleModal(null);
+      Alert.alert('Proposta enviada!', 'O tutor será notificado para aceitar o novo horário.');
+    } catch {
+      Alert.alert('Erro', 'Não foi possível propor o reagendamento.');
+      setRescheduleModal((prev) => prev ? { ...prev, saving: false } : null);
+    }
   };
 
   const doFinalize = async (paymentMethod: 'cash' | 'pix' | 'card' | 'skip') => {
@@ -482,16 +556,34 @@ export default function AgendaScreen() {
                         </View>
                       )}
 
-                      {/* Botão finalizar — para serviços confirmados ou atrasados */}
+                      {/* Botões finalizar + reagendar — confirmados ou atrasados */}
                       {(item.status === 'confirmed' || item.status === 'overdue') && (
-                        <TouchableOpacity
-                          style={styles.finalizeBtn}
-                          onPress={() => finalizeService(item)}
-                          activeOpacity={0.75}
-                        >
-                          <Ionicons name="checkmark-circle-outline" size={14} color="#fff" />
-                          <Text style={[styles.actionBtnText, { color: '#fff' }]}>Finalizar serviço</Text>
-                        </TouchableOpacity>
+                        <View style={styles.actionRow}>
+                          <TouchableOpacity
+                            style={styles.rescheduleBtn}
+                            onPress={() => openReschedule(item)}
+                            activeOpacity={0.75}
+                          >
+                            <Ionicons name="calendar-outline" size={13} color={Colors.primary} />
+                            <Text style={[styles.actionBtnText, { color: Colors.primary }]}>Reagendar</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.finalizeBtn, { flex: 1 }]}
+                            onPress={() => finalizeService(item)}
+                            activeOpacity={0.75}
+                          >
+                            <Ionicons name="checkmark-circle-outline" size={14} color="#fff" />
+                            <Text style={[styles.actionBtnText, { color: '#fff' }]}>Finalizar</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+
+                      {/* Badge reagendamento proposto */}
+                      {item.status === 'rescheduled' && (
+                        <View style={styles.rescheduledBadge}>
+                          <Ionicons name="time-outline" size={13} color={Colors.primary} />
+                          <Text style={styles.rescheduledText}>Aguardando tutor aceitar novo horário</Text>
+                        </View>
                       )}
                     </View>
                   </View>
@@ -625,6 +717,74 @@ export default function AgendaScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Modal de reagendamento */}
+      <Modal visible={!!rescheduleModal} transparent animationType="slide" onRequestClose={() => setRescheduleModal(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Propor reagendamento</Text>
+            <Text style={styles.modalSub}>O tutor será notificado e poderá aceitar ou recusar.</Text>
+
+            <View style={styles.rescheduleField}>
+              <Text style={styles.rescheduleLabel}>Nova data (dd/mm/aaaa)</Text>
+              <TextInput
+                style={styles.rescheduleInput}
+                value={rescheduleDate}
+                onChangeText={setRescheduleDate}
+                placeholder="ex: 05/09/2026"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="numeric"
+                maxLength={10}
+              />
+            </View>
+
+            <View style={styles.rescheduleField}>
+              <Text style={styles.rescheduleLabel}>Novo horário (HH:mm)</Text>
+              <TextInput
+                style={styles.rescheduleInput}
+                value={rescheduleTime}
+                onChangeText={setRescheduleTime}
+                placeholder="ex: 14:30"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="numeric"
+                maxLength={5}
+              />
+            </View>
+
+            <View style={styles.rescheduleField}>
+              <Text style={styles.rescheduleLabel}>Motivo (opcional)</Text>
+              <TextInput
+                style={[styles.rescheduleInput, { height: 72, textAlignVertical: 'top' }]}
+                value={rescheduleNotes}
+                onChangeText={setRescheduleNotes}
+                placeholder="Ex: compromisso imprevisto..."
+                placeholderTextColor={Colors.textSecondary}
+                multiline
+                maxLength={200}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.finalizeBtn}
+              onPress={doReschedule}
+              disabled={rescheduleModal?.saving}
+              activeOpacity={0.8}
+            >
+              {rescheduleModal?.saving
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <>
+                    <Ionicons name="calendar-outline" size={14} color="#fff" />
+                    <Text style={[styles.actionBtnText, { color: '#fff' }]}>Enviar proposta</Text>
+                  </>
+              }
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setRescheduleModal(null)} style={styles.cancelBtn}>
+              <Text style={styles.cancelBtnText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -706,6 +866,26 @@ const styles = StyleSheet.create({
     borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2,
   },
   serviceChipText: { fontSize: 10, fontWeight: '600', color: Colors.primary },
+
+  rescheduleBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
+    paddingVertical: 7, borderRadius: 10,
+    borderWidth: 1, borderColor: `${Colors.primary}40`,
+    backgroundColor: `${Colors.primary}0D`,
+  },
+  rescheduledBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: `${Colors.primary}10`, borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 6, marginTop: 4,
+  },
+  rescheduledText: { fontSize: 12, color: Colors.primary, fontWeight: '500', flex: 1 },
+  rescheduleField: { gap: 4 },
+  rescheduleLabel: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
+  rescheduleInput: {
+    backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border,
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
+    fontSize: 15, color: Colors.text,
+  },
 
   overdueSection: { marginHorizontal: 20, marginTop: 16, marginBottom: 4, gap: 10 },
   overdueHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
