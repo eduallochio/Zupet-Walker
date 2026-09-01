@@ -7,7 +7,7 @@ import { supabase } from '../../services/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { sendPushToOwner } from '../../services/ownerPushService';
 
-type ScheduleStatus = 'proposed' | 'confirmed' | 'cancelled' | 'done';
+type ScheduleStatus = 'proposed' | 'confirmed' | 'cancelled' | 'done' | 'overdue';
 
 type PetInfo = { id: string; name: string };
 
@@ -38,17 +38,29 @@ const statusConfig: Record<ScheduleStatus, { label: string; color: string; borde
   proposed:  { label: 'Pendente',   color: Colors.warning, border: Colors.warning },
   cancelled: { label: 'Cancelado',  color: Colors.error,   border: Colors.error   },
   done:      { label: 'Concluído',  color: Colors.textSecondary, border: Colors.border },
+  overdue:   { label: 'Atrasado',   color: Colors.error,   border: Colors.error   },
 };
 
-function buildWeekDays() {
+function buildWeekDays(overdueSchedules: Schedule[]) {
   const days = [];
   const today = new Date();
+  // Inclui dias passados que tenham serviços atrasados
+  const overdueDates = overdueSchedules.map((s) => {
+    const d = new Date(s.scheduled_at);
+    d.setHours(0, 0, 0, 0);
+    return d.toDateString();
+  });
+  const uniqueOverdueDates = [...new Set(overdueDates)].map((ds) => new Date(ds));
+  for (const d of uniqueOverdueDates) {
+    if (!isSameDay(d, today)) days.push(d);
+  }
+  // Próximos 7 dias a partir de hoje
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
-    days.push(d);
+    if (!days.some((x) => isSameDay(x, d))) days.push(d);
   }
-  return days;
+  return days.sort((a, b) => a.getTime() - b.getTime());
 }
 
 function isSameDay(a: Date, b: Date) {
@@ -66,7 +78,6 @@ export default function AgendaScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDay, setSelectedDay] = useState(new Date());
-  const weekDays = buildWeekDays();
 
   const [paymentModal, setPaymentModal] = useState<{ item: Schedule; saving: boolean } | null>(null);
   const [historyModal, setHistoryModal] = useState(false);
@@ -280,7 +291,15 @@ export default function AgendaScreen() {
     }
   };
 
-  const daySchedules = schedules.filter((s) => isSameDay(new Date(s.scheduled_at), selectedDay));
+  const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+  const overdueItems = schedules
+    .filter((s) => s.status === 'confirmed' && new Date(s.scheduled_at) < startOfToday)
+    .map((s) => ({ ...s, status: 'overdue' as ScheduleStatus }));
+  const weekDays = buildWeekDays(overdueItems);
+
+  const daySchedules = schedules
+    .filter((s) => isSameDay(new Date(s.scheduled_at), selectedDay))
+    .map((s) => overdueItems.find((o) => o.id === s.id) ?? s);
 
   // Próximos 3 dias com agendamentos
   const upcomingDays = weekDays
@@ -302,6 +321,54 @@ export default function AgendaScreen() {
             <Ionicons name="time-outline" size={13} color={Colors.primary} />
           </TouchableOpacity>
         </View>
+
+        {/* Seção de serviços atrasados */}
+        {overdueItems.length > 0 && (
+          <View style={styles.overdueSection}>
+            <View style={styles.overdueHeader}>
+              <Ionicons name="warning" size={14} color={Colors.error} />
+              <Text style={styles.overdueTitle}>ATENÇÃO — SERVIÇOS ATRASADOS</Text>
+            </View>
+            <View style={styles.cardList}>
+              {overdueItems.map((item) => {
+                const cfg = statusConfig['overdue'];
+                const time = new Date(item.scheduled_at);
+                return (
+                  <View key={item.id} style={[styles.card, { borderLeftColor: cfg.border }]}>
+                    <View style={styles.cardLeft}>
+                      <Text style={styles.cardTime}>{time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</Text>
+                      <Text style={styles.cardDur}>{time.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</Text>
+                    </View>
+                    <View style={styles.cardBody}>
+                      <View style={styles.cardTop}>
+                        <View style={[styles.statusChip, { backgroundColor: `${cfg.color}18` }]}>
+                          <Text style={[styles.statusText, { color: cfg.color }]}>{cfg.label}</Text>
+                        </View>
+                        {item.service_type && item.service_type !== 'walk' && (
+                          <View style={styles.serviceChip}>
+                            <Text style={styles.serviceChipText}>{SERVICE_TYPE_LABELS[item.service_type]}</Text>
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.cardPets}>
+                        <Ionicons name="paw-outline" size={12} color={Colors.textSecondary} />
+                        <Text style={styles.cardPetsText}>
+                          {item.petNames && item.petNames.length > 0
+                            ? item.petNames.join(', ')
+                            : `${item.pet_ids.length} pet${item.pet_ids.length !== 1 ? 's' : ''}`}
+                        </Text>
+                      </View>
+                      <TouchableOpacity style={styles.finalizeBtn} onPress={() => finalizeService(item)} activeOpacity={0.75}>
+                        <Ionicons name="checkmark-circle-outline" size={14} color="#fff" />
+                        <Text style={[styles.actionBtnText, { color: '#fff' }]}>Finalizar serviço</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
 
         {/* Seletor de dias */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayScroll}>
@@ -397,8 +464,8 @@ export default function AgendaScreen() {
                         </View>
                       )}
 
-                      {/* Botão finalizar — para serviços não-passeio confirmados */}
-                      {item.status === 'confirmed' && item.service_type && item.service_type !== 'walk' && (
+                      {/* Botão finalizar — para serviços confirmados ou atrasados */}
+                      {(item.status === 'confirmed' || item.status === 'overdue') && (
                         <TouchableOpacity
                           style={styles.finalizeBtn}
                           onPress={() => finalizeService(item)}
@@ -607,6 +674,10 @@ const styles = StyleSheet.create({
     borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2,
   },
   serviceChipText: { fontSize: 10, fontWeight: '600', color: Colors.primary },
+
+  overdueSection: { marginHorizontal: 20, marginTop: 16, marginBottom: 4, gap: 10 },
+  overdueHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  overdueTitle: { fontSize: 11, fontWeight: '700', color: Colors.error, letterSpacing: 0.6 },
 
   upcomingRow: { flexDirection: 'row', gap: 10 },
   upcomingChip: {
