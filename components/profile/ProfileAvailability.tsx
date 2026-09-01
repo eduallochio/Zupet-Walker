@@ -16,8 +16,9 @@ export function ProfileAvailability() {
   const hasData = availDays.length > 0 || startTime;
 
   const blockedDays: string[] = (walkerProfile as any)?.blocked_days ?? [];
+  const todayStr = new Date().toISOString().split('T')[0];
   const upcomingBlocked = blockedDays
-    .filter((k) => new Date(k) >= new Date(new Date().toDateString()))
+    .filter((k) => k >= todayStr)
     .sort()
     .slice(0, 2);
 
@@ -67,7 +68,7 @@ export function ProfileAvailability() {
           <Text style={styles.vacationText}>
             {upcomingBlocked.length === 0
               ? 'Gerenciar dias de folga'
-              : `${blockedDays.filter((k) => new Date(k) >= new Date(new Date().toDateString())).length} dia(s) bloqueado(s)`
+              : `${blockedDays.filter((k) => k >= todayStr).length} dia(s) bloqueado(s)`
             }
           </Text>
           {upcomingBlocked.length > 0 && (

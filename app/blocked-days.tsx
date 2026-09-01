@@ -14,7 +14,10 @@ const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
 function toDateKey(d: Date) {
-  return d.toISOString().split('T')[0]; // YYYY-MM-DD
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function buildCalendarDays(year: number, month: number): (Date | null)[] {
@@ -77,7 +80,7 @@ export default function BlockedDaysScreen() {
     try {
       // Remove datas passadas antes de salvar
       const today0 = new Date(); today0.setHours(0, 0, 0, 0);
-      const cleaned = [...blockedDays].filter((k) => new Date(k) >= today0);
+      const cleaned = [...blockedDays].filter((k) => k >= toDateKey(today0));
       const { error } = await supabase
         .from('walker_profiles')
         .update({ blocked_days: cleaned })
@@ -96,8 +99,9 @@ export default function BlockedDaysScreen() {
   const today0 = new Date(); today0.setHours(0, 0, 0, 0);
 
   // Dias bloqueados futuros ordenados
+  const todayStr = toDateKey(today0);
   const upcomingBlocked = [...blockedDays]
-    .filter((k) => new Date(k) >= today0)
+    .filter((k) => k >= todayStr)
     .sort()
     .slice(0, 5);
 
