@@ -10,6 +10,7 @@ import { ProfileServices } from '../../components/profile/ProfileServices';
 import { ProfileRatings } from '../../components/profile/ProfileRatings';
 import { ProfilePaymentsCard } from '../../components/profile/ProfilePaymentsCard';
 import { ProfilePlanCard } from '../../components/profile/ProfilePlanCard';
+import { ProfileSettingsCard } from '../../components/profile/ProfileSettingsCard';
 import { ProfileWebBanner } from '../../components/profile/ProfileWebBanner';
 import { ProfileLinkProCard } from '../../components/profile/ProfileLinkProCard';
 
@@ -39,6 +40,7 @@ export default function PerfilScreen() {
         <ProfilePaymentsCard />
         <ProfileLinkProCard />
         <ProfilePlanCard />
+        <ProfileSettingsCard />
       </ScrollView>
     </SafeAreaView>
   );
