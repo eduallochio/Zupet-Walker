@@ -190,7 +190,7 @@ export function ProfileHeader() {
             </View>
             <Text style={styles.confirmTitle}>Excluir conta permanentemente?</Text>
             <Text style={styles.confirmMsg}>
-              Esta ação não pode ser desfeita. Todo o seu perfil de walker, agenda, histórico de passeios e avaliações serão deletados para sempre.
+              Esta ação não pode ser desfeita. Todo o seu perfil profissional, agenda, histórico de atendimentos e avaliações serão deletados para sempre.
             </Text>
             <TouchableOpacity style={styles.confirmDeleteBtn} onPress={handleDeleteAccount}>
               <Text style={styles.confirmDeleteText}>Excluir permanentemente</Text>
