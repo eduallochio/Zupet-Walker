@@ -30,6 +30,7 @@ export type WalkerProfile = {
   max_distance_km?: number;
   accepted_sizes?: string[];
   accepts_last_minute?: boolean;
+  username?: string;
 };
 
 export type PetStatus = 'pending' | 'active' | 'inactive';
