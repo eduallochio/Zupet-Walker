@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, Modal, Alert, Pressable, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Modal, Alert, Pressable, Linking, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import Constants from 'expo-constants';
 import { Colors } from '../../constants/colors';
 import { useAuthStore } from '../../stores/authStore';
+import { deleteAccount } from '../../services/accountService';
 
 export function ProfileHeader() {
   const router = useRouter();
@@ -12,6 +13,8 @@ export function ProfileHeader() {
   const userEmail = useAuthStore((s) => s.session?.user?.email ?? null);
   const signOut = useAuthStore((s) => s.signOut);
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
 
@@ -28,6 +31,18 @@ export function ProfileHeader() {
         { text: 'Sair', style: 'destructive', onPress: signOut },
       ]);
     }, 300);
+  };
+
+  const handleDeleteAccount = async () => {
+    setConfirmVisible(false);
+    setIsDeleting(true);
+    const result = await deleteAccount();
+    setIsDeleting(false);
+    if (result.success) {
+      router.replace('/auth/login' as any);
+    } else {
+      Alert.alert('Erro', result.error);
+    }
   };
 
   const handleSupport = () => {
@@ -150,9 +165,52 @@ export function ProfileHeader() {
               </View>
               <Text style={[styles.sheetLabel, { color: Colors.error }]}>Sair da conta</Text>
             </TouchableOpacity>
+
+            <View style={styles.sheetDivider} />
+
+            <TouchableOpacity style={styles.sheetRow} onPress={() => { setSettingsVisible(false); setTimeout(() => setConfirmVisible(true), 300); }} activeOpacity={0.7}>
+              <View style={[styles.sheetIcon, { backgroundColor: '#C6282818' }]}>
+                <Ionicons name="person-remove-outline" size={18} color="#C62828" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sheetLabel, { color: '#C62828' }]}>Excluir minha conta</Text>
+                <Text style={styles.sheetVersion}>Permanente e irreversível</Text>
+              </View>
+            </TouchableOpacity>
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* Modal de confirmação de exclusão */}
+      <Modal visible={confirmVisible} transparent animationType="fade" onRequestClose={() => setConfirmVisible(false)}>
+        <View style={styles.confirmOverlay}>
+          <View style={styles.confirmCard}>
+            <View style={styles.confirmIconWrap}>
+              <Ionicons name="warning-outline" size={30} color="#C62828" />
+            </View>
+            <Text style={styles.confirmTitle}>Excluir conta permanentemente?</Text>
+            <Text style={styles.confirmMsg}>
+              Esta ação não pode ser desfeita. Todo o seu perfil de walker, agenda, histórico de passeios e avaliações serão deletados para sempre.
+            </Text>
+            <TouchableOpacity style={styles.confirmDeleteBtn} onPress={handleDeleteAccount}>
+              <Text style={styles.confirmDeleteText}>Excluir permanentemente</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.confirmCancelBtn} onPress={() => setConfirmVisible(false)}>
+              <Text style={styles.confirmCancelText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Loading overlay */}
+      {isDeleting && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.loadingText}>Excluindo conta...</Text>
+          </View>
+        </View>
+      )}
 
       <TouchableOpacity onPress={() => router.push('/profile/edit')} style={styles.avatarWrap}>
         {walkerProfile?.avatar_url ? (
@@ -251,4 +309,37 @@ const styles = StyleSheet.create({
   sheetVersion: { fontSize: 13, color: Colors.textSecondary },
   sheetEmail: { fontSize: 12, color: Colors.textSecondary, marginTop: 1 },
   sheetDivider: { height: 1, backgroundColor: Colors.border, marginLeft: 48 },
+
+  confirmOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center', justifyContent: 'center', padding: 24,
+  },
+  confirmCard: {
+    backgroundColor: Colors.card, borderRadius: 20,
+    padding: 24, width: '100%', alignItems: 'center', gap: 10,
+  },
+  confirmIconWrap: {
+    width: 56, height: 56, borderRadius: 28,
+    backgroundColor: '#FFEBEE', alignItems: 'center', justifyContent: 'center',
+  },
+  confirmTitle: { fontSize: 16, fontWeight: '700', color: Colors.text, textAlign: 'center' },
+  confirmMsg: { fontSize: 13, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
+  confirmDeleteBtn: {
+    backgroundColor: '#C62828', borderRadius: 12,
+    paddingVertical: 12, width: '100%', alignItems: 'center', marginTop: 6,
+  },
+  confirmDeleteText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  confirmCancelBtn: { paddingVertical: 8, width: '100%', alignItems: 'center' },
+  confirmCancelText: { color: Colors.textSecondary, fontSize: 14 },
+
+  loadingOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center', justifyContent: 'center', zIndex: 99,
+  },
+  loadingCard: {
+    backgroundColor: Colors.card, borderRadius: 16,
+    padding: 24, alignItems: 'center', gap: 12,
+  },
+  loadingText: { color: Colors.text, fontWeight: '600', fontSize: 14 },
 });
