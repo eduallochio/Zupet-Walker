@@ -167,7 +167,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Banner passeio */}
+        {/* Banner atendimento */}
         <TouchableOpacity
           style={[styles.startBanner, activeWalk && styles.startBannerActive]}
           onPress={() => router.push(activeWalk ? '/walk/active' : '/walk/start')}
@@ -175,7 +175,7 @@ export default function HomeScreen() {
         >
           <View style={styles.startBannerLeft}>
             <Text style={styles.startBannerTitle}>
-              {activeWalk ? 'Passeio em andamento' : 'Iniciar Passeio'}
+              {activeWalk ? 'Atendimento em andamento' : 'Iniciar Atendimento'}
             </Text>
             <Text style={styles.startBannerSub}>
               {activeWalk ? 'Toque para voltar' : 'Toque para começar agora'}

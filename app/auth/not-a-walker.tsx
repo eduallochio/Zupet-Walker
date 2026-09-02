@@ -35,11 +35,11 @@ export default function NotAWalkerScreen() {
           <Ionicons name="paw-outline" size={48} color={Colors.primary} />
         </View>
 
-        <Text style={styles.title}>Este app é para Walkers</Text>
+        <Text style={styles.title}>Este app é para profissionais de pets</Text>
         <Text style={styles.subtitle}>
           Olá{name ? `, ${name.split(' ')[0]}` : ''}! A conta{'\n'}
           <Text style={styles.email}>{user?.email}</Text>
-          {'\n'}não tem perfil de walker cadastrado.
+          {'\n'}não tem perfil profissional cadastrado.
         </Text>
 
         {isTutor && (
@@ -56,7 +56,7 @@ export default function NotAWalkerScreen() {
           <View style={styles.card}>
             <Ionicons name="information-circle-outline" size={20} color={Colors.textSecondary} />
             <Text style={styles.cardText}>
-              O <Text style={styles.bold}>Zupet Walker</Text> é exclusivo para profissionais que oferecem serviços de passeio.{' '}
+              O <Text style={styles.bold}>Zupet Walker</Text> é exclusivo para profissionais de pets — passeadores, banhistas, hospedeiros, adestradores e mais.{' '}
               Se você é tutor, use o app <Text style={styles.bold}>Zupet</Text>.
             </Text>
           </View>
@@ -64,7 +64,7 @@ export default function NotAWalkerScreen() {
 
         <TouchableOpacity style={styles.primaryBtn} onPress={handleBecomeWalker} activeOpacity={0.85}>
           <Ionicons name="add-circle-outline" size={20} color="#fff" />
-          <Text style={styles.primaryBtnText}>Quero ser Walker</Text>
+          <Text style={styles.primaryBtnText}>Criar perfil profissional</Text>
         </TouchableOpacity>
 
         {isTutor && (
