@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Linking, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Alert, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { useAuthStore } from '../../stores/authStore';
@@ -6,12 +6,26 @@ import { useAuthStore } from '../../stores/authStore';
 const BASE_URL = 'https://walker.zupet.io';
 
 export function ProfileWebBanner() {
-  const username = useAuthStore((s) => s.walkerProfile?.username);
+  const profile  = useAuthStore((s) => s.walkerProfile);
+  const username = profile?.username;
+  const isPro    = profile?.plan === 'pro';
+
+  const profileUrl = username ? `${BASE_URL}/w/${username}` : null;
 
   const openUrl = (url: string) => {
     Linking.openURL(url).catch(() =>
       Alert.alert('Erro', 'Não foi possível abrir o navegador.')
     );
+  };
+
+  const handleShare = async () => {
+    if (!profileUrl) return;
+    try {
+      await Share.share({
+        message: `Confira meu perfil de walker no Zupet: ${profileUrl}`,
+        url: profileUrl,
+      });
+    } catch {}
   };
 
   return (
@@ -20,21 +34,48 @@ export function ProfileWebBanner() {
         <Ionicons name="globe-outline" size={22} color={Colors.primary} />
       </View>
       <View style={styles.textWrap}>
-        <Text style={styles.title}>Seu perfil na web</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>Seu perfil na web</Text>
+          {isPro && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>⭐ Pro</Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.subtitle}>
           Acesse e compartilhe seu perfil público ou complete seus dados pelo painel.
         </Text>
+
+        {profileUrl && (
+          <TouchableOpacity style={styles.linkBox} onPress={() => openUrl(profileUrl)} activeOpacity={0.7}>
+            <Text style={styles.linkText} numberOfLines={1}>{profileUrl}</Text>
+            <Ionicons name="open-outline" size={13} color={Colors.primary} />
+          </TouchableOpacity>
+        )}
+
         <View style={styles.btns}>
-          {username ? (
+          {profileUrl ? (
             <TouchableOpacity
               style={styles.btnPrimary}
-              onPress={() => openUrl(`${BASE_URL}/w/${username}`)}
+              onPress={() => openUrl(profileUrl)}
               activeOpacity={0.8}
             >
               <Ionicons name="person-circle-outline" size={14} color="#fff" />
-              <Text style={styles.btnPrimaryText}>Ver perfil público</Text>
+              <Text style={styles.btnPrimaryText}>Ver perfil</Text>
             </TouchableOpacity>
           ) : null}
+
+          {profileUrl && (
+            <TouchableOpacity
+              style={styles.btnShare}
+              onPress={handleShare}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="share-social-outline" size={14} color={Colors.primary} />
+              <Text style={styles.btnShareText}>Compartilhar</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={styles.btnSecondary}
             onPress={() => openUrl(`${BASE_URL}/dashboard/perfil`)}
@@ -75,15 +116,49 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 4,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   title: {
     fontSize: 13,
     fontWeight: '700',
     color: '#0D2926',
   },
+  badge: {
+    backgroundColor: Colors.primary + '25',
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
   subtitle: {
     fontSize: 12,
     color: '#3D8A7A',
     lineHeight: 17,
+  },
+  linkBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: '#B2EDE5',
+    marginTop: 6,
+  },
+  linkText: {
+    flex: 1,
+    fontSize: 12,
+    color: Colors.primary,
+    fontWeight: '600',
   },
   btns: {
     flexDirection: 'row',
@@ -102,6 +177,22 @@ const styles = StyleSheet.create({
   },
   btnPrimaryText: {
     color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  btnShare: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.primary + '50',
+  },
+  btnShareText: {
+    color: Colors.primary,
     fontSize: 12,
     fontWeight: '700',
   },
