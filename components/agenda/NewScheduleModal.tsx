@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../services/supabase';
+import { DatePickerButton, TimePickerButton } from '../ui/DateTimePicker';
 
 type ServiceType = 'walk' | 'bath' | 'boarding' | 'daycare' | 'training' | 'vet_visit';
 
@@ -37,8 +38,9 @@ export function NewScheduleModal({ visible, onClose, onCreated }: Props) {
   const walkerProfile = useAuthStore((s) => s.walkerProfile);
 
   const [serviceType, setServiceType] = useState<ServiceType>('walk');
-  const [date, setDate]       = useState('');
-  const [time, setTime]       = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [hour, setHour]       = useState(8);
+  const [minute, setMinute]   = useState(0);
   const [duration, setDuration] = useState('60');
   const [amount, setAmount]   = useState('');
   const [notes, setNotes]     = useState('');
@@ -94,8 +96,9 @@ export function NewScheduleModal({ visible, onClose, onCreated }: Props) {
 
   const resetForm = () => {
     setServiceType('walk');
-    setDate('');
-    setTime('');
+    setSelectedDate(null);
+    setHour(8);
+    setMinute(0);
     setDuration('60');
     setAmount('');
     setNotes('');
@@ -119,14 +122,14 @@ export function NewScheduleModal({ visible, onClose, onCreated }: Props) {
   const handleSave = async () => {
     if (!walkerProfile) return;
 
-    // Valida data dd/mm/aaaa
-    const [day, month, year] = date.split('/').map(Number);
-    const [hour, min] = time.split(':').map(Number);
-    if (!day || !month || !year || isNaN(hour) || isNaN(min)) {
-      Alert.alert('Dados incompletos', 'Preencha data (dd/mm/aaaa) e hora (HH:mm).');
+    if (!selectedDate) {
+      Alert.alert('Dados incompletos', 'Selecione a data do atendimento.');
       return;
     }
-    const scheduledAt = new Date(year, month - 1, day, hour, min);
+    const scheduledAt = new Date(
+      selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(),
+      hour, minute,
+    );
     if (scheduledAt < new Date()) {
       Alert.alert('Data inválida', 'A data e hora devem ser no futuro.');
       return;
@@ -224,32 +227,17 @@ export function NewScheduleModal({ visible, onClose, onCreated }: Props) {
             </ScrollView>
 
             {/* Data e hora */}
-            <View style={styles.row}>
-              <View style={styles.halfField}>
-                <Text style={styles.label}>Data</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="dd/mm/aaaa"
-                  placeholderTextColor={Colors.textSecondary}
-                  value={date}
-                  onChangeText={setDate}
-                  keyboardType="numeric"
-                  maxLength={10}
-                />
-              </View>
-              <View style={styles.halfField}>
-                <Text style={styles.label}>Hora</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="HH:mm"
-                  placeholderTextColor={Colors.textSecondary}
-                  value={time}
-                  onChangeText={setTime}
-                  keyboardType="numeric"
-                  maxLength={5}
-                />
-              </View>
-            </View>
+            <Text style={styles.label}>Data</Text>
+            <DatePickerButton
+              value={selectedDate}
+              onChange={setSelectedDate}
+            />
+            <Text style={styles.label}>Hora</Text>
+            <TimePickerButton
+              hour={hour}
+              minute={minute}
+              onChange={(h, m) => { setHour(h); setMinute(m); }}
+            />
 
             {/* Duração e valor */}
             <View style={styles.row}>
