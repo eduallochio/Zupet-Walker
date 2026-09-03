@@ -8,6 +8,7 @@ import { Colors } from '../../constants/colors';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../services/supabase';
 import { DatePickerButton, TimePickerButton } from '../ui/DateTimePicker';
+import { sendPushToOwner } from '../../services/ownerPushService';
 
 type ServiceType = 'walk' | 'bath' | 'boarding' | 'daycare' | 'training' | 'vet_visit';
 
@@ -163,19 +164,28 @@ export function NewScheduleModal({ visible, onClose, onCreated }: Props) {
 
       if (error) throw error;
 
-      // Notifica o tutor se há owner_id
+      // Notifica o tutor se há owner_id (banco + push)
       if (ownerId) {
         const dateLabel = scheduledAt.toLocaleDateString('pt-BR', {
           day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
         });
         const svcLabel = SERVICE_OPTIONS.find((s) => s.type === serviceType)?.label ?? 'Serviço';
-        await supabase.from('notifications').insert({
-          user_id: ownerId,
-          type:    'schedule_confirmed',
-          title:   `📅 ${svcLabel} agendado`,
-          body:    `${walkerProfile.name} agendou um ${svcLabel.toLowerCase()} para ${dateLabel}.`,
-          data:    { walker_id: walkerProfile.id },
-        });
+        const title = `📅 ${svcLabel} agendado`;
+        const body  = `${walkerProfile.name} agendou um ${svcLabel.toLowerCase()} para ${dateLabel}.`;
+        await Promise.all([
+          supabase.from('notifications').insert({
+            user_id: ownerId,
+            type:    'schedule_confirmed',
+            title,
+            body,
+            data:    { walker_id: walkerProfile.id, service_type: serviceType },
+          }),
+          sendPushToOwner(ownerId, title, body, {
+            type:       'schedule_confirmed',
+            walker_id:  walkerProfile.id,
+            service_type: serviceType,
+          }),
+        ]);
       }
 
       resetForm();
