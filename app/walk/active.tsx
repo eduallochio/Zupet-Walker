@@ -26,13 +26,46 @@ const SERVICE_LABELS: Record<ServiceType, string> = {
 type PetInfo = { id: string; name: string; breed?: string };
 
 type EventBtn = { icon: string; label: string; type: WalkEventType };
-const EVENT_BUTTONS: EventBtn[] = [
-  { icon: '💧', label: 'Xixi',      type: 'pee'         },
-  { icon: '💩', label: 'Cocô',      type: 'poop'        },
-  { icon: '🐾', label: 'Interação', type: 'interaction' },
-  { icon: '😊', label: 'Humor',     type: 'mood'        },
-  { icon: '📝', label: 'Nota',      type: 'note'        },
-];
+
+const EVENT_BUTTONS_BY_SERVICE: Record<ServiceType, EventBtn[]> = {
+  walk: [
+    { icon: '💧', label: 'Xixi',       type: 'pee'         },
+    { icon: '💩', label: 'Cocô',       type: 'poop'        },
+    { icon: '🐾', label: 'Interação',  type: 'interaction' },
+    { icon: '😊', label: 'Humor',      type: 'mood'        },
+    { icon: '📝', label: 'Nota',       type: 'note'        },
+  ],
+  bath: [
+    { icon: '😊', label: 'Humor',      type: 'mood'        },
+    { icon: '📝', label: 'Nota',       type: 'note'        },
+  ],
+  boarding: [
+    { icon: '🍽️', label: 'Refeição',  type: 'meal'        },
+    { icon: '💧', label: 'Xixi',       type: 'pee'         },
+    { icon: '💩', label: 'Cocô',       type: 'poop'        },
+    { icon: '🎾', label: 'Brincadeira', type: 'play'       },
+    { icon: '😊', label: 'Humor',      type: 'mood'        },
+    { icon: '📝', label: 'Nota',       type: 'note'        },
+  ],
+  daycare: [
+    { icon: '🍽️', label: 'Refeição',  type: 'meal'        },
+    { icon: '💧', label: 'Xixi',       type: 'pee'         },
+    { icon: '💩', label: 'Cocô',       type: 'poop'        },
+    { icon: '🎾', label: 'Brincadeira', type: 'play'       },
+    { icon: '😊', label: 'Humor',      type: 'mood'        },
+    { icon: '📝', label: 'Nota',       type: 'note'        },
+  ],
+  training: [
+    { icon: '✅', label: 'Exercício',  type: 'exercise'    },
+    { icon: '🐾', label: 'Interação',  type: 'interaction' },
+    { icon: '😊', label: 'Humor',      type: 'mood'        },
+    { icon: '📝', label: 'Nota',       type: 'note'        },
+  ],
+  vet_visit: [
+    { icon: '😊', label: 'Humor',      type: 'mood'        },
+    { icon: '📝', label: 'Nota',       type: 'note'        },
+  ],
+};
 
 function formatElapsed(startIso: string) {
   const s = Math.floor((Date.now() - new Date(startIso).getTime()) / 1000);
@@ -207,11 +240,37 @@ export default function ActiveWalkScreen() {
         )}
         {!isWalk && <View style={styles.statDivider} />}
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>
-            {activeWalk.events.filter((e) => e.type === 'pee').length}💧
-            {' '}{activeWalk.events.filter((e) => e.type === 'poop').length}💩
-          </Text>
-          <Text style={styles.statLabel}>Registros</Text>
+          {isWalk ? (
+            <>
+              <Text style={styles.statValue}>
+                {activeWalk.events.filter((e) => e.type === 'pee').length}💧
+                {' '}{activeWalk.events.filter((e) => e.type === 'poop').length}💩
+              </Text>
+              <Text style={styles.statLabel}>Registros</Text>
+            </>
+          ) : activeWalk.service_type === 'boarding' || activeWalk.service_type === 'daycare' ? (
+            <>
+              <Text style={styles.statValue}>
+                {activeWalk.events.filter((e) => e.type === 'meal').length}🍽️
+                {' '}{activeWalk.events.filter((e) => e.type === 'play').length}🎾
+              </Text>
+              <Text style={styles.statLabel}>Refeição / Jogo</Text>
+            </>
+          ) : activeWalk.service_type === 'training' ? (
+            <>
+              <Text style={styles.statValue}>
+                {activeWalk.events.filter((e) => e.type === 'exercise').length}✅
+              </Text>
+              <Text style={styles.statLabel}>Exercícios</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.statValue}>
+                {activeWalk.events.filter((e) => e.type === 'note').length}📝
+              </Text>
+              <Text style={styles.statLabel}>Anotações</Text>
+            </>
+          )}
         </View>
       </View>
 
@@ -229,7 +288,7 @@ export default function ActiveWalkScreen() {
             </View>
 
             <View style={styles.eventGrid}>
-              {EVENT_BUTTONS.map((btn) => {
+              {(EVENT_BUTTONS_BY_SERVICE[activeWalk.service_type ?? 'walk'] ?? EVENT_BUTTONS_BY_SERVICE.walk).map((btn) => {
                 const count = eventCountForPet(petId, btn.type);
                 return (
                   <TouchableOpacity

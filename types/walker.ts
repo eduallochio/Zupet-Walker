@@ -67,7 +67,7 @@ export type LinkedPet = {
   };
 };
 
-export type WalkEventType = 'pee' | 'poop' | 'interaction' | 'mood' | 'photo' | 'note';
+export type WalkEventType = 'pee' | 'poop' | 'interaction' | 'mood' | 'photo' | 'note' | 'meal' | 'exercise' | 'play';
 
 export type WalkEvent = {
   id?: string;
