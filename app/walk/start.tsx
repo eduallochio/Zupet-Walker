@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { useAuthStore } from '../../stores/authStore';
 import { useWalkStore } from '../../stores/walkStore';
 import { supabase } from '../../services/supabase';
-import type { LinkedPet } from '../../types/walker';
+import type { LinkedPet, ServiceType } from '../../types/walker';
 import { maxPetsPerWalk } from '../../lib/plan';
 
 type WalkPet = {
@@ -18,6 +18,8 @@ type WalkPet = {
 
 export default function WalkStartScreen() {
   const router = useRouter();
+  const { service_type: rawServiceType, schedule_id: scheduleId } = useLocalSearchParams<{ service_type?: string; schedule_id?: string }>();
+  const serviceType = (rawServiceType as ServiceType) ?? 'walk';
   const walkerProfile = useAuthStore((s) => s.walkerProfile);
   const startWalk = useWalkStore((s) => s.startWalk);
   const activeWalk = useWalkStore((s) => s.activeWalk);
@@ -117,13 +119,23 @@ export default function WalkStartScreen() {
     });
   };
 
+  const SERVICE_LABELS: Record<ServiceType, string> = {
+    walk: 'passeio',
+    bath: 'banho e tosa',
+    boarding: 'hospedagem',
+    daycare: 'day care',
+    training: 'adestramento',
+    vet_visit: 'visita veterinária',
+  };
+  const serviceLabel = SERVICE_LABELS[serviceType] ?? 'atendimento';
+
   const handleStart = () => {
     if (selected.size === 0) {
-      Alert.alert('Selecione ao menos um pet', 'Escolha os pets que vão neste passeio.');
+      Alert.alert('Selecione ao menos um pet', `Escolha os pets para este ${serviceLabel}.`);
       return;
     }
     if (!walkerProfile) return;
-    startWalk(walkerProfile.id, Array.from(selected));
+    startWalk(walkerProfile.id, Array.from(selected), scheduleId, serviceType);
     router.replace('/walk/active');
   };
 
@@ -134,11 +146,11 @@ export default function WalkStartScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>Iniciar Passeio</Text>
+        <Text style={styles.title}>Iniciar {SERVICE_LABELS[serviceType] ? SERVICE_LABELS[serviceType].charAt(0).toUpperCase() + SERVICE_LABELS[serviceType].slice(1) : 'Atendimento'}</Text>
         <View style={{ width: 36 }} />
       </View>
 
-      <Text style={styles.subtitle}>Selecione os pets que vão neste passeio</Text>
+      <Text style={styles.subtitle}>Selecione os pets para este {serviceLabel}</Text>
 
       {loading ? (
         <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
@@ -146,7 +158,7 @@ export default function WalkStartScreen() {
         <View style={styles.empty}>
           <Ionicons name="paw-outline" size={52} color={Colors.border} />
           <Text style={styles.emptyTitle}>Nenhum pet vinculado</Text>
-          <Text style={styles.emptyText}>Você precisa ter pets ativos vinculados para iniciar um passeio.</Text>
+          <Text style={styles.emptyText}>Você precisa ter pets ativos vinculados para iniciar um {serviceLabel}.</Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.list}>
@@ -191,7 +203,7 @@ export default function WalkStartScreen() {
           >
             <Ionicons name="play" size={20} color="#fff" />
             <Text style={styles.startBtnText}>
-              Iniciar{selected.size > 0 ? ` com ${selected.size} pet${selected.size > 1 ? 's' : ''}` : ''}
+              Iniciar{selected.size > 0 ? ` com ${selected.size} pet${selected.size > 1 ? 's' : ''}` : ` ${serviceLabel}`}
             </Text>
           </TouchableOpacity>
         </View>

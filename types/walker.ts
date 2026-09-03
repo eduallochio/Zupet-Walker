@@ -78,10 +78,13 @@ export type WalkEvent = {
   recorded_at: string;
 };
 
+export type ServiceType = 'walk' | 'bath' | 'boarding' | 'daycare' | 'training' | 'vet_visit';
+
 export type WalkSession = {
   id?: string;
   walker_id: string;
   schedule_id?: string;
+  service_type?: ServiceType;
   started_at: string;
   ended_at?: string;
   duration_minutes?: number;

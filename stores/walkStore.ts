@@ -2,14 +2,14 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { haversineMeters } from '../services/locationService';
-import type { WalkSession, WalkEvent, WalkEventType } from '../types/walker';
+import type { WalkSession, WalkEvent, WalkEventType, ServiceType } from '../types/walker';
 
 type Coord = { lat: number; lon: number };
 
 type WalkStore = {
   activeWalk: WalkSession | null;
   locationPoints: Coord[];
-  startWalk: (walkerId: string, petIds: string[], scheduleId?: string) => void;
+  startWalk: (walkerId: string, petIds: string[], scheduleId?: string, serviceType?: ServiceType) => void;
   endWalk: () => void;
   addEvent: (petId: string, type: WalkEventType, value?: string) => void;
   addPhoto: (url: string) => void;
@@ -23,12 +23,13 @@ export const useWalkStore = create<WalkStore>()(
       activeWalk: null,
       locationPoints: [],
 
-      startWalk: (walkerId, petIds, scheduleId) => {
+      startWalk: (walkerId, petIds, scheduleId, serviceType) => {
         set({
           locationPoints: [],
           activeWalk: {
             walker_id:       walkerId,
             schedule_id:     scheduleId,
+            service_type:    serviceType ?? 'walk',
             started_at:      new Date().toISOString(),
             pet_ids:         petIds,
             events:          [],

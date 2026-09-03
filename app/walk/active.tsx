@@ -12,7 +12,16 @@ import { useWalkStore } from '../../stores/walkStore';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../services/supabase';
 import { startLocationTracking, stopLocationTracking } from '../../services/locationService';
-import type { WalkEventType } from '../../types/walker';
+import type { WalkEventType, ServiceType } from '../../types/walker';
+
+const SERVICE_LABELS: Record<ServiceType, string> = {
+  walk: 'Passeio',
+  bath: 'Banho e Tosa',
+  boarding: 'Hospedagem',
+  daycare: 'Day Care',
+  training: 'Adestramento',
+  vet_visit: 'Visita Veterinária',
+};
 
 type PetInfo = { id: string; name: string; breed?: string };
 
@@ -55,9 +64,11 @@ export default function ActiveWalkScreen() {
       router.replace('/walk/start');
       return;
     }
-    // Inicia GPS ao entrar na tela
-    startLocationTracking().catch(console.error);
-    return () => { stopLocationTracking().catch(console.error); };
+    // GPS só faz sentido para passeios — outros serviços (banho, hospedagem, etc.) não precisam de rastreamento
+    if (activeWalk.service_type === 'walk' || !activeWalk.service_type) {
+      startLocationTracking().catch(console.error);
+      return () => { stopLocationTracking().catch(console.error); };
+    }
   }, []);
 
   // Timer
@@ -135,7 +146,7 @@ export default function ActiveWalkScreen() {
   };
 
   const handleFinish = () =>
-    Alert.alert('Finalizar passeio', 'Deseja encerrar o passeio agora?', [
+    Alert.alert(`Finalizar ${serviceLabel}`, `Deseja encerrar o atendimento agora?`, [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Finalizar',
@@ -148,6 +159,8 @@ export default function ActiveWalkScreen() {
   if (!activeWalk) return null;
 
   const totalEvents = activeWalk.events.length;
+  const isWalk = !activeWalk.service_type || activeWalk.service_type === 'walk';
+  const serviceLabel = SERVICE_LABELS[activeWalk.service_type ?? 'walk'] ?? 'Atendimento';
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -155,7 +168,7 @@ export default function ActiveWalkScreen() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.liveDot} />
-          <Text style={styles.liveText}>AO VIVO</Text>
+          <Text style={styles.liveText}>{serviceLabel.toUpperCase()}</Text>
         </View>
         <Text style={styles.timer}>{formatElapsed(activeWalk.started_at)}</Text>
         <View style={styles.headerRight}>
@@ -177,16 +190,21 @@ export default function ActiveWalkScreen() {
           <Text style={styles.statValue}>{totalEvents}</Text>
           <Text style={styles.statLabel}>Eventos</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>
-            {activeWalk.distance_meters != null && activeWalk.distance_meters >= 1000
-              ? `${(activeWalk.distance_meters / 1000).toFixed(1)}km`
-              : `${Math.round(activeWalk.distance_meters ?? 0)}m`}
-          </Text>
-          <Text style={styles.statLabel}>📍 Distância</Text>
-        </View>
-        <View style={styles.statDivider} />
+        {isWalk && (
+          <>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>
+                {activeWalk.distance_meters != null && activeWalk.distance_meters >= 1000
+                  ? `${(activeWalk.distance_meters / 1000).toFixed(1)}km`
+                  : `${Math.round(activeWalk.distance_meters ?? 0)}m`}
+              </Text>
+              <Text style={styles.statLabel}>📍 Distância</Text>
+            </View>
+            <View style={styles.statDivider} />
+          </>
+        )}
+        {!isWalk && <View style={styles.statDivider} />}
         <View style={styles.statItem}>
           <Text style={styles.statValue}>
             {activeWalk.events.filter((e) => e.type === 'pee').length}💧
@@ -247,7 +265,7 @@ export default function ActiveWalkScreen() {
 
         <TouchableOpacity style={styles.finishBtn} onPress={handleFinish} activeOpacity={0.85}>
           <Ionicons name="stop-circle-outline" size={20} color="#fff" />
-          <Text style={styles.finishText}>Finalizar passeio</Text>
+          <Text style={styles.finishText}>Finalizar {serviceLabel}</Text>
         </TouchableOpacity>
       </View>
 
@@ -255,10 +273,10 @@ export default function ActiveWalkScreen() {
       <Modal visible={walkNoteModal} transparent animationType="slide" onRequestClose={() => setWalkNoteModal(false)}>
         <KeyboardAvoidingView style={styles.modalBg} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Nota geral do passeio</Text>
+            <Text style={styles.modalTitle}>Nota geral do atendimento</Text>
             <TextInput
               style={styles.noteInput}
-              placeholder="Observações gerais sobre o passeio..."
+              placeholder={`Observações gerais sobre o ${serviceLabel.toLowerCase()}...`}
               placeholderTextColor={Colors.textSecondary}
               value={walkNoteText}
               onChangeText={setWalkNoteText}
