@@ -6,6 +6,7 @@ import { Colors } from '../../constants/colors';
 import { supabase } from '../../services/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { sendPushToOwner } from '../../services/ownerPushService';
+import { NewScheduleModal } from '../../components/agenda/NewScheduleModal';
 
 type ScheduleStatus = 'proposed' | 'confirmed' | 'cancelled' | 'done' | 'overdue' | 'rescheduled';
 
@@ -81,6 +82,7 @@ export default function AgendaScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDay, setSelectedDay] = useState(new Date());
 
+  const [newScheduleModal, setNewScheduleModal] = useState(false);
   const [paymentModal, setPaymentModal] = useState<{ item: Schedule; saving: boolean } | null>(null);
   const [historyModal, setHistoryModal] = useState(false);
   const [rescheduleModal, setRescheduleModal] = useState<{ item: Schedule; saving: boolean } | null>(null);
@@ -392,10 +394,15 @@ export default function AgendaScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Agenda</Text>
-          <TouchableOpacity style={styles.totalBadge} onPress={() => setHistoryModal(true)} activeOpacity={0.75}>
-            <Text style={styles.totalText}>{schedules.filter((s) => s.status !== 'cancelled').length} agendamentos</Text>
-            <Ionicons name="time-outline" size={13} color={Colors.primary} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <TouchableOpacity style={styles.totalBadge} onPress={() => setHistoryModal(true)} activeOpacity={0.75}>
+              <Text style={styles.totalText}>{schedules.filter((s) => s.status !== 'cancelled').length} agendamentos</Text>
+              <Ionicons name="time-outline" size={13} color={Colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.addBtn} onPress={() => setNewScheduleModal(true)} activeOpacity={0.8}>
+              <Ionicons name="add" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Seção de serviços atrasados */}
@@ -785,6 +792,12 @@ export default function AgendaScreen() {
           </View>
         </View>
       </Modal>
+
+      <NewScheduleModal
+        visible={newScheduleModal}
+        onClose={() => setNewScheduleModal(false)}
+        onCreated={() => { setNewScheduleModal(false); fetchSchedules(); }}
+      />
     </SafeAreaView>
   );
 }
@@ -799,6 +812,11 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800', color: Colors.text },
   totalBadge: { backgroundColor: `${Colors.primary}18`, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 5 },
   totalText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
+  addBtn: {
+    width: 34, height: 34, borderRadius: 17,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center', alignItems: 'center',
+  },
 
   dayScroll: { paddingHorizontal: 16, gap: 8, marginBottom: 8 },
   dayBtn: {
