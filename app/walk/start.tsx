@@ -96,29 +96,6 @@ export default function WalkStartScreen() {
     load();
   }, [walkerProfile, activeWalk]);
 
-  const toggle = (petId: string) => {
-    const limit = maxPetsPerWalk(walkerProfile);
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(petId)) {
-        next.delete(petId);
-      } else {
-        if (next.size >= limit) {
-          Alert.alert(
-            'Limite de pets por passeio',
-            walkerProfile?.plan === 'pro'
-              ? `Você configurou o máximo de ${limit} pet${limit !== 1 ? 's' : ''} por passeio.`
-              : `No plano Free você pode levar até ${limit} pets por passeio. Faça upgrade para o plano Pro para aumentar esse limite.`,
-            [{ text: 'Entendido' }]
-          );
-          return prev;
-        }
-        next.add(petId);
-      }
-      return next;
-    });
-  };
-
   const SERVICE_LABELS: Record<ServiceType, string> = {
     walk: 'passeio',
     bath: 'banho e tosa',
@@ -128,6 +105,29 @@ export default function WalkStartScreen() {
     vet_visit: 'visita veterinária',
   };
   const serviceLabel = SERVICE_LABELS[serviceType] ?? 'atendimento';
+
+  const toggle = (petId: string) => {
+    const limit = maxPetsPerWalk(walkerProfile);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(petId)) {
+        next.delete(petId);
+      } else {
+        if (next.size >= limit) {
+          Alert.alert(
+            `Limite de pets por ${serviceLabel}`,
+            walkerProfile?.plan === 'pro'
+              ? `Você configurou o máximo de ${limit} pet${limit !== 1 ? 's' : ''} por ${serviceLabel}.`
+              : `No plano Free você pode atender até ${limit} pets por ${serviceLabel}. Faça upgrade para o plano Pro para aumentar esse limite.`,
+            [{ text: 'Entendido' }]
+          );
+          return prev;
+        }
+        next.add(petId);
+      }
+      return next;
+    });
+  };
 
   const handleStart = () => {
     if (selected.size === 0) {
@@ -146,7 +146,7 @@ export default function WalkStartScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>Iniciar {SERVICE_LABELS[serviceType] ? SERVICE_LABELS[serviceType].charAt(0).toUpperCase() + SERVICE_LABELS[serviceType].slice(1) : 'Atendimento'}</Text>
+        <Text style={styles.title}>Iniciar {serviceLabel.charAt(0).toUpperCase() + serviceLabel.slice(1)}</Text>
         <View style={{ width: 36 }} />
       </View>
 

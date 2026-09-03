@@ -145,6 +145,9 @@ export default function ActiveWalkScreen() {
     }
   };
 
+  const isWalk = !activeWalk?.service_type || activeWalk?.service_type === 'walk';
+  const serviceLabel = SERVICE_LABELS[activeWalk?.service_type ?? 'walk'] ?? 'Atendimento';
+
   const handleFinish = () =>
     Alert.alert(`Finalizar ${serviceLabel}`, `Deseja encerrar o atendimento agora?`, [
       { text: 'Cancelar', style: 'cancel' },
@@ -159,8 +162,6 @@ export default function ActiveWalkScreen() {
   if (!activeWalk) return null;
 
   const totalEvents = activeWalk.events.length;
-  const isWalk = !activeWalk.service_type || activeWalk.service_type === 'walk';
-  const serviceLabel = SERVICE_LABELS[activeWalk.service_type ?? 'walk'] ?? 'Atendimento';
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
