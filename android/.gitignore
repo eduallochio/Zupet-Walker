@@ -14,4 +14,7 @@ local.properties
 
 # Bundle artifacts
 *.jsbundle
-debug.keystore
+
+# Signing secrets
+app/keystore.properties
+*.keystore
