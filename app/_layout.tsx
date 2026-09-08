@@ -6,6 +6,7 @@ import * as Linking from 'expo-linking';
 import { supabase } from '../services/supabase';
 import { useAuthStore } from '../stores/authStore';
 import { registerPushToken, addNotificationListeners, removeNotificationListeners, setNotificationRouter, handleInitialNotificationResponse } from '../services/notificationService';
+import '../services/locationService'; // registra a background task de GPS no boot do app
 
 function AuthGuard() {
   const router = useRouter();
