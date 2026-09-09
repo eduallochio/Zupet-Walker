@@ -45,7 +45,14 @@ TaskManager.defineTask(LOCATION_TASK, ({ data, error }: any) => {
   const store = useWalkStore.getState();
   const latest = locations[locations.length - 1];
 
-  console.log('[GPS task] ponto recebido', latest.coords.latitude, latest.coords.longitude, 'activeWalk:', !!store.activeWalk);
+  // Ignorar pontos com baixa precisão (GPS ainda calibrando — cold start)
+  const accuracy = latest.coords.accuracy ?? 999;
+  if (accuracy > 30) {
+    console.log('[GPS task] ponto ignorado — accuracy fraca:', accuracy, 'm');
+    return;
+  }
+
+  console.log('[GPS task] ponto recebido', latest.coords.latitude, latest.coords.longitude, 'accuracy:', accuracy, 'activeWalk:', !!store.activeWalk);
 
   if (!store.activeWalk) return;
 

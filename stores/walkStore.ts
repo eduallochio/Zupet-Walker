@@ -73,8 +73,8 @@ export const useWalkStore = create<WalkStore>()(
         if (points.length > 0) {
           const last = points[points.length - 1];
           addedMeters = haversineMeters(last.lat, last.lon, lat, lon);
-          // Ignora pontos com salto > 200m (GPS errado)
-          if (addedMeters > 200) return;
+          // Ignora pontos com salto > 50m entre updates (GPS impreciso ou teleporte)
+          if (addedMeters > 50) return;
         }
 
         const newPoints = [...points, { lat, lon }];
