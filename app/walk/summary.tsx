@@ -64,7 +64,20 @@ export default function WalkSummaryScreen() {
           supabase.from('walk_events').insert(events).then(() => {});
         }
 
-        // Enviar relatório ao(s) tutor(es) dos pets
+        // Buscar preço do serviço cadastrado pelo walker
+        const serviceType = activeWalk.service_type ?? 'walk';
+        const { data: serviceData } = await supabase
+          .from('walker_services')
+          .select('price, billing_type')
+          .eq('walker_id', walkerProfile.id)
+          .eq('type', serviceType)
+          .eq('active', true)
+          .limit(1)
+          .maybeSingle();
+        const servicePrice   = serviceData?.price ?? 0;
+        const serviceBilling = serviceData?.billing_type ?? 'per_session';
+
+        // Enviar relatório ao(s) tutor(es) dos pets e registrar ganho por tutor
         if (activeWalk.pet_ids.length > 0) {
           const { data: links } = await supabase
             .from('walker_pet_links')
@@ -114,6 +127,34 @@ export default function WalkSummaryScreen() {
               data:    { report_id: reportData?.id, session_id: data.id },
             });
             sendPushToOwner(owner_id, notifTitle, notifBody, { report_id: reportData?.id, session_id: data.id });
+
+            // Registrar ganho deste tutor em walker_payments
+            await supabase.from('walker_payments').insert({
+              walker_id:       walkerProfile.id,
+              owner_id,
+              walk_session_id: data.id,
+              session_id:      data.id,
+              service_type:    serviceType,
+              amount:          servicePrice,
+              billing_type:    serviceBilling,
+              status:          'pending',
+              pet_ids:         ownerPetIds,
+            });
+          }
+
+          // Pets próprios (sem tutor vinculado): registrar ganho no próprio walker
+          if (ownerIds.length === 0) {
+            await supabase.from('walker_payments').insert({
+              walker_id:       walkerProfile.id,
+              owner_id:        walkerProfile.user_id,
+              walk_session_id: data.id,
+              session_id:      data.id,
+              service_type:    serviceType,
+              amount:          servicePrice,
+              billing_type:    serviceBilling,
+              status:          'pending',
+              pet_ids:         activeWalk.pet_ids,
+            });
           }
         }
 
