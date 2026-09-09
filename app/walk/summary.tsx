@@ -64,37 +64,32 @@ export default function WalkSummaryScreen() {
           supabase.from('walk_events').insert(events).then(() => {});
         }
 
-        // Buscar preço do serviço cadastrado pelo walker
         const serviceType = activeWalk.service_type ?? 'walk';
-        const { data: serviceData } = await supabase
-          .from('walker_services')
-          .select('price, billing_type')
-          .eq('walker_id', walkerProfile.id)
-          .eq('type', serviceType)
-          .eq('active', true)
-          .limit(1)
-          .maybeSingle();
-        const servicePrice   = serviceData?.price ?? 0;
-        const serviceBilling = serviceData?.billing_type ?? 'per_session';
 
         // Enviar relatório ao(s) tutor(es) dos pets e registrar ganho por tutor
         if (activeWalk.pet_ids.length > 0) {
+          // Busca vínculos incluindo service_id e billing_override para saber o plano do tutor
           const { data: links } = await supabase
             .from('walker_pet_links')
-            .select('owner_id, pet_id')
+            .select('owner_id, pet_id, service_id, billing_override')
             .in('pet_id', activeWalk.pet_ids)
             .eq('walker_id', walkerProfile.id);
 
-          // Mapear owner_id → pet_ids desse tutor
-          const ownerPetMap: Record<string, string[]> = {};
-          for (const link of (links ?? []) as { owner_id: string; pet_id: string }[]) {
+          // Mapear owner_id → { pet_ids, service_id, billing_override }
+          type LinkInfo = { pet_id: string; service_id: string | null; billing_override: number | null };
+          const ownerPetMap: Record<string, LinkInfo[]> = {};
+          for (const link of (links ?? []) as { owner_id: string; pet_id: string; service_id: string | null; billing_override: number | null }[]) {
             if (!ownerPetMap[link.owner_id]) ownerPetMap[link.owner_id] = [];
-            ownerPetMap[link.owner_id].push(link.pet_id);
+            ownerPetMap[link.owner_id].push({ pet_id: link.pet_id, service_id: link.service_id, billing_override: link.billing_override });
           }
           const ownerIds = Object.keys(ownerPetMap);
 
           for (const owner_id of ownerIds) {
-            const ownerPetIds = ownerPetMap[owner_id];
+            const ownerLinks  = ownerPetMap[owner_id];
+            const ownerPetIds = ownerLinks.map((l) => l.pet_id);
+            // Usa service_id do primeiro pet deste tutor (todos devem ter o mesmo plano)
+            const linkServiceId      = ownerLinks[0]?.service_id ?? null;
+            const linkBillingOverride = ownerLinks[0]?.billing_override ?? null;
             const ownerEvents = activeWalk.events.filter(
               (e) => !e.pet_id || ownerPetIds.includes(e.pet_id)
             );
@@ -128,6 +123,36 @@ export default function WalkSummaryScreen() {
             });
             sendPushToOwner(owner_id, notifTitle, notifBody, { report_id: reportData?.id, session_id: data.id });
 
+            // Buscar preço: billing_override do vínculo > preço do service_id do vínculo > serviço genérico ativo
+            let paymentAmount   = 0;
+            let paymentBilling  = 'per_session';
+            let paymentServiceId = linkServiceId;
+
+            if (linkBillingOverride != null) {
+              paymentAmount = linkBillingOverride;
+            } else if (linkServiceId) {
+              const { data: linkedService } = await supabase
+                .from('walker_services')
+                .select('price, billing_type')
+                .eq('id', linkServiceId)
+                .maybeSingle();
+              paymentAmount  = linkedService?.price ?? 0;
+              paymentBilling = linkedService?.billing_type ?? 'per_session';
+            } else {
+              // Fallback: primeiro serviço ativo do tipo
+              const { data: fallbackService } = await supabase
+                .from('walker_services')
+                .select('id, price, billing_type')
+                .eq('walker_id', walkerProfile.id)
+                .eq('type', serviceType)
+                .eq('active', true)
+                .limit(1)
+                .maybeSingle();
+              paymentAmount    = fallbackService?.price ?? 0;
+              paymentBilling   = fallbackService?.billing_type ?? 'per_session';
+              paymentServiceId = fallbackService?.id ?? null;
+            }
+
             // Registrar ganho deste tutor em walker_payments
             await supabase.from('walker_payments').insert({
               walker_id:       walkerProfile.id,
@@ -135,25 +160,35 @@ export default function WalkSummaryScreen() {
               walk_session_id: data.id,
               session_id:      data.id,
               service_type:    serviceType,
-              amount:          servicePrice,
-              billing_type:    serviceBilling,
+              amount:          paymentAmount,
+              billing_type:    paymentBilling,
               status:          'pending',
               pet_ids:         ownerPetIds,
+              schedule_id:     activeWalk.schedule_id ?? null,
             });
           }
 
           // Pets próprios (sem tutor vinculado): registrar ganho no próprio walker
           if (ownerIds.length === 0) {
+            const { data: ownService } = await supabase
+              .from('walker_services')
+              .select('price, billing_type')
+              .eq('walker_id', walkerProfile.id)
+              .eq('type', serviceType)
+              .eq('active', true)
+              .limit(1)
+              .maybeSingle();
             await supabase.from('walker_payments').insert({
               walker_id:       walkerProfile.id,
               owner_id:        walkerProfile.user_id,
               walk_session_id: data.id,
               session_id:      data.id,
               service_type:    serviceType,
-              amount:          servicePrice,
-              billing_type:    serviceBilling,
+              amount:          ownService?.price ?? 0,
+              billing_type:    ownService?.billing_type ?? 'per_session',
               status:          'pending',
               pet_ids:         activeWalk.pet_ids,
+              schedule_id:     activeWalk.schedule_id ?? null,
             });
           }
         }
