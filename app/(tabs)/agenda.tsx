@@ -209,6 +209,18 @@ export default function AgendaScreen() {
                     status:       'pending',
                   });
                 }
+
+                // Propaga service_id para walker_pet_links dos pets deste agendamento
+                // (só atualiza vínculos que ainda não têm service_id definido)
+                if (schedule.service_id && schedule.pet_ids?.length && schedule.owner_id) {
+                  await supabase
+                    .from('walker_pet_links')
+                    .update({ service_id: schedule.service_id })
+                    .eq('walker_id', walkerProfile.id)
+                    .eq('owner_id', schedule.owner_id)
+                    .in('pet_id', schedule.pet_ids)
+                    .is('service_id', null);
+                }
               }
             }
 

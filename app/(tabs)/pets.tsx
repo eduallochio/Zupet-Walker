@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ScrollView, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -14,6 +14,9 @@ import { sendPushToOwner } from '../../services/ownerPushService';
 import { getLimits } from '../../lib/plan';
 
 type FilterTab = 'todos' | 'active' | 'pending';
+
+type WalkerService = { id: string; type: string; label: string; price: number; billing_type: string };
+type PendingAccept = { pet: LinkedPet; services: WalkerService[] };
 
 type OwnPet = {
   id: string;
@@ -37,6 +40,7 @@ export default function PetsScreen() {
   const [filter, setFilter] = useState<FilterTab>('todos');
   const [selectedPet, setSelectedPet] = useState<LinkedPet | null>(null);
   const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [pendingAccept, setPendingAccept] = useState<PendingAccept | null>(null);
 
   const unlinkPet = async (pet: LinkedPet) => {
     Alert.alert(
@@ -73,6 +77,38 @@ export default function PetsScreen() {
         },
       ]
     );
+  };
+
+  const confirmAccept = async (pet: LinkedPet, serviceId: string | null) => {
+    setRespondingId(pet.id);
+    try {
+      const { error } = await supabase
+        .from('walker_pet_links')
+        .update({ status: 'active', service_id: serviceId })
+        .eq('id', pet.id);
+      if (error) throw error;
+
+      if (pet.owner?.user_id) {
+        const title = 'Vínculo aceito!';
+        const body  = `${walkerProfile?.name ?? 'Seu walker'} aceitou cuidar de ${pet.pet?.name ?? 'seu pet'}.`;
+        await Promise.all([
+          supabase.from('notifications').insert({
+            user_id: pet.owner.user_id,
+            type: 'pet_link_accepted', title, body,
+            data: { pet_id: pet.pet?.id, walker_id: walkerProfile?.id },
+          }),
+          sendPushToOwner(pet.owner.user_id, title, body, {
+            type: 'pet_link_accepted', pet_id: pet.pet?.id, walker_id: walkerProfile?.id,
+          }),
+        ]);
+      }
+      setPets((prev) => prev.map((p) => p.id === pet.id ? { ...p, status: 'active' } : p));
+    } catch {
+      Alert.alert('Erro', 'Não foi possível aceitar o vínculo.');
+    } finally {
+      setRespondingId(null);
+      setPendingAccept(null);
+    }
   };
 
   const respondToRequest = async (pet: LinkedPet, accept: boolean) => {
@@ -112,28 +148,24 @@ export default function PetsScreen() {
           return;
         }
 
-        const { error } = await supabase
-          .from('walker_pet_links')
-          .update({ status: 'active' })
-          .eq('id', pet.id);
-        if (error) throw error;
+        // Buscar serviços ativos do walker para exibir no modal de escolha de plano
+        const { data: services } = await supabase
+          .from('walker_services')
+          .select('id, type, label, price, billing_type')
+          .eq('walker_id', walkerProfile?.id ?? '')
+          .eq('active', true)
+          .order('type');
 
-        if (pet.owner?.user_id) {
-          const title = 'Vínculo aceito!';
-          const body  = `${walkerProfile?.name ?? 'Seu walker'} aceitou cuidar de ${pet.pet?.name ?? 'seu pet'}.`;
-          await Promise.all([
-            supabase.from('notifications').insert({
-              user_id: pet.owner.user_id,
-              type: 'pet_link_accepted', title, body,
-              data: { pet_id: pet.pet?.id, walker_id: walkerProfile?.id },
-            }),
-            sendPushToOwner(pet.owner.user_id, title, body, {
-              type: 'pet_link_accepted', pet_id: pet.pet?.id, walker_id: walkerProfile?.id,
-            }),
-          ]);
+        setRespondingId(null);
+
+        if (!services || services.length === 0) {
+          // Sem serviços cadastrados: aceita sem plano
+          await confirmAccept(pet, null);
+        } else {
+          // Abre modal para o walker escolher o plano
+          setPendingAccept({ pet, services: services as WalkerService[] });
         }
-
-        setPets((prev) => prev.map((p) => p.id === pet.id ? { ...p, status: 'active' } : p));
+        return;
       } else {
         const { error } = await supabase
           .from('walker_pet_links')
@@ -414,6 +446,50 @@ export default function PetsScreen() {
         </ScrollView>
       )}
 
+      {/* Modal de seleção de plano ao aceitar vínculo */}
+      <Modal visible={!!pendingAccept} transparent animationType="fade" onRequestClose={() => setPendingAccept(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Escolha o plano</Text>
+            <Text style={styles.modalSubtitle}>
+              Qual serviço se aplica a {pendingAccept?.pet.pet?.name ?? 'este pet'}?
+            </Text>
+            <View style={styles.modalServices}>
+              {pendingAccept?.services.map((svc) => (
+                <TouchableOpacity
+                  key={svc.id}
+                  style={styles.serviceOption}
+                  onPress={() => confirmAccept(pendingAccept.pet, svc.id)}
+                  activeOpacity={0.8}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.serviceLabel}>{svc.label}</Text>
+                    <Text style={styles.serviceBilling}>
+                      {svc.billing_type === 'monthly' ? 'Mensal' :
+                       svc.billing_type === 'per_session' ? 'Por sessão' : svc.billing_type}
+                    </Text>
+                  </View>
+                  <Text style={styles.servicePrice}>
+                    R$ {Number(svc.price).toFixed(2).replace('.', ',')}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                style={[styles.serviceOption, styles.serviceOptionNone]}
+                onPress={() => confirmAccept(pendingAccept!.pet, null)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.serviceLabel, { color: Colors.textSecondary }]}>Sem plano definido</Text>
+                <Text style={[styles.servicePrice, { color: Colors.textSecondary }]}>—</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.modalCancel} onPress={() => setPendingAccept(null)}>
+              <Text style={styles.modalCancelText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <OwnPetModal pet={selectedOwnPet} onClose={() => setSelectedOwnPet(null)} />
       <PetDetailModal pet={selectedPet} onClose={() => setSelectedPet(null)} />
     </SafeAreaView>
@@ -522,4 +598,29 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 16, fontWeight: '700', color: Colors.text },
   emptyText: { fontSize: 13, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
   list: { paddingHorizontal: 20, gap: 12 },
+
+  // Modal de seleção de plano
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center', alignItems: 'center', padding: 24,
+  },
+  modalBox: {
+    width: '100%', backgroundColor: Colors.card,
+    borderRadius: 20, padding: 24, gap: 16,
+  },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: Colors.text, textAlign: 'center' },
+  modalSubtitle: { fontSize: 13, color: Colors.textSecondary, textAlign: 'center', lineHeight: 18 },
+  modalServices: { gap: 8 },
+  serviceOption: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Colors.background, borderRadius: 12,
+    borderWidth: 1.5, borderColor: Colors.border,
+    paddingHorizontal: 16, paddingVertical: 14, gap: 12,
+  },
+  serviceOptionNone: { borderStyle: 'dashed', borderColor: Colors.border },
+  serviceLabel: { fontSize: 15, fontWeight: '700', color: Colors.text },
+  serviceBilling: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  servicePrice: { fontSize: 16, fontWeight: '800', color: Colors.primary },
+  modalCancel: { alignItems: 'center', paddingVertical: 8 },
+  modalCancelText: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary },
 });
