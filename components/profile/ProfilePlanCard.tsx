@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable, Linking, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable, Linking, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { useAuthStore } from '../../stores/authStore';
@@ -49,28 +49,43 @@ export function ProfilePlanCard() {
             </View>
 
             <Text style={styles.sheetTitle}>Assine o Plano Pro</Text>
-            <Text style={styles.sheetDesc}>
-              A assinatura é feita pelo{' '}
-              <Text style={styles.sheetBold}>Dashboard exclusivo do Walker</Text>
-              {' '}no site. Você será redirecionado para{' '}
-              <Text style={styles.sheetUrl}>walker.zupet.io</Text>
-            </Text>
+            {Platform.OS === 'ios' ? (
+              <>
+                <Text style={styles.sheetDesc}>
+                  Para assinar o Plano Pro, acesse{' '}
+                  <Text style={styles.sheetBold}>walker.zupet.io</Text>
+                  {' '}pelo navegador do seu dispositivo e faça login com o mesmo e-mail e senha do app.
+                </Text>
+                <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)} activeOpacity={0.7}>
+                  <Text style={styles.cancelBtnText}>Entendido</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={styles.sheetDesc}>
+                  A assinatura é feita pelo{' '}
+                  <Text style={styles.sheetBold}>Dashboard exclusivo do Walker</Text>
+                  {' '}no site. Você será redirecionado para{' '}
+                  <Text style={styles.sheetUrl}>walker.zupet.io</Text>
+                </Text>
 
-            <View style={styles.infoCard}>
-              <Ionicons name="information-circle-outline" size={18} color={Colors.primary} />
-              <Text style={styles.infoText}>
-                Use o <Text style={styles.sheetBold}>mesmo e-mail e senha</Text> do app para fazer login no site.
-              </Text>
-            </View>
+                <View style={styles.infoCard}>
+                  <Ionicons name="information-circle-outline" size={18} color={Colors.primary} />
+                  <Text style={styles.infoText}>
+                    Use o <Text style={styles.sheetBold}>mesmo e-mail e senha</Text> do app para fazer login no site.
+                  </Text>
+                </View>
 
-            <TouchableOpacity style={styles.confirmBtn} onPress={handleOpenDashboard} activeOpacity={0.85}>
-              <Ionicons name="open-outline" size={16} color="#fff" />
-              <Text style={styles.confirmBtnText}>Ir para o Dashboard</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={styles.confirmBtn} onPress={handleOpenDashboard} activeOpacity={0.85}>
+                  <Ionicons name="open-outline" size={16} color="#fff" />
+                  <Text style={styles.confirmBtnText}>Ir para o Dashboard</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)} activeOpacity={0.7}>
-              <Text style={styles.cancelBtnText}>Agora não</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)} activeOpacity={0.7}>
+                  <Text style={styles.cancelBtnText}>Agora não</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </Pressable>
         </Pressable>
       </Modal>
