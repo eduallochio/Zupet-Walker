@@ -22,24 +22,35 @@ export function haversineMeters(
 // Task de background — chamada pelo SO com novas localizações
 // useWalkStore é importado via require lazy para evitar require cycle
 TaskManager.defineTask(LOCATION_TASK, ({ data, error }: any) => {
-  if (error) { console.error('[GPS task]', error); return; }
+  if (error) { console.error('[GPS task error]', error); return; }
   const locations: Location.LocationObject[] = data?.locations ?? [];
   if (locations.length === 0) return;
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { useWalkStore } = require('../stores/walkStore');
   const store = useWalkStore.getState();
+  const latest = locations[locations.length - 1];
+
+  console.log('[GPS task] ponto recebido', latest.coords.latitude, latest.coords.longitude, 'activeWalk:', !!store.activeWalk);
+
   if (!store.activeWalk) return;
 
-  const latest = locations[locations.length - 1];
   store.addLocationPoint(latest.coords.latitude, latest.coords.longitude);
 });
 
 export async function startLocationTracking() {
   const { status } = await Location.requestForegroundPermissionsAsync();
+  console.log('[GPS] foreground permission:', status);
   if (status !== 'granted') return false;
 
-  await Location.requestBackgroundPermissionsAsync();
+  const bgPerm = await Location.requestBackgroundPermissionsAsync();
+  console.log('[GPS] background permission:', bgPerm.status);
+
+  const alreadyRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK).catch(() => false);
+  if (alreadyRunning) {
+    console.log('[GPS] já está rodando, skip startLocationUpdatesAsync');
+    return true;
+  }
 
   await Location.startLocationUpdatesAsync(LOCATION_TASK, {
     accuracy: Location.Accuracy.High,

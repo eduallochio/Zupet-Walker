@@ -91,18 +91,22 @@ export default function ActiveWalkScreen() {
   const [walkNoteModal, setWalkNoteModal] = useState(false);
   const [walkNoteText, setWalkNoteText]   = useState('');
 
-  // Se não tem passeio ativo, redireciona para seleção
+  // Redireciona se não tem passeio ativo
   useEffect(() => {
     if (!activeWalk) {
       router.replace('/walk/start');
-      return;
     }
+  }, [activeWalk]);
+
+  // Inicia GPS assim que o activeWalk estiver disponível (após hidratação do persist)
+  useEffect(() => {
+    if (!activeWalk) return;
     // GPS só faz sentido para passeios — outros serviços (banho, hospedagem, etc.) não precisam de rastreamento
     if (activeWalk.service_type === 'walk' || !activeWalk.service_type) {
       startLocationTracking().catch(console.error);
       return () => { stopLocationTracking().catch(console.error); };
     }
-  }, []);
+  }, [activeWalk?.service_type]);
 
   // Timer
   useEffect(() => {
