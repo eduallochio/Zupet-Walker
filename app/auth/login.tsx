@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import { supabase } from '../../services/supabase';
 import { Colors } from '../../constants/colors';
@@ -55,7 +56,7 @@ export default function LoginScreen() {
     });
     setSocialLoading(null);
     if (error) { Alert.alert('Erro', error.message); return; }
-    if (data?.url) await Linking.openURL(data.url);
+    if (data?.url) await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URL);
   };
 
   const handleApple = async () => {
@@ -73,7 +74,7 @@ export default function LoginScreen() {
     });
     setSocialLoading(null);
     if (error) { Alert.alert('Erro', error.message); return; }
-    if (data?.url) await Linking.openURL(data.url);
+    if (data?.url) await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URL);
   };
 
   return (

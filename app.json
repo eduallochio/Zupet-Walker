@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "io.zupet.walker",
-      "buildNumber": "4",
+      "buildNumber": "6",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Usado para tirar fotos durante os passeios e para o seu perfil de walker.",
@@ -84,7 +84,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "updates": {
       "url": "https://u.expo.dev/e2d81550-850d-4338-b75a-5b39574657cd",
