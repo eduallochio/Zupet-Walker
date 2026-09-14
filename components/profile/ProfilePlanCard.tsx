@@ -52,9 +52,7 @@ export function ProfilePlanCard() {
             {Platform.OS === 'ios' ? (
               <>
                 <Text style={styles.sheetDesc}>
-                  Para assinar o Plano Pro, acesse{' '}
-                  <Text style={styles.sheetBold}>walker.zupet.io</Text>
-                  {' '}pelo navegador do seu dispositivo e faça login com o mesmo e-mail e senha do app.
+                  O Plano Pro oferece recursos ilimitados para walkers profissionais. Entre em contato com nosso suporte para saber mais sobre como assinar.
                 </Text>
                 <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)} activeOpacity={0.7}>
                   <Text style={styles.cancelBtnText}>Entendido</Text>

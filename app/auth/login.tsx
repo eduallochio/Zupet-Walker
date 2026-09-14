@@ -54,9 +54,25 @@ export default function LoginScreen() {
       provider: 'google',
       options: { redirectTo: REDIRECT_URL, skipBrowserRedirect: true },
     });
+    if (error) { setSocialLoading(null); Alert.alert('Erro', error.message); return; }
+    if (data?.url) {
+      const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URL);
+      if (result.type === 'success' && result.url) {
+        const url = result.url;
+        const hashIndex = url.indexOf('#');
+        const queryIndex = url.indexOf('?');
+        const paramStr = hashIndex !== -1
+          ? url.slice(hashIndex + 1)
+          : queryIndex !== -1 ? url.slice(queryIndex + 1) : '';
+        const params = Object.fromEntries(new URLSearchParams(paramStr));
+        const accessToken = params['access_token'];
+        const refreshToken = params['refresh_token'];
+        if (accessToken && refreshToken) {
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        }
+      }
+    }
     setSocialLoading(null);
-    if (error) { Alert.alert('Erro', error.message); return; }
-    if (data?.url) await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URL);
   };
 
   const handleApple = async () => {
@@ -72,9 +88,25 @@ export default function LoginScreen() {
       provider: 'apple',
       options: { redirectTo: REDIRECT_URL, skipBrowserRedirect: true },
     });
+    if (error) { setSocialLoading(null); Alert.alert('Erro', error.message); return; }
+    if (data?.url) {
+      const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URL);
+      if (result.type === 'success' && result.url) {
+        const url = result.url;
+        const hashIndex = url.indexOf('#');
+        const queryIndex = url.indexOf('?');
+        const paramStr = hashIndex !== -1
+          ? url.slice(hashIndex + 1)
+          : queryIndex !== -1 ? url.slice(queryIndex + 1) : '';
+        const params = Object.fromEntries(new URLSearchParams(paramStr));
+        const accessToken = params['access_token'];
+        const refreshToken = params['refresh_token'];
+        if (accessToken && refreshToken) {
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        }
+      }
+    }
     setSocialLoading(null);
-    if (error) { Alert.alert('Erro', error.message); return; }
-    if (data?.url) await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URL);
   };
 
   return (
