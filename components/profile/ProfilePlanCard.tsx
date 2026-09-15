@@ -52,10 +52,21 @@ export function ProfilePlanCard() {
             {Platform.OS === 'ios' ? (
               <>
                 <Text style={styles.sheetDesc}>
-                  O Plano Pro oferece recursos ilimitados para walkers profissionais. Entre em contato com nosso suporte para saber mais sobre como assinar.
+                  O Plano Pro oferece recursos ilimitados para walkers profissionais. Fale com nosso suporte pelo Instagram para saber mais.
                 </Text>
+                <TouchableOpacity
+                  style={styles.confirmBtn}
+                  onPress={() => {
+                    setModalVisible(false);
+                    setTimeout(() => Linking.openURL('https://instagram.com/zupet.io').catch(() => {}), 300);
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="logo-instagram" size={16} color="#fff" />
+                  <Text style={styles.confirmBtnText}>Falar com Suporte</Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)} activeOpacity={0.7}>
-                  <Text style={styles.cancelBtnText}>Entendido</Text>
+                  <Text style={styles.cancelBtnText}>Agora não</Text>
                 </TouchableOpacity>
               </>
             ) : (
