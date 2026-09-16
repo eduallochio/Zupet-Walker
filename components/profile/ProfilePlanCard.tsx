@@ -22,6 +22,30 @@ export function ProfilePlanCard() {
     }, 300);
   };
 
+  // No iOS, exibe apenas um banner informativo sem menção a upgrade ou plano
+  if (Platform.OS === 'ios') {
+    return (
+      <View style={styles.section}>
+        <TouchableOpacity
+          style={styles.card}
+          activeOpacity={0.85}
+          onPress={handleOpenDashboard}
+        >
+          <View style={styles.cardLeft}>
+            <View style={styles.iconWrap}>
+              <Ionicons name="globe-outline" size={18} color={Colors.primary} />
+            </View>
+            <View style={styles.cardText}>
+              <Text style={styles.title}>Painel do Walker</Text>
+              <Text style={styles.sub}>Gerencie seu perfil completo em walker.zupet.io</Text>
+            </View>
+          </View>
+          <Ionicons name="open-outline" size={18} color={Colors.textSecondary} />
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.section}>
       <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => setModalVisible(true)}>
@@ -49,52 +73,28 @@ export function ProfilePlanCard() {
             </View>
 
             <Text style={styles.sheetTitle}>Assine o Plano Pro</Text>
-            {Platform.OS === 'ios' ? (
-              <>
-                <Text style={styles.sheetDesc}>
-                  O Plano Pro oferece recursos ilimitados para walkers profissionais. Fale com nosso suporte pelo Instagram para saber mais.
-                </Text>
-                <TouchableOpacity
-                  style={styles.confirmBtn}
-                  onPress={() => {
-                    setModalVisible(false);
-                    setTimeout(() => Linking.openURL('https://instagram.com/zupet.io').catch(() => {}), 300);
-                  }}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="logo-instagram" size={16} color="#fff" />
-                  <Text style={styles.confirmBtnText}>Falar com Suporte</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)} activeOpacity={0.7}>
-                  <Text style={styles.cancelBtnText}>Agora não</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <Text style={styles.sheetDesc}>
-                  A assinatura é feita pelo{' '}
-                  <Text style={styles.sheetBold}>Dashboard exclusivo do Walker</Text>
-                  {' '}no site. Você será redirecionado para{' '}
-                  <Text style={styles.sheetUrl}>walker.zupet.io</Text>
-                </Text>
+            <Text style={styles.sheetDesc}>
+              A assinatura é feita pelo{' '}
+              <Text style={styles.sheetBold}>Dashboard exclusivo do Walker</Text>
+              {' '}no site. Você será redirecionado para{' '}
+              <Text style={styles.sheetUrl}>walker.zupet.io</Text>
+            </Text>
 
-                <View style={styles.infoCard}>
-                  <Ionicons name="information-circle-outline" size={18} color={Colors.primary} />
-                  <Text style={styles.infoText}>
-                    Use o <Text style={styles.sheetBold}>mesmo e-mail e senha</Text> do app para fazer login no site.
-                  </Text>
-                </View>
+            <View style={styles.infoCard}>
+              <Ionicons name="information-circle-outline" size={18} color={Colors.primary} />
+              <Text style={styles.infoText}>
+                Use o <Text style={styles.sheetBold}>mesmo e-mail e senha</Text> do app para fazer login no site.
+              </Text>
+            </View>
 
-                <TouchableOpacity style={styles.confirmBtn} onPress={handleOpenDashboard} activeOpacity={0.85}>
-                  <Ionicons name="open-outline" size={16} color="#fff" />
-                  <Text style={styles.confirmBtnText}>Ir para o Dashboard</Text>
-                </TouchableOpacity>
+            <TouchableOpacity style={styles.confirmBtn} onPress={handleOpenDashboard} activeOpacity={0.85}>
+              <Ionicons name="open-outline" size={16} color="#fff" />
+              <Text style={styles.confirmBtnText}>Ir para o Dashboard</Text>
+            </TouchableOpacity>
 
-                <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)} activeOpacity={0.7}>
-                  <Text style={styles.cancelBtnText}>Agora não</Text>
-                </TouchableOpacity>
-              </>
-            )}
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)} activeOpacity={0.7}>
+              <Text style={styles.cancelBtnText}>Agora não</Text>
+            </TouchableOpacity>
           </Pressable>
         </Pressable>
       </Modal>
