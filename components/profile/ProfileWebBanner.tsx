@@ -8,8 +8,6 @@ const BASE_URL = 'https://walker.zupet.io';
 export function ProfileWebBanner() {
   const profile  = useAuthStore((s) => s.walkerProfile);
   const username = profile?.username;
-  const isPro    = profile?.plan === 'pro';
-
   const profileUrl = username ? `${BASE_URL}/w/${username}` : null;
 
   const openUrl = (url: string) => {
@@ -36,11 +34,6 @@ export function ProfileWebBanner() {
       <View style={styles.textWrap}>
         <View style={styles.titleRow}>
           <Text style={styles.title}>Seu perfil na web</Text>
-          {isPro && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>⭐ Pro</Text>
-            </View>
-          )}
         </View>
         <Text style={styles.subtitle}>
           Acesse e compartilhe seu perfil público ou complete seus dados pelo painel.
@@ -125,17 +118,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#0D2926',
-  },
-  badge: {
-    backgroundColor: Colors.primary + '25',
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: Colors.primary,
   },
   subtitle: {
     fontSize: 12,
