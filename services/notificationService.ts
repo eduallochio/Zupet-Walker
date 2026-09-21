@@ -67,12 +67,23 @@ export function addNotificationListeners(): () => void {
 }
 
 // Chamado após o router estar pronto — lida com notificações que abriram o app do estado fechado
+let _handledInitialNotifId: string | null = null;
+
 export async function handleInitialNotificationResponse(): Promise<void> {
   if (isExpoGo) return;
   try {
     const Notifications = getNotifications();
     const response = await Notifications.getLastNotificationResponseAsync();
     if (!response) return;
+
+    const notifId = response.notification.request.identifier;
+    if (notifId === _handledInitialNotifId) return;
+
+    // Ignora notificações com mais de 30s — são de sessões anteriores
+    const notifDate = response.notification.date;
+    if (Date.now() / 1000 - notifDate > 30) return;
+
+    _handledInitialNotifId = notifId;
     const data = response.notification.request.content.data as Record<string, any>;
     navigateFromNotificationData(data);
   } catch {}

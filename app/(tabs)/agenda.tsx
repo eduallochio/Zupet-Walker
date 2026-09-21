@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Modal, FlatList, Image, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Modal, FlatList, Image, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
@@ -20,6 +20,7 @@ type Schedule = {
   status: ScheduleStatus;
   notes?: string;
   owner_id: string;
+  proposed_by?: string | null;
   service_id?: string | null;
   service_type?: string;
   petNames?: string[];
@@ -43,6 +44,126 @@ const statusConfig: Record<ScheduleStatus, { label: string; color: string; borde
   overdue:      { label: 'Atrasado',      color: Colors.error,   border: Colors.error   },
   rescheduled:  { label: 'Reagendando',  color: Colors.primary, border: Colors.primary },
 };
+
+const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+type RescheduleCalendarProps = {
+  initialDate: Date;
+  initialTimeStr: string;
+  saving: boolean;
+  onSubmit: (date: Date, timeStr: string, notes: string) => void;
+  onCancel: () => void;
+};
+
+function RescheduleCalendar({ initialDate, initialTimeStr, saving, onSubmit, onCancel }: RescheduleCalendarProps) {
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
+  const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [timeStr, setTimeStr] = useState(initialTimeStr);
+  const [notes, setNotes] = useState('');
+
+  const y = calendarMonth.getFullYear();
+  const mo = calendarMonth.getMonth();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const firstDay = new Date(y, mo, 1).getDay();
+  const daysInMonth = new Date(y, mo + 1, 0).getDate();
+  const cells: (number | null)[] = [...Array(firstDay).fill(null), ...Array.from({length: daysInMonth}, (_, i) => i + 1)];
+  const selDate = new Date(selectedDate); selDate.setHours(0,0,0,0);
+
+  return (
+    <View>
+      {/* Cabeçalho mês */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <TouchableOpacity onPress={() => setCalendarMonth(new Date(y, mo - 1, 1))} style={{ padding: 6 }}>
+          <Ionicons name="chevron-back" size={18} color={Colors.primary} />
+        </TouchableOpacity>
+        <Text style={{ fontWeight: '700', color: Colors.text, fontSize: 14 }}>{MONTHS_PT[mo]} {y}</Text>
+        <TouchableOpacity onPress={() => setCalendarMonth(new Date(y, mo + 1, 1))} style={{ padding: 6 }}>
+          <Ionicons name="chevron-forward" size={18} color={Colors.primary} />
+        </TouchableOpacity>
+      </View>
+      {/* Dias da semana */}
+      <View style={{ flexDirection: 'row', marginBottom: 4 }}>
+        {['D','S','T','Q','Q','S','S'].map((d, i) => (
+          <Text key={i} style={{ flex: 1, textAlign: 'center', fontSize: 11, color: Colors.textSecondary, fontWeight: '600' }}>{d}</Text>
+        ))}
+      </View>
+      {/* Grid de dias */}
+      {Array.from({ length: Math.ceil(cells.length / 7) }, (_, week) => (
+        <View key={week} style={{ flexDirection: 'row', marginBottom: 2 }}>
+          {cells.slice(week * 7, week * 7 + 7).concat(Array(7).fill(null)).slice(0, 7).map((day, col) => {
+            if (!day) return <View key={col} style={{ flex: 1 }} />;
+            const cellDate = new Date(y, mo, day);
+            const isPast = cellDate < today;
+            const isSelected = cellDate.getTime() === selDate.getTime();
+            return (
+              <TouchableOpacity
+                key={col}
+                disabled={isPast}
+                onPress={() => setSelectedDate(new Date(y, mo, day))}
+                style={{ flex: 1, alignItems: 'center', paddingVertical: 5, borderRadius: 20,
+                  backgroundColor: isSelected ? Colors.primary : 'transparent' }}
+              >
+                <Text style={{ fontSize: 13, color: isPast ? Colors.textSecondary : isSelected ? '#fff' : Colors.text, fontWeight: isSelected ? '700' : '400' }}>
+                  {day}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ))}
+      {/* Horário */}
+      <View style={{ marginTop: 10, marginBottom: 4 }}>
+        <Text style={{ fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 5 }}>Horário</Text>
+        <TextInput
+          style={{ backgroundColor: Colors.card, borderRadius: 10, borderWidth: 1.5, borderColor: Colors.border, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: Colors.text }}
+          value={timeStr}
+          onChangeText={(text) => {
+            const digits = text.replace(/\D/g, '').slice(0, 4);
+            let formatted = digits;
+            if (digits.length >= 3) {
+              formatted = digits.slice(0, 2) + ':' + digits.slice(2);
+            } else if (digits.length === 2 && text.endsWith(':')) {
+              formatted = digits + ':';
+            }
+            setTimeStr(formatted);
+          }}
+          placeholder="08:00"
+          placeholderTextColor={Colors.textSecondary}
+          keyboardType="numeric"
+          maxLength={5}
+        />
+      </View>
+      {/* Motivo */}
+      <View style={{ marginTop: 10, marginBottom: 16 }}>
+        <Text style={{ fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 5 }}>Motivo (opcional)</Text>
+        <TextInput
+          style={{ backgroundColor: Colors.card, borderRadius: 10, borderWidth: 1.5, borderColor: Colors.border, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: Colors.text, height: 72, textAlignVertical: 'top' }}
+          value={notes}
+          onChangeText={setNotes}
+          placeholder="Ex: compromisso imprevisto..."
+          placeholderTextColor={Colors.textSecondary}
+          multiline
+          maxLength={200}
+        />
+      </View>
+      {/* Botões */}
+      <TouchableOpacity
+        style={{ backgroundColor: Colors.primary, borderRadius: 12, height: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+        onPress={() => onSubmit(selectedDate, timeStr, notes)}
+        disabled={saving}
+        activeOpacity={0.8}
+      >
+        {saving
+          ? <ActivityIndicator size="small" color="#fff" />
+          : <><Ionicons name="calendar-outline" size={14} color="#fff" /><Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Enviar proposta</Text></>
+        }
+      </TouchableOpacity>
+      <TouchableOpacity onPress={onCancel} style={{ alignItems: 'center', paddingVertical: 12 }}>
+        <Text style={{ color: Colors.textSecondary, fontSize: 14 }}>Cancelar</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 function buildWeekDays(overdueSchedules: Schedule[]) {
   const days = [];
@@ -86,15 +207,15 @@ export default function AgendaScreen() {
   const [paymentModal, setPaymentModal] = useState<{ item: Schedule; saving: boolean } | null>(null);
   const [historyModal, setHistoryModal] = useState(false);
   const [rescheduleModal, setRescheduleModal] = useState<{ item: Schedule; saving: boolean } | null>(null);
-  const [rescheduleDate, setRescheduleDate] = useState('');
-  const [rescheduleTime, setRescheduleTime] = useState('');
-  const [rescheduleNotes, setRescheduleNotes] = useState('');
+  const [rescheduleInitialDate, setRescheduleInitialDate] = useState<Date>(new Date());
+  const [rescheduleInitialTimeStr, setRescheduleInitialTimeStr] = useState('08:00');
+  const [detailModal, setDetailModal] = useState<Schedule | null>(null);
 
   const fetchSchedules = useCallback(async () => {
     if (!walkerProfile) return;
     const { data } = await supabase
       .from('walk_schedules')
-      .select('id, scheduled_at, duration_minutes, pet_ids, status, notes, owner_id, service_id, walker_services(type)')
+      .select('id, scheduled_at, duration_minutes, pet_ids, status, notes, owner_id, proposed_by, service_id, walker_services(type)')
       .eq('walker_id', walkerProfile.id)
       .order('scheduled_at', { ascending: true });
 
@@ -259,25 +380,21 @@ export default function AgendaScreen() {
   };
 
   const openReschedule = (item: Schedule) => {
-    const d = new Date(item.scheduled_at);
-    setRescheduleDate(d.toLocaleDateString('pt-BR'));
-    setRescheduleTime(`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`);
-    setRescheduleNotes('');
+    const original = new Date(item.scheduled_at);
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0,0,0,0);
+    const initialDate = original > new Date() ? original : tomorrow;
+    setRescheduleInitialDate(initialDate);
+    setRescheduleInitialTimeStr(`${String(initialDate.getHours()).padStart(2,'0')}:${String(initialDate.getMinutes()).padStart(2,'0')}`);
     setRescheduleModal({ item, saving: false });
   };
 
-  const doReschedule = async () => {
+  const doReschedule = async (date: Date, timeStr: string, notes: string) => {
     if (!rescheduleModal || !walkerProfile) return;
     const item = rescheduleModal.item;
 
-    // Valida data e hora no formato dd/mm/aaaa e HH:mm
-    const [day, month, year] = rescheduleDate.split('/').map(Number);
-    const [hour, minute] = rescheduleTime.split(':').map(Number);
-    if (!day || !month || !year || isNaN(hour) || isNaN(minute)) {
-      Alert.alert('Data inválida', 'Informe a data (dd/mm/aaaa) e hora (HH:mm) corretamente.');
-      return;
-    }
-    const proposed = new Date(year, month - 1, day, hour, minute);
+    const [h, m] = timeStr.split(':').map(Number);
+    const proposed = new Date(date);
+    proposed.setHours(isNaN(h) ? 8 : h, isNaN(m) ? 0 : m, 0, 0);
     if (proposed <= new Date()) {
       Alert.alert('Data inválida', 'O novo horário deve ser no futuro.');
       return;
@@ -290,7 +407,7 @@ export default function AgendaScreen() {
         .update({
           status: 'rescheduled',
           reschedule_proposed_at: proposed.toISOString(),
-          reschedule_notes: rescheduleNotes || null,
+          reschedule_notes: notes || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', item.id);
@@ -298,8 +415,8 @@ export default function AgendaScreen() {
 
       setSchedules((prev) => prev.map((s) => s.id === item.id ? { ...s, status: 'rescheduled' as any } : s));
 
-      // Notifica tutor
-      if (item.owner_id && walkerProfile.name) {
+      // Notifica tutor apenas se o agendamento foi proposto pelo tutor (não criado pelo próprio walker)
+      if (item.owner_id && item.proposed_by === 'owner' && walkerProfile.name) {
         const dateLabel = proposed.toLocaleDateString('pt-BR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
         const title = '🔄 Reagendamento proposto';
         const body  = `${walkerProfile.name} propôs um novo horário: ${dateLabel}. Abra o app para aceitar.`;
@@ -321,7 +438,8 @@ export default function AgendaScreen() {
 
       setRescheduleModal(null);
       Alert.alert('Proposta enviada!', 'O tutor será notificado para aceitar o novo horário.');
-    } catch {
+    } catch (err) {
+      console.error('[doReschedule]', err);
       Alert.alert('Erro', 'Não foi possível propor o reagendamento.');
       setRescheduleModal((prev) => prev ? { ...prev, saving: false } : null);
     }
@@ -385,7 +503,10 @@ export default function AgendaScreen() {
   const overdueItems = schedules
     .filter((s) => s.status === 'confirmed' && new Date(s.scheduled_at) < startOfToday)
     .map((s) => ({ ...s, status: 'overdue' as ScheduleStatus }));
-  const weekDays = buildWeekDays(overdueItems);
+  // Inclui também rescheduled passados para que o dia apareça no seletor
+  const rescheduledPastItems = schedules
+    .filter((s) => s.status === 'rescheduled' && new Date(s.scheduled_at) < startOfToday);
+  const weekDays = buildWeekDays([...overdueItems, ...rescheduledPastItems]);
 
   const daySchedules = schedules
     .filter((s) => isSameDay(new Date(s.scheduled_at), selectedDay))
@@ -517,7 +638,7 @@ export default function AgendaScreen() {
                 const cfg = statusConfig[item.status];
                 const time = new Date(item.scheduled_at);
                 return (
-                  <View key={item.id} style={[styles.card, { borderLeftColor: cfg.border }]}>
+                  <TouchableOpacity key={item.id} style={[styles.card, { borderLeftColor: cfg.border }]} onPress={() => setDetailModal(item)} activeOpacity={0.85}>
                     <View style={styles.cardLeft}>
                       <Text style={styles.cardTime}>
                         {time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -552,60 +673,14 @@ export default function AgendaScreen() {
                         </Text>
                       </View>
                       {item.notes ? <Text style={styles.cardNotes} numberOfLines={1}>{item.notes}</Text> : null}
-
-                      {/* Botões aceitar/recusar — apenas para agendamentos pendentes */}
-                      {item.status === 'proposed' && (
-                        <View style={styles.actionRow}>
-                          <TouchableOpacity
-                            style={styles.rejectBtn}
-                            onPress={() => updateStatus(item.id, 'cancelled')}
-                            activeOpacity={0.75}
-                          >
-                            <Ionicons name="close" size={14} color={Colors.error} />
-                            <Text style={[styles.actionBtnText, { color: Colors.error }]}>Recusar</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={styles.acceptBtn}
-                            onPress={() => updateStatus(item.id, 'confirmed')}
-                            activeOpacity={0.75}
-                          >
-                            <Ionicons name="checkmark" size={14} color="#fff" />
-                            <Text style={[styles.actionBtnText, { color: '#fff' }]}>Aceitar</Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
-
-                      {/* Botões finalizar + reagendar — confirmados ou atrasados */}
-                      {(item.status === 'confirmed' || item.status === 'overdue') && (
-                        <View style={styles.actionRow}>
-                          <TouchableOpacity
-                            style={styles.rescheduleBtn}
-                            onPress={() => openReschedule(item)}
-                            activeOpacity={0.75}
-                          >
-                            <Ionicons name="calendar-outline" size={13} color={Colors.primary} />
-                            <Text style={[styles.actionBtnText, { color: Colors.primary }]}>Reagendar</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={[styles.finalizeBtn, { flex: 1 }]}
-                            onPress={() => finalizeService(item)}
-                            activeOpacity={0.75}
-                          >
-                            <Ionicons name="checkmark-circle-outline" size={14} color="#fff" />
-                            <Text style={[styles.actionBtnText, { color: '#fff' }]}>Finalizar</Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
-
-                      {/* Badge reagendamento proposto */}
                       {item.status === 'rescheduled' && (
                         <View style={styles.rescheduledBadge}>
                           <Ionicons name="time-outline" size={13} color={Colors.primary} />
-                          <Text style={styles.rescheduledText}>Aguardando tutor aceitar novo horário</Text>
+                          <Text style={styles.rescheduledText}>Aguardando tutor aceitar</Text>
                         </View>
                       )}
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 );
               })}
             </View>
@@ -739,68 +814,150 @@ export default function AgendaScreen() {
 
       {/* Modal de reagendamento */}
       <Modal visible={!!rescheduleModal} transparent animationType="slide" onRequestClose={() => setRescheduleModal(null)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Propor reagendamento</Text>
-            <Text style={styles.modalSub}>O tutor será notificado e poderá aceitar ou recusar.</Text>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+          <View style={styles.modalOverlay}>
+            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+              <View style={styles.modalBox}>
+                <Text style={styles.modalTitle}>Propor reagendamento</Text>
+                <Text style={styles.modalSub}>O tutor será notificado e poderá aceitar ou recusar.</Text>
 
-            <View style={styles.rescheduleField}>
-              <Text style={styles.rescheduleLabel}>Nova data (dd/mm/aaaa)</Text>
-              <TextInput
-                style={styles.rescheduleInput}
-                value={rescheduleDate}
-                onChangeText={setRescheduleDate}
-                placeholder="ex: 05/09/2026"
-                placeholderTextColor={Colors.textSecondary}
-                keyboardType="numeric"
-                maxLength={10}
-              />
-            </View>
+                <RescheduleCalendar
+                  initialDate={rescheduleInitialDate}
+                  initialTimeStr={rescheduleInitialTimeStr}
+                  saving={!!rescheduleModal?.saving}
+                  onSubmit={doReschedule}
+                  onCancel={() => setRescheduleModal(null)}
+                />
+              </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
-            <View style={styles.rescheduleField}>
-              <Text style={styles.rescheduleLabel}>Novo horário (HH:mm)</Text>
-              <TextInput
-                style={styles.rescheduleInput}
-                value={rescheduleTime}
-                onChangeText={setRescheduleTime}
-                placeholder="ex: 14:30"
-                placeholderTextColor={Colors.textSecondary}
-                keyboardType="numeric"
-                maxLength={5}
-              />
-            </View>
+      {/* Modal de detalhes do agendamento */}
+      <Modal visible={!!detailModal} transparent animationType="slide" onRequestClose={() => setDetailModal(null)}>
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)' }}>
+          <View style={{ backgroundColor: Colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingTop: 20, paddingBottom: Platform.OS === 'android' ? 32 : 12, maxHeight: '90%' }}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            {detailModal && (() => {
+              const item = detailModal;
+              const cfg = statusConfig[item.status];
+              const time = new Date(item.scheduled_at);
+              return (
+                <>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <Text style={styles.modalTitle}>Detalhes</Text>
+                    <TouchableOpacity onPress={() => setDetailModal(null)}>
+                      <Ionicons name="close" size={22} color={Colors.textSecondary} />
+                    </TouchableOpacity>
+                  </View>
 
-            <View style={styles.rescheduleField}>
-              <Text style={styles.rescheduleLabel}>Motivo (opcional)</Text>
-              <TextInput
-                style={[styles.rescheduleInput, { height: 72, textAlignVertical: 'top' }]}
-                value={rescheduleNotes}
-                onChangeText={setRescheduleNotes}
-                placeholder="Ex: compromisso imprevisto..."
-                placeholderTextColor={Colors.textSecondary}
-                multiline
-                maxLength={200}
-              />
-            </View>
+                  {/* Status */}
+                  <View style={[styles.statusChip, { backgroundColor: `${cfg.color}18`, alignSelf: 'flex-start', marginBottom: 16 }]}>
+                    <Text style={[styles.statusText, { color: cfg.color }]}>{cfg.label}</Text>
+                  </View>
 
-            <TouchableOpacity
-              style={styles.finalizeBtn}
-              onPress={doReschedule}
-              disabled={rescheduleModal?.saving}
-              activeOpacity={0.8}
-            >
-              {rescheduleModal?.saving
-                ? <ActivityIndicator size="small" color="#fff" />
-                : <>
-                    <Ionicons name="calendar-outline" size={14} color="#fff" />
-                    <Text style={[styles.actionBtnText, { color: '#fff' }]}>Enviar proposta</Text>
-                  </>
-              }
-            </TouchableOpacity>
+                  {/* Data e hora */}
+                  <View style={{ flexDirection: 'row', gap: 16, marginBottom: 12 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rescheduleLabel}>Data</Text>
+                      <Text style={{ fontSize: 15, color: Colors.text, fontWeight: '600' }}>
+                        {time.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text style={styles.rescheduleLabel}>Horário</Text>
+                      <Text style={{ fontSize: 15, color: Colors.text, fontWeight: '600' }}>
+                        {time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                    </View>
+                  </View>
 
-            <TouchableOpacity onPress={() => setRescheduleModal(null)} style={styles.cancelBtn}>
-              <Text style={styles.cancelBtnText}>Cancelar</Text>
-            </TouchableOpacity>
+                  {/* Duração e serviço */}
+                  <View style={{ flexDirection: 'row', gap: 16, marginBottom: 12 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rescheduleLabel}>Duração</Text>
+                      <Text style={{ fontSize: 15, color: Colors.text, fontWeight: '600' }}>{item.duration_minutes} min</Text>
+                    </View>
+                    {item.service_type && (
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.rescheduleLabel}>Serviço</Text>
+                        <Text style={{ fontSize: 15, color: Colors.text, fontWeight: '600' }}>{SERVICE_TYPE_LABELS[item.service_type] ?? item.service_type}</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Pets */}
+                  <View style={{ marginBottom: 12 }}>
+                    <Text style={styles.rescheduleLabel}>Pets</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                      {(item.petAvatars ?? []).slice(0, 4).map((uri, i) =>
+                        uri ? (
+                          <Image key={i} source={{ uri }} style={[styles.petAvatar, { width: 32, height: 32, borderRadius: 16 }]} />
+                        ) : (
+                          <View key={i} style={[styles.petAvatarPlaceholder, { width: 32, height: 32, borderRadius: 16 }]}>
+                            <Ionicons name="paw" size={14} color={Colors.primary} />
+                          </View>
+                        )
+                      )}
+                      <Text style={{ fontSize: 14, color: Colors.text }}>
+                        {item.petNames && item.petNames.length > 0 ? item.petNames.join(', ') : `${item.pet_ids.length} pet(s)`}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Notas */}
+                  {item.notes ? (
+                    <View style={{ marginBottom: 16 }}>
+                      <Text style={styles.rescheduleLabel}>Observações</Text>
+                      <Text style={{ fontSize: 14, color: Colors.text, marginTop: 2 }}>{item.notes}</Text>
+                    </View>
+                  ) : null}
+
+                  {/* Botões aceitar/recusar — só para agendamentos propostos pelo tutor */}
+                  {item.status === 'proposed' && item.proposed_by !== 'walker' && (
+                    <View style={styles.actionRow}>
+                      <TouchableOpacity style={styles.rejectBtn} onPress={() => { updateStatus(item.id, 'cancelled'); setDetailModal(null); }} activeOpacity={0.75}>
+                        <Ionicons name="close" size={14} color={Colors.error} />
+                        <Text style={[styles.actionBtnText, { color: Colors.error }]}>Recusar</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.acceptBtn} onPress={() => { updateStatus(item.id, 'confirmed'); setDetailModal(null); }} activeOpacity={0.75}>
+                        <Ionicons name="checkmark" size={14} color="#fff" />
+                        <Text style={[styles.actionBtnText, { color: '#fff' }]}>Aceitar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  {/* Agendamento próprio pendente — confirmar direto */}
+                  {item.status === 'proposed' && item.proposed_by === 'walker' && (
+                    <TouchableOpacity style={styles.acceptBtn} onPress={() => { updateStatus(item.id, 'confirmed'); setDetailModal(null); }} activeOpacity={0.75}>
+                      <Ionicons name="checkmark" size={14} color="#fff" />
+                      <Text style={[styles.actionBtnText, { color: '#fff' }]}>Confirmar</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {(item.status === 'confirmed' || item.status === 'overdue') && (
+                    <View style={styles.actionRow}>
+                      <TouchableOpacity style={styles.rescheduleBtn} onPress={() => { setDetailModal(null); openReschedule(item); }} activeOpacity={0.75}>
+                        <Ionicons name="calendar-outline" size={13} color={Colors.primary} />
+                        <Text style={[styles.actionBtnText, { color: Colors.primary }]}>Reagendar</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.finalizeBtn, { flex: 1 }]} onPress={() => { setDetailModal(null); finalizeService(item); }} activeOpacity={0.75}>
+                        <Ionicons name="checkmark-circle-outline" size={14} color="#fff" />
+                        <Text style={[styles.actionBtnText, { color: '#fff' }]}>Finalizar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {item.status === 'rescheduled' && (
+                    <View style={styles.rescheduledBadge}>
+                      <Ionicons name="time-outline" size={13} color={Colors.primary} />
+                      <Text style={styles.rescheduledText}>Aguardando tutor aceitar novo horário</Text>
+                    </View>
+                  )}
+                </>
+              );
+            })()}
+          </ScrollView>
           </View>
         </View>
       </Modal>

@@ -6,14 +6,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
-import * as WebBrowser from 'expo-web-browser';
-import Constants from 'expo-constants';
 import { supabase } from '../../services/supabase';
 import { Colors } from '../../constants/colors';
-
-// No Expo Go o scheme customizado não funciona — login social requer APK/build nativa
-const IS_EXPO_GO = Constants.appOwnership === 'expo';
-const REDIRECT_URL = 'zupet-walker://auth/callback';
 
 export default function LoginScreen() {
   const [email, setEmail]       = useState('');
@@ -41,22 +35,39 @@ export default function LoginScreen() {
     else Alert.alert('Confirme seu e-mail', 'Enviamos um link de confirmação para o seu e-mail.');
   };
 
-  const handleGoogle = async () => {
-    if (IS_EXPO_GO) {
-      Alert.alert(
-        'Não disponível no Expo Go',
-        'O login com Google requer um build nativo do app. Use e-mail e senha para testar.',
-      );
+  const handleSocialLogin = async (provider: 'google' | 'apple') => {
+    setSocialLoading(provider);
+
+    // ATENÇÃO: não alterar este bloco sem avisar o Eduardo primeiro.
+    // O redirectUrl DEVE ser 'zupet-walker://auth/callback' (cadastrado no Supabase).
+    // O segundo parâmetro do openAuthSessionAsync DEVE ser 'zupet-walker://' (scheme completo)
+    // para capturar o retorno. Qualquer mudança aqui quebra o login social no Android.
+    const redirectUrl = 'zupet-walker://auth/callback';
+
+    // expo-web-browser usa módulo nativo — não disponível em Expo Go.
+    // requireNativeModule verifica sem crashar; require só ocorre após confirmação.
+    let openAuthSession: typeof import('expo-web-browser').openAuthSessionAsync | null = null;
+    try {
+      const { requireNativeModule } = require('expo-modules-core');
+      requireNativeModule('ExpoWebBrowser');
+      openAuthSession = require('expo-web-browser').openAuthSessionAsync;
+    } catch {
+      openAuthSession = null;
+    }
+
+    if (!openAuthSession) {
+      setSocialLoading(null);
+      Alert.alert('Indisponível', 'Login social requer o app instalado (não Expo Go).');
       return;
     }
-    setSocialLoading('google');
+
     const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: REDIRECT_URL, skipBrowserRedirect: true },
+      provider,
+      options: { redirectTo: redirectUrl, skipBrowserRedirect: true },
     });
     if (error) { setSocialLoading(null); Alert.alert('Erro', error.message); return; }
     if (data?.url) {
-      const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URL);
+      const result = await openAuthSession(data.url, 'zupet-walker://');
       if (result.type === 'success' && result.url) {
         const url = result.url;
         const hashIndex = url.indexOf('#');
@@ -65,49 +76,16 @@ export default function LoginScreen() {
           ? url.slice(hashIndex + 1)
           : queryIndex !== -1 ? url.slice(queryIndex + 1) : '';
         const params = Object.fromEntries(new URLSearchParams(paramStr));
-        const accessToken = params['access_token'];
-        const refreshToken = params['refresh_token'];
-        if (accessToken && refreshToken) {
-          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        if (params['access_token'] && params['refresh_token']) {
+          await supabase.auth.setSession({ access_token: params['access_token'], refresh_token: params['refresh_token'] });
         }
       }
     }
     setSocialLoading(null);
   };
 
-  const handleApple = async () => {
-    if (IS_EXPO_GO) {
-      Alert.alert(
-        'Não disponível no Expo Go',
-        'O login com Apple requer um build nativo do app. Use e-mail e senha para testar.',
-      );
-      return;
-    }
-    setSocialLoading('apple');
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'apple',
-      options: { redirectTo: REDIRECT_URL, skipBrowserRedirect: true },
-    });
-    if (error) { setSocialLoading(null); Alert.alert('Erro', error.message); return; }
-    if (data?.url) {
-      const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URL);
-      if (result.type === 'success' && result.url) {
-        const url = result.url;
-        const hashIndex = url.indexOf('#');
-        const queryIndex = url.indexOf('?');
-        const paramStr = hashIndex !== -1
-          ? url.slice(hashIndex + 1)
-          : queryIndex !== -1 ? url.slice(queryIndex + 1) : '';
-        const params = Object.fromEntries(new URLSearchParams(paramStr));
-        const accessToken = params['access_token'];
-        const refreshToken = params['refresh_token'];
-        if (accessToken && refreshToken) {
-          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-        }
-      }
-    }
-    setSocialLoading(null);
-  };
+  const handleGoogle = () => handleSocialLogin('google');
+  const handleApple  = () => handleSocialLogin('apple');
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -187,7 +165,7 @@ export default function LoginScreen() {
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Social — abaixo do formulário */}
+          {/* Social */}
           <View style={styles.socialGroup}>
             <TouchableOpacity style={styles.socialBtn} onPress={handleGoogle} activeOpacity={0.85} disabled={!!socialLoading}>
               {socialLoading === 'google'
