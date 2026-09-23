@@ -22,28 +22,8 @@ export function ProfilePlanCard() {
     }, 300);
   };
 
-  // No iOS, exibe apenas um banner informativo sem menção a upgrade ou plano
   if (Platform.OS === 'ios') {
-    return (
-      <View style={styles.section}>
-        <TouchableOpacity
-          style={styles.card}
-          activeOpacity={0.85}
-          onPress={handleOpenDashboard}
-        >
-          <View style={styles.cardLeft}>
-            <View style={styles.iconWrap}>
-              <Ionicons name="globe-outline" size={18} color={Colors.primary} />
-            </View>
-            <View style={styles.cardText}>
-              <Text style={styles.title}>Painel do Walker</Text>
-              <Text style={styles.sub}>Gerencie seu perfil completo em walker.zupet.io</Text>
-            </View>
-          </View>
-          <Ionicons name="open-outline" size={18} color={Colors.textSecondary} />
-        </TouchableOpacity>
-      </View>
-    );
+    return null;
   }
 
   return (

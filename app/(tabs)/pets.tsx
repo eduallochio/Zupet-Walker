@@ -43,40 +43,97 @@ export default function PetsScreen() {
   const [pendingAccept, setPendingAccept] = useState<PendingAccept | null>(null);
 
   const unlinkPet = async (pet: LinkedPet) => {
+    const petName = pet.pet?.name ?? 'este pet';
+
     Alert.alert(
       'Desvincular pet',
-      `Deseja remover ${pet.pet?.name ?? 'este pet'} da sua lista? O tutor será notificado.`,
+      `Deseja remover ${petName} da sua lista?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Desvincular', style: 'destructive',
-          onPress: async () => {
-            const { error } = await supabase
-              .from('walker_pet_links')
-              .delete()
-              .eq('id', pet.id);
-            if (error) { Alert.alert('Erro', 'Não foi possível desvincular.'); return; }
-
-            if (pet.owner?.user_id) {
-              const title = 'Pet desvinculado pelo walker';
-              const body  = `${walkerProfile?.name ?? 'Seu walker'} removeu ${pet.pet?.name ?? 'seu pet'} da lista de atendimento.`;
-              await Promise.all([
-                supabase.from('notifications').insert({
-                  user_id: pet.owner.user_id,
-                  type: 'pet_unlinked_by_walker', title, body,
-                  data: { pet_id: pet.pet?.id, walker_id: walkerProfile?.id, pet_name: pet.pet?.name },
-                }),
-                sendPushToOwner(pet.owner.user_id, title, body, {
-                  type: 'pet_unlinked_by_walker', pet_id: pet.pet?.id, walker_id: walkerProfile?.id,
-                }),
-              ]);
-            }
-
-            setPets((prev) => prev.filter((p) => p.id !== pet.id));
+          onPress: () => {
+            Alert.alert(
+              'Pagamentos pendentes',
+              `Deseja cancelar os pagamentos pendentes de ${petName}?`,
+              [
+                {
+                  text: 'Não cancelar',
+                  onPress: () => _doUnlink(pet, false),
+                },
+                {
+                  text: 'Cancelar pagamentos', style: 'destructive',
+                  onPress: () => {
+                    Alert.alert(
+                      'Agendamentos futuros',
+                      `Deseja cancelar os agendamentos futuros de ${petName}?`,
+                      [
+                        {
+                          text: 'Não cancelar',
+                          onPress: () => _doUnlink(pet, true, false),
+                        },
+                        {
+                          text: 'Cancelar agendamentos', style: 'destructive',
+                          onPress: () => _doUnlink(pet, true, true),
+                        },
+                      ]
+                    );
+                  },
+                },
+              ]
+            );
           },
         },
       ]
     );
+  };
+
+  const _doUnlink = async (pet: LinkedPet, cancelPayments: boolean, cancelSchedules?: boolean) => {
+    try {
+      const petId   = pet.pet_id;
+      const walkerId = walkerProfile?.id ?? '';
+
+      await supabase.from('walker_pet_links').update({ status: 'cancelled' }).eq('id', pet.id);
+
+      if (cancelPayments) {
+        await supabase.from('walker_payments')
+          .update({ status: 'cancelled' })
+          .eq('walker_id', walkerId)
+          .eq('owner_id', pet.owner?.user_id ?? '')
+          .eq('status', 'pending')
+          .contains('pet_ids', [petId]);
+      }
+
+      if (cancelSchedules) {
+        const now = new Date().toISOString();
+        await supabase.from('walk_schedules')
+          .update({ status: 'cancelled' })
+          .eq('walker_id', walkerId)
+          .eq('owner_id', pet.owner?.user_id ?? '')
+          .in('status', ['confirmed', 'pending'])
+          .gte('scheduled_at', now)
+          .contains('pet_ids', [petId]);
+      }
+
+      if (pet.owner?.user_id) {
+        const title = 'Pet desvinculado pelo walker';
+        const body  = `${walkerProfile?.name ?? 'Seu walker'} encerrou o atendimento de ${pet.pet?.name ?? 'seu pet'}.`;
+        await Promise.all([
+          supabase.from('notifications').insert({
+            user_id: pet.owner.user_id,
+            type: 'pet_unlinked_by_walker', title, body,
+            data: { pet_id: pet.pet?.id, walker_id: walkerId, pet_name: pet.pet?.name },
+          }),
+          sendPushToOwner(pet.owner.user_id, title, body, {
+            type: 'pet_unlinked_by_walker', pet_id: pet.pet?.id, walker_id: walkerId,
+          }),
+        ]);
+      }
+
+      setPets((prev) => prev.filter((p) => p.id !== pet.id));
+    } catch {
+      Alert.alert('Erro', 'Não foi possível desvincular. Tente novamente.');
+    }
   };
 
   const confirmAccept = async (pet: LinkedPet, serviceId: string | null) => {
@@ -87,6 +144,23 @@ export default function PetsScreen() {
         .update({ status: 'active', service_id: serviceId })
         .eq('id', pet.id);
       if (error) throw error;
+
+      // Criar walker_payment pendente automaticamente se serviço foi escolhido
+      if (serviceId && walkerProfile?.id && pet.owner?.user_id) {
+        const svc = pendingAccept?.services.find((s) => s.id === serviceId);
+        if (svc && svc.price > 0) {
+          await supabase.from('walker_payments').insert({
+            walker_id:    walkerProfile.id,
+            owner_id:     pet.owner.user_id,
+            pet_ids:      [pet.pet_id],
+            service_type: svc.type,
+            description:  svc.label,
+            amount:       svc.price,
+            billing_type: svc.billing_type,
+            status:       'pending',
+          });
+        }
+      }
 
       if (pet.owner?.user_id) {
         const title = 'Vínculo aceito!';
@@ -119,12 +193,9 @@ export default function PetsScreen() {
         const limits = getLimits(walkerProfile);
         const activePets = pets.filter((p) => p.status === 'active').length;
         if (activePets >= limits.linkedPets) {
-          const isPro = walkerProfile?.plan === 'pro';
           Alert.alert(
             'Limite atingido',
-            isPro
-              ? `Você já tem ${activePets} pets vinculados.`
-              : `Você já tem ${activePets} pets vinculados (limite do plano Free: ${limits.linkedPets}). Faça upgrade para o plano Pro para aceitar mais pets.`,
+            `Você já tem ${activePets} pets vinculados. Entre em contato com o suporte para ampliar sua conta.`,
             [{ text: 'Entendido' }]
           );
           return;
@@ -300,7 +371,7 @@ export default function PetsScreen() {
               if (ownPets.length >= limits.ownPets) {
                 Alert.alert(
                   'Limite atingido',
-                  `Você já tem ${ownPets.length} pets cadastrados (limite do plano Free: ${limits.ownPets}). Faça upgrade para o plano Pro para cadastrar mais.`,
+                  `Você já tem ${ownPets.length} pets cadastrados. Entre em contato com o suporte para ampliar sua conta.`,
                   [{ text: 'Entendido' }]
                 );
                 return;

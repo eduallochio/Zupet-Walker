@@ -116,9 +116,7 @@ export default function WalkStartScreen() {
         if (next.size >= limit) {
           Alert.alert(
             `Limite de pets por ${serviceLabel}`,
-            walkerProfile?.plan === 'pro'
-              ? `Você configurou o máximo de ${limit} pet${limit !== 1 ? 's' : ''} por ${serviceLabel}.`
-              : `No plano Free você pode atender até ${limit} pets por ${serviceLabel}. Faça upgrade para o plano Pro para aumentar esse limite.`,
+            `Você configurou o máximo de ${limit} pet${limit !== 1 ? 's' : ''} por ${serviceLabel}.`,
             [{ text: 'Entendido' }]
           );
           return prev;

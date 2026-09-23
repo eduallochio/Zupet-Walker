@@ -306,36 +306,6 @@ export default function EditProfileScreen() {
 
           </View>
 
-          {/* ── Link Público Pro ── */}
-          {(walkerProfile as any)?.plan === 'pro' && (
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>PERFIL PÚBLICO (PRO)</Text>
-              <Text style={styles.sectionHint}>Defina um link personalizado para compartilhar nas redes sociais</Text>
-              <View style={styles.field}>
-                <Text style={styles.label}>🔗  Seu link (username)</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.card, borderRadius: 12, borderWidth: 1.5, borderColor: usernameError ? '#F87171' : Colors.border, paddingHorizontal: 14, paddingVertical: 13 }}>
-                  <Text style={{ fontSize: 14, color: Colors.textSecondary }}>zupet.io/w/</Text>
-                  <TextInput
-                    style={{ flex: 1, fontSize: 15, color: Colors.text }}
-                    value={username}
-                    onChangeText={v => { setUsername(v.toLowerCase()); setUsernameError(''); }}
-                    placeholder="meu-nome"
-                    placeholderTextColor={Colors.textSecondary}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    keyboardType="url"
-                  />
-                </View>
-                {usernameError ? (
-                  <Text style={{ fontSize: 11, color: '#F87171', marginTop: 3 }}>{usernameError}</Text>
-                ) : username.trim() ? (
-                  <Text style={{ fontSize: 11, color: Colors.textSecondary, marginTop: 3 }}>
-                    walker.zupet.io/w/{username.trim().toLowerCase()}
-                  </Text>
-                ) : null}
-              </View>
-            </View>
-          )}
 
           {/* ── Redes Sociais ── */}
           <View style={styles.section}>

@@ -239,14 +239,6 @@ export default function HistoricoScreen() {
         </View>
       </View>
 
-      {walkerProfile?.plan !== 'pro' && (
-        <View style={styles.planBanner}>
-          <Ionicons name="lock-closed-outline" size={14} color="#F59E0B" />
-          <Text style={styles.planBannerText}>
-            Plano Free: histórico dos últimos 7 dias. Faça upgrade para ver todo o histórico.
-          </Text>
-        </View>
-      )}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
