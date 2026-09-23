@@ -19,9 +19,7 @@ export default function NotAWalkerScreen() {
   };
 
   const handleOpenZupet = () => {
-    Linking.openURL('zupet://').catch(() => {
-      Linking.openURL('https://zupet.io');
-    });
+    Linking.openURL('zupet://').catch(() => {});
   };
 
   const handleSignOut = async () => {

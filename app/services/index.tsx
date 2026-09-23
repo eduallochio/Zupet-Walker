@@ -54,7 +54,7 @@ export default function ServicesScreen() {
     if (services.length >= limits.services) {
       Alert.alert(
         'Limite atingido',
-        `No plano Free você pode ter até ${limits.services} serviço. Faça upgrade para o plano Pro para adicionar mais.`,
+        `Você atingiu o limite de ${limits.services} serviço disponível. Entre em contato com o suporte para ampliar sua conta.`,
         [{ text: 'Entendido' }]
       );
       return;
