@@ -69,11 +69,16 @@ export async function restorePurchases(): Promise<boolean> {
 
 export async function syncPlanWithSupabase(
   walkerId: string,
-  isPro: boolean
+  isPro: boolean,
+  originalTransactionId?: string
 ): Promise<void> {
+  const update: Record<string, unknown> = { plan: isPro ? 'pro' : 'free' };
+  if (originalTransactionId) {
+    update.apple_original_transaction_id = originalTransactionId;
+  }
   await supabase
     .from('walker_profiles')
-    .update({ plan: isPro ? 'pro' : 'free' })
+    .update(update)
     .eq('id', walkerId);
 }
 

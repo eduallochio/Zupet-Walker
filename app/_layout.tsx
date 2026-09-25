@@ -73,7 +73,8 @@ export default function RootLayout() {
     const cleanup = setupPurchaseListeners(
       async (purchase) => {
         if (walkerProfile?.id) {
-          await syncPlanWithSupabase(walkerProfile.id, true);
+          const txId = (purchase as any).originalTransactionIdentifier ?? (purchase as any).transactionIdentifier;
+          await syncPlanWithSupabase(walkerProfile.id, true, txId);
           fetchWalkerProfile(walkerProfile.id);
         }
       },
