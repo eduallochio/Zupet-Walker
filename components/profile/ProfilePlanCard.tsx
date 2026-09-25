@@ -10,6 +10,7 @@ const DASHBOARD_URL = 'https://walker.zupet.io';
 export function ProfilePlanCard() {
   const walkerProfile = useAuthStore((s) => s.walkerProfile);
   const setWalkerProfile = useAuthStore((s) => s.setWalkerProfile);
+  const fetchWalkerProfile = useAuthStore((s) => s.fetchWalkerProfile);
   const plan  = walkerProfile?.plan ?? 'free';
   const isPro = plan === 'pro';
   const [modalVisible, setModalVisible] = useState(false);
@@ -21,32 +22,30 @@ export function ProfilePlanCard() {
     setLoading(true);
     const result = await purchasePro();
     setLoading(false);
-    if (result.success) {
-      if (walkerProfile) {
-        await syncPlanWithSupabase(walkerProfile.id, true);
-        setWalkerProfile({ ...walkerProfile, plan: 'pro' });
-      }
-      setModalVisible(false);
-      Alert.alert('Plano Pro ativado!', 'Bem-vindo ao Plano Pro. Seus recursos foram desbloqueados.');
-    } else if (result.error) {
+    // A compra é assíncrona — o resultado real chega pelo listener em _layout.tsx
+    // que atualiza o plano no Supabase e recarrega o perfil.
+    // Aqui só tratamos cancelamento e erros.
+    if (!result.success && result.error) {
       Alert.alert('Erro', result.error);
+    } else if (!result.success) {
+      // Usuário cancelou — não faz nada
     }
+    // Fechamos o modal ao iniciar a compra (a Apple mostra a tela nativa)
+    setModalVisible(false);
   };
 
   const handleRestore = async () => {
     setLoading(true);
     const active = await restorePurchases();
-    setLoading(false);
-    if (active) {
-      if (walkerProfile) {
-        await syncPlanWithSupabase(walkerProfile.id, true);
-        setWalkerProfile({ ...walkerProfile, plan: 'pro' });
-      }
+    if (active && walkerProfile) {
+      await syncPlanWithSupabase(walkerProfile.id, true);
+      await fetchWalkerProfile(walkerProfile.user_id);
       setModalVisible(false);
       Alert.alert('Compra restaurada!', 'Seu Plano Pro foi restaurado com sucesso.');
-    } else {
+    } else if (!active) {
       Alert.alert('Nenhuma assinatura encontrada', 'Não encontramos uma assinatura ativa para restaurar.');
     }
+    setLoading(false);
   };
 
   const handleOpenDashboard = () => {

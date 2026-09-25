@@ -50,6 +50,8 @@ export default function RootLayout() {
   const fetchWalkerProfile = useAuthStore((s) => s.fetchWalkerProfile);
   const forceReady = useAuthStore((s) => s.forceReady);
   const walkerProfile = useAuthStore((s) => s.walkerProfile);
+  const walkerProfileRef = useRef(walkerProfile);
+  walkerProfileRef.current = walkerProfile;
   const notifCleanup = useRef<(() => void) | null>(null);
   // Guarda o último uid para evitar fetchWalkerProfile duplicado quando
   // getSession() e onAuthStateChange disparam juntos no boot
@@ -67,15 +69,16 @@ export default function RootLayout() {
     registerPushToken(walkerProfile.id);
   }, [walkerProfile?.id]);
 
-  // IAP: inicializa conexão e escuta compras concluídas
+  // IAP: inicializa conexão e escuta compras concluídas (uma única vez)
   useEffect(() => {
     initIAP();
     const cleanup = setupPurchaseListeners(
       async (purchase) => {
-        if (walkerProfile?.id) {
+        const profile = walkerProfileRef.current;
+        if (profile?.id) {
           const txId = (purchase as any).originalTransactionIdentifier ?? (purchase as any).transactionIdentifier;
-          await syncPlanWithSupabase(walkerProfile.id, true, txId);
-          fetchWalkerProfile(walkerProfile.id);
+          await syncPlanWithSupabase(profile.id, true, txId);
+          fetchWalkerProfile(profile.user_id);
         }
       },
       (error) => {
@@ -86,7 +89,7 @@ export default function RootLayout() {
       cleanup();
       closeIAP();
     };
-  }, [walkerProfile?.id]);
+  }, []);
 
   // Listeners de notificação (recebida em foreground / tap)
   useEffect(() => {
