@@ -58,9 +58,7 @@ export function ProfileHeader() {
   const name    = walkerProfile?.name ?? 'Walker';
   const city    = walkerProfile?.city ?? '';
   const state   = (walkerProfile as any)?.state ?? '';
-  const plan    = walkerProfile?.plan ?? 'free';
   const rating  = walkerProfile?.rating;
-  const isPro   = plan === 'pro';
   const location = [city, state].filter(Boolean).join(', ');
 
   return (
@@ -238,10 +236,6 @@ export function ProfileHeader() {
             <Text style={styles.chipText}>{location}</Text>
           </View>
         ) : null}
-        <View style={styles.chip}>
-          <Ionicons name={isPro ? 'star' : 'star-outline'} size={13} color="rgba(255,255,255,0.85)" />
-          <Text style={styles.chipText}>Plano {isPro ? 'Pro' : 'Gratuito'}</Text>
-        </View>
       </View>
     </View>
   );

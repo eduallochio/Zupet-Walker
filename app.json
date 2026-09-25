@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "io.zupet.walker",
-      "buildNumber": "6",
+      "buildNumber": "12",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Usado para tirar fotos durante os passeios e para o seu perfil de walker.",
@@ -85,7 +85,8 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "@react-native-community/datetimepicker"
     ],
     "updates": {
       "url": "https://u.expo.dev/e2d81550-850d-4338-b75a-5b39574657cd",

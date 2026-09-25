@@ -13,7 +13,6 @@ import ServiceModal, {
   type WalkerService, type ServiceForm, type ServiceType,
   SERVICE_CATALOG, defaultForm, formatDuration,
 } from '../../components/services/ServiceModal';
-import { getLimits } from '../../lib/plan';
 
 export default function ServicesScreen() {
   const router = useRouter();
@@ -50,15 +49,6 @@ export default function ServicesScreen() {
   useEffect(() => { fetchServices().finally(() => setLoading(false)); }, [fetchServices]);
 
   const openNew = (type: ServiceType) => {
-    const limits = getLimits(walkerProfile);
-    if (services.length >= limits.services) {
-      Alert.alert(
-        'Limite atingido',
-        `Você atingiu o limite de ${limits.services} serviço disponível. Entre em contato com o suporte para ampliar sua conta.`,
-        [{ text: 'Entendido' }]
-      );
-      return;
-    }
     setEditingService({ ...defaultForm(type), id: '', walker_id: walkerProfile!.id, isNew: true, blocked_slots: {} } as any);
     setModalVisible(true);
   };

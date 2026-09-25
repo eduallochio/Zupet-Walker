@@ -116,7 +116,7 @@ export function DatePickerButton({ value, onChange }: DatePickerProps) {
                   activeOpacity={past ? 1 : 0.7}
                 >
                   <Text style={[styles.dayText, sel && styles.dayTextSelected, past && styles.dayTextPast]}>
-                    {day}
+                    {String(day)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -246,18 +246,16 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   cell: { width: `${100/7}%`, aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
   dayCell: {},
-  dayCellSelected: {},
-  dayCellPast: { opacity: 0.3 },
-  dayText: { fontSize: 14, fontWeight: '600', color: Colors.text },
-  dayTextSelected: {
-    color: '#fff',
+  dayCellSelected: {
     backgroundColor: Colors.primary,
     borderRadius: 20,
-    overflow: 'hidden',
     width: 32, height: 32,
-    textAlign: 'center',
-    lineHeight: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  dayCellPast: { opacity: 0.3 },
+  dayText: { fontSize: 14, fontWeight: '600', color: Colors.text },
+  dayTextSelected: { color: '#fff' },
   dayTextPast: { color: Colors.textSecondary },
 
   // Time

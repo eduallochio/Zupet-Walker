@@ -11,7 +11,6 @@ import { PetDetailModal } from '../../components/pets/PetDetailModal';
 import { OwnPetModal } from '../../components/pets/OwnPetModal';
 import type { LinkedPet } from '../../types/walker';
 import { sendPushToOwner } from '../../services/ownerPushService';
-import { getLimits } from '../../lib/plan';
 
 type FilterTab = 'todos' | 'active' | 'pending';
 
@@ -189,18 +188,6 @@ export default function PetsScreen() {
     setRespondingId(pet.id);
     try {
       if (accept) {
-        // Verificar limite de pets vinculados por tutores
-        const limits = getLimits(walkerProfile);
-        const activePets = pets.filter((p) => p.status === 'active').length;
-        if (activePets >= limits.linkedPets) {
-          Alert.alert(
-            'Limite atingido',
-            `Você já tem ${activePets} pets vinculados. Entre em contato com o suporte para ampliar sua conta.`,
-            [{ text: 'Entendido' }]
-          );
-          return;
-        }
-
         // Verificar se o pet já tem vínculo ativo com outro walker
         const { data: existingLink } = await supabase
           .from('walker_pet_links')
@@ -367,15 +354,6 @@ export default function PetsScreen() {
             style={styles.addPetBtn}
             activeOpacity={0.8}
             onPress={() => {
-              const limits = getLimits(walkerProfile);
-              if (ownPets.length >= limits.ownPets) {
-                Alert.alert(
-                  'Limite atingido',
-                  `Você já tem ${ownPets.length} pets cadastrados. Entre em contato com o suporte para ampliar sua conta.`,
-                  [{ text: 'Entendido' }]
-                );
-                return;
-              }
               router.push('/pets/add');
             }}
           >
@@ -517,11 +495,11 @@ export default function PetsScreen() {
         </ScrollView>
       )}
 
-      {/* Modal de seleção de plano ao aceitar vínculo */}
+      {/* Modal de seleção de serviço ao aceitar vínculo */}
       <Modal visible={!!pendingAccept} transparent animationType="fade" onRequestClose={() => setPendingAccept(null)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Escolha o plano</Text>
+            <Text style={styles.modalTitle}>Escolha o serviço</Text>
             <Text style={styles.modalSubtitle}>
               Qual serviço se aplica a {pendingAccept?.pet.pet?.name ?? 'este pet'}?
             </Text>
@@ -550,7 +528,7 @@ export default function PetsScreen() {
                 onPress={() => confirmAccept(pendingAccept!.pet, null)}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.serviceLabel, { color: Colors.textSecondary }]}>Sem plano definido</Text>
+                <Text style={[styles.serviceLabel, { color: Colors.textSecondary }]}>Sem serviço definido</Text>
                 <Text style={[styles.servicePrice, { color: Colors.textSecondary }]}>—</Text>
               </TouchableOpacity>
             </View>
