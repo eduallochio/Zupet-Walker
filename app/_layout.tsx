@@ -7,6 +7,7 @@ import { supabase } from '../services/supabase';
 import { useAuthStore } from '../stores/authStore';
 import { registerPushToken, addNotificationListeners, removeNotificationListeners, setNotificationRouter, handleInitialNotificationResponse } from '../services/notificationService';
 import '../services/locationService'; // registra a background task de GPS no boot do app
+import { initIAP, closeIAP, setupPurchaseListeners, syncPlanWithSupabase } from '../services/iapService';
 
 function AuthGuard() {
   const router = useRouter();
@@ -64,6 +65,26 @@ export default function RootLayout() {
   useEffect(() => {
     if (!walkerProfile?.id) return;
     registerPushToken(walkerProfile.id);
+  }, [walkerProfile?.id]);
+
+  // IAP: inicializa conexão e escuta compras concluídas
+  useEffect(() => {
+    initIAP();
+    const cleanup = setupPurchaseListeners(
+      async (purchase) => {
+        if (walkerProfile?.id) {
+          await syncPlanWithSupabase(walkerProfile.id, true);
+          fetchWalkerProfile(walkerProfile.id);
+        }
+      },
+      (error) => {
+        if (__DEV__) console.warn('[IAP] Erro:', error);
+      }
+    );
+    return () => {
+      cleanup();
+      closeIAP();
+    };
   }, [walkerProfile?.id]);
 
   // Listeners de notificação (recebida em foreground / tap)

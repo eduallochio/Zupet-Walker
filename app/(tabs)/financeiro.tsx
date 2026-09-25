@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { supabase } from '../../services/supabase';
 import { useAuthStore } from '../../stores/authStore';
+import { getLimits } from '../../lib/plan';
 
 type WalkReport = {
   id: string;
@@ -86,6 +87,8 @@ export default function HistoricoScreen() {
   const fetchData = useCallback(async () => {
     if (!walkerProfile) return;
 
+    const limits = getLimits(walkerProfile);
+
     const monthStart = new Date(viewYear, viewMonth, 1);
     const monthEnd   = new Date(viewYear, viewMonth + 1, 0, 23, 59, 59, 999);
 
@@ -97,6 +100,11 @@ export default function HistoricoScreen() {
       .gte('sent_at', monthStart.toISOString())
       .lte('sent_at', monthEnd.toISOString())
       .order('sent_at', { ascending: false });
+    if (isFinite(limits.reportDays)) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - limits.reportDays);
+      if (monthStart < cutoff) historyQuery.gte('sent_at', cutoff.toISOString());
+    }
 
     // 2. schedules concluídos no mês selecionado
     const schedulesQuery = supabase
