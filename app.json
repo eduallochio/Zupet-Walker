@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "io.zupet.walker",
-      "buildNumber": "14",
+      "buildNumber": "13",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Usado para tirar fotos durante os passeios e para o seu perfil de walker.",
