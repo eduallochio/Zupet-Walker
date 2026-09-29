@@ -1,20 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable, Linking, Alert, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { useAuthStore } from '../../stores/authStore';
-import { purchasePro, restorePurchases, syncPlanWithSupabase } from '../../services/iapService';
+import { purchasePro, restorePurchases, syncPlanWithSupabase, getProSubscription } from '../../services/iapService';
 
 const DASHBOARD_URL = 'https://walker.zupet.io';
+const TERMS_URL = 'https://walker.zupet.io/termos';
+const PRIVACY_URL = 'https://walker.zupet.io/privacidade';
 
 export function ProfilePlanCard() {
   const walkerProfile = useAuthStore((s) => s.walkerProfile);
-  const setWalkerProfile = useAuthStore((s) => s.setWalkerProfile);
   const fetchWalkerProfile = useAuthStore((s) => s.fetchWalkerProfile);
   const plan  = walkerProfile?.plan ?? 'free';
   const isPro = plan === 'pro';
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [subInfo, setSubInfo] = useState<{ localizedPrice?: string; title?: string } | null>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios' || !modalVisible) return;
+    getProSubscription().then((sub) => {
+      if (sub) setSubInfo({ localizedPrice: (sub as any).localizedPrice, title: (sub as any).title });
+    });
+  }, [modalVisible]);
 
   if (isPro) return null;
 
@@ -22,15 +31,9 @@ export function ProfilePlanCard() {
     setLoading(true);
     const result = await purchasePro();
     setLoading(false);
-    // A compra é assíncrona — o resultado real chega pelo listener em _layout.tsx
-    // que atualiza o plano no Supabase e recarrega o perfil.
-    // Aqui só tratamos cancelamento e erros.
     if (!result.success && result.error) {
       Alert.alert('Erro', result.error);
-    } else if (!result.success) {
-      // Usuário cancelou — não faz nada
     }
-    // Fechamos o modal ao iniciar a compra (a Apple mostra a tela nativa)
     setModalVisible(false);
   };
 
@@ -56,6 +59,12 @@ export function ProfilePlanCard() {
       );
     }, 300);
   };
+
+  const openLink = (url: string) => {
+    Linking.openURL(url).catch(() => Alert.alert('Erro', 'Não foi possível abrir o link.'));
+  };
+
+  const priceLabel = subInfo?.localizedPrice ? `${subInfo.localizedPrice}/mês` : 'Ver preço na App Store';
 
   return (
     <View style={styles.section}>
@@ -101,6 +110,11 @@ export function ProfilePlanCard() {
 
             {Platform.OS === 'ios' ? (
               <>
+                <View style={styles.priceBox}>
+                  <Text style={styles.priceLabel}>Assinatura mensal · renova automaticamente</Text>
+                  <Text style={styles.priceValue}>{priceLabel}</Text>
+                </View>
+
                 <TouchableOpacity
                   style={[styles.confirmBtn, loading && styles.confirmBtnDisabled]}
                   onPress={handlePurchase}
@@ -127,8 +141,19 @@ export function ProfilePlanCard() {
                 </TouchableOpacity>
 
                 <Text style={styles.legalText}>
-                  A assinatura é cobrada pela Apple. Cancele a qualquer momento nas configurações da App Store.
+                  A assinatura renova automaticamente a cada mês. Cancele a qualquer momento nas configurações da App Store.{' '}
+                  A cobrança ocorre até 24 horas antes do fim do período.
                 </Text>
+
+                <View style={styles.linksRow}>
+                  <TouchableOpacity onPress={() => openLink(TERMS_URL)}>
+                    <Text style={styles.linkText}>Termos de Uso</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.linkSep}>·</Text>
+                  <TouchableOpacity onPress={() => openLink(PRIVACY_URL)}>
+                    <Text style={styles.linkText}>Privacidade</Text>
+                  </TouchableOpacity>
+                </View>
               </>
             ) : (
               <>
@@ -203,10 +228,21 @@ const styles = StyleSheet.create({
   restoreBtn: { paddingVertical: 6 },
   restoreBtnText: { fontSize: 13, color: Colors.primary, fontWeight: '600' },
 
+  priceBox: {
+    width: '100%', backgroundColor: `${Colors.primary}10`,
+    borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center', gap: 2,
+  },
+  priceLabel: { fontSize: 12, color: Colors.textSecondary, textAlign: 'center' },
+  priceValue: { fontSize: 17, fontWeight: '700', color: Colors.text },
+
   legalText: {
     fontSize: 11, color: Colors.textSecondary, textAlign: 'center', lineHeight: 16,
     paddingHorizontal: 8,
   },
+
+  linksRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: -4 },
+  linkText: { fontSize: 12, color: Colors.primary, fontWeight: '600' },
+  linkSep: { fontSize: 12, color: Colors.textSecondary },
 
   cancelBtn: { paddingVertical: 8 },
   cancelBtnText: { fontSize: 14, color: Colors.textSecondary, fontWeight: '500' },
