@@ -16,12 +16,12 @@ export function ProfilePlanCard() {
   const isPro = plan === 'pro';
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [subInfo, setSubInfo] = useState<{ localizedPrice?: string; title?: string } | null>(null);
+  const [subInfo, setSubInfo] = useState<{ displayPrice?: string; title?: string } | null>(null);
 
   useEffect(() => {
     if (Platform.OS !== 'ios' || !modalVisible) return;
     getProSubscription().then((sub) => {
-      if (sub) setSubInfo({ localizedPrice: (sub as any).localizedPrice, title: (sub as any).title });
+      if (sub) setSubInfo({ displayPrice: (sub as any).displayPrice, title: (sub as any).title });
     });
   }, [modalVisible]);
 
@@ -64,7 +64,7 @@ export function ProfilePlanCard() {
     Linking.openURL(url).catch(() => Alert.alert('Erro', 'Não foi possível abrir o link.'));
   };
 
-  const priceLabel = subInfo?.localizedPrice ? `${subInfo.localizedPrice}/mês` : 'Ver preço na App Store';
+  const priceLabel = subInfo?.displayPrice ? `${subInfo.displayPrice}/mês` : 'Ver preço na App Store';
 
   return (
     <View style={styles.section}>
