@@ -2,13 +2,12 @@ import { Platform } from 'react-native';
 import {
   initConnection,
   endConnection,
-  getSubscriptions,
-  requestSubscription,
+  fetchProducts,
+  requestPurchase,
   getActiveSubscriptions,
   finishTransaction,
   purchaseUpdatedListener,
   purchaseErrorListener,
-  type SubscriptionPurchase,
   type PurchaseError,
 } from 'expo-iap';
 import { supabase } from './supabase';
@@ -29,22 +28,33 @@ export async function initIAP(): Promise<void> {
 
 export async function closeIAP(): Promise<void> {
   if (!connectionInitialized) return;
-  await endConnection();
+  try {
+    await endConnection();
+  } catch {}
   connectionInitialized = false;
 }
 
 export async function getProSubscription() {
   if (Platform.OS !== 'ios') return null;
-  await initIAP();
-  const subs = await getSubscriptions({ skus: [PRO_MONTHLY_ID] });
-  return subs[0] ?? null;
+  try {
+    await initIAP();
+    const products = await fetchProducts({ skus: [PRO_MONTHLY_ID], type: 'subs' });
+    return products[0] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function purchasePro(): Promise<{ success: boolean; error?: string }> {
   if (Platform.OS !== 'ios') return { success: false, error: 'IAP disponível apenas no iOS' };
   try {
     await initIAP();
-    await requestSubscription({ sku: PRO_MONTHLY_ID });
+    await requestPurchase({
+      request: {
+        apple: { sku: PRO_MONTHLY_ID },
+      },
+      type: 'subs',
+    });
     return { success: true };
   } catch (e: any) {
     if (e?.code === 'E_USER_CANCELLED') return { success: false };
@@ -56,8 +66,8 @@ export async function checkActiveSubscription(): Promise<boolean> {
   if (Platform.OS !== 'ios') return false;
   try {
     await initIAP();
-    const active = await getActiveSubscriptions();
-    return active.some((p) => p.productId === PRO_MONTHLY_ID);
+    const active = await getActiveSubscriptions([PRO_MONTHLY_ID]);
+    return active.length > 0;
   } catch {
     return false;
   }
@@ -83,12 +93,14 @@ export async function syncPlanWithSupabase(
 }
 
 export function setupPurchaseListeners(
-  onSuccess: (purchase: SubscriptionPurchase) => void,
+  onSuccess: (purchase: any) => void,
   onError: (error: PurchaseError) => void
 ) {
   const successSub = purchaseUpdatedListener(async (purchase) => {
-    await finishTransaction({ purchase, isConsumable: false });
-    onSuccess(purchase as SubscriptionPurchase);
+    try {
+      await finishTransaction({ purchase, isConsumable: false });
+    } catch {}
+    onSuccess(purchase);
   });
   const errorSub = purchaseErrorListener(onError);
   return () => {
