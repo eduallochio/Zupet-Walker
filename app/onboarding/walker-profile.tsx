@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
   ScrollView, KeyboardAvoidingView, Platform, Alert,
-  ActivityIndicator, Image,
+  ActivityIndicator, Image, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -437,9 +437,9 @@ export default function WalkerProfileOnboarding() {
                   </View>
                   <Text style={styles.termsText}>
                     Li e aceito os{' '}
-                    <Text style={styles.termsLink}>Termos de Uso</Text>
+                    <Text style={styles.termsLink} onPress={() => Linking.openURL('https://walker.zupet.io/termos')}>Termos de Uso</Text>
                     {' '}e{' '}
-                    <Text style={styles.termsLink}>Política de Privacidade</Text>
+                    <Text style={styles.termsLink} onPress={() => Linking.openURL('https://walker.zupet.io/privacidade')}>Política de Privacidade</Text>
                     {' '}do Zupet Walker
                   </Text>
                 </TouchableOpacity>

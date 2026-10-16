@@ -200,7 +200,9 @@ export default function LoginScreen() {
 
           <Text style={styles.footer}>
             Ao entrar você concorda com os{' '}
-            <Text style={styles.footerLink}>Termos de Uso</Text>
+            <Text style={styles.footerLink} onPress={() => Linking.openURL('https://walker.zupet.io/termos')}>Termos de Uso</Text>
+            {' '}e a{' '}
+            <Text style={styles.footerLink} onPress={() => Linking.openURL('https://walker.zupet.io/privacidade')}>Política de Privacidade</Text>
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>

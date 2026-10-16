@@ -17,13 +17,25 @@ export function ProfilePlanCard() {
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [subInfo, setSubInfo] = useState<{ displayPrice?: string; title?: string } | null>(null);
+  const [priceStatus, setPriceStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (Platform.OS !== 'ios' || !modalVisible) return;
+    let cancelled = false;
+    setPriceStatus('loading');
     getProSubscription().then((sub) => {
-      if (sub) setSubInfo({ displayPrice: (sub as any).displayPrice, title: (sub as any).title });
+      if (cancelled) return;
+      const displayPrice = (sub as any)?.displayPrice;
+      if (displayPrice) {
+        setSubInfo({ displayPrice, title: (sub as any).title });
+        setPriceStatus('ready');
+      } else {
+        setPriceStatus('error');
+      }
     });
-  }, [modalVisible]);
+    return () => { cancelled = true; };
+  }, [modalVisible, reloadKey]);
 
   if (isPro) return null;
 
@@ -64,7 +76,9 @@ export function ProfilePlanCard() {
     Linking.openURL(url).catch(() => Alert.alert('Erro', 'Não foi possível abrir o link.'));
   };
 
-  const priceLabel = subInfo?.displayPrice ? `${subInfo.displayPrice}/mês` : 'Ver preço na App Store';
+  const priceLabel = priceStatus === 'ready' && subInfo?.displayPrice
+    ? `${subInfo.displayPrice} / mês`
+    : priceStatus === 'loading' ? 'Carregando preço…' : 'Preço indisponível';
 
   return (
     <View style={styles.section}>
@@ -111,15 +125,22 @@ export function ProfilePlanCard() {
             {Platform.OS === 'ios' ? (
               <>
                 <View style={styles.priceBox}>
-                  <Text style={styles.priceLabel}>Assinatura mensal · renova automaticamente</Text>
+                  <Text style={styles.priceLabel}>
+                    {subInfo?.title ?? 'Zupet Walker Pro'} · Mensal · renova automaticamente
+                  </Text>
                   <Text style={styles.priceValue}>{priceLabel}</Text>
+                  {priceStatus === 'error' && (
+                    <TouchableOpacity onPress={() => setReloadKey((k) => k + 1)}>
+                      <Text style={styles.linkText}>Tentar novamente</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.confirmBtn, loading && styles.confirmBtnDisabled]}
+                  style={[styles.confirmBtn, (loading || priceStatus !== 'ready') && styles.confirmBtnDisabled]}
                   onPress={handlePurchase}
                   activeOpacity={0.85}
-                  disabled={loading}
+                  disabled={loading || priceStatus !== 'ready'}
                 >
                   {loading ? (
                     <ActivityIndicator color="#fff" size="small" />

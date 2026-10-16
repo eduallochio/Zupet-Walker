@@ -39,8 +39,9 @@ export async function getProSubscription() {
   try {
     await initIAP();
     const products = await fetchProducts({ skus: [PRO_MONTHLY_ID], type: 'subs' });
-    return products[0] ?? null;
-  } catch {
+    return products?.[0] ?? null;
+  } catch (e) {
+    console.warn('[IAP] fetchProducts falhou', e);
     return null;
   }
 }
@@ -49,6 +50,11 @@ export async function purchasePro(): Promise<{ success: boolean; error?: string 
   if (Platform.OS !== 'ios') return { success: false, error: 'IAP disponível apenas no iOS' };
   try {
     await initIAP();
+    // StoreKit exige que o produto tenha sido carregado antes da compra
+    const product = await getProSubscription();
+    if (!product) {
+      return { success: false, error: 'Assinatura indisponível no momento. Tente novamente em instantes.' };
+    }
     await requestPurchase({
       request: {
         apple: { sku: PRO_MONTHLY_ID },
