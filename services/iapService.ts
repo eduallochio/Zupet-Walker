@@ -5,10 +5,10 @@ import {
   fetchProducts,
   requestPurchase,
   getActiveSubscriptions,
+  restorePurchases as syncRestore,
   finishTransaction,
   purchaseUpdatedListener,
   purchaseErrorListener,
-  type PurchaseError,
 } from 'expo-iap';
 import { supabase } from './supabase';
 
@@ -79,8 +79,19 @@ export async function checkActiveSubscription(): Promise<boolean> {
   }
 }
 
-export async function restorePurchases(): Promise<boolean> {
-  return checkActiveSubscription();
+export async function restorePurchases(): Promise<{ active: boolean; transactionId?: string }> {
+  if (Platform.OS !== 'ios') return { active: false };
+  try {
+    await initIAP();
+    // Sincroniza com a App Store (pode pedir login do Apple ID) antes de consultar
+    try { await syncRestore(); } catch {}
+    const active = await getActiveSubscriptions([PRO_MONTHLY_ID]);
+    const current = active.find((s) => s.isActive) ?? active[0];
+    return { active: !!current, transactionId: current?.transactionId };
+  } catch (e) {
+    console.warn('[IAP] restore falhou', e);
+    return { active: false };
+  }
 }
 
 export async function syncPlanWithSupabase(
@@ -100,7 +111,7 @@ export async function syncPlanWithSupabase(
 
 export function setupPurchaseListeners(
   onSuccess: (purchase: any) => void,
-  onError: (error: PurchaseError) => void
+  onError: Parameters<typeof purchaseErrorListener>[0]
 ) {
   const successSub = purchaseUpdatedListener(async (purchase) => {
     try {

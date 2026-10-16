@@ -76,7 +76,7 @@ export default function RootLayout() {
       async (purchase) => {
         const profile = walkerProfileRef.current;
         if (profile?.id) {
-          const txId = (purchase as any).originalTransactionIdentifier ?? (purchase as any).transactionIdentifier;
+          const txId = (purchase as any).originalTransactionIdentifierIOS ?? (purchase as any).transactionId;
           await syncPlanWithSupabase(profile.id, true, txId);
           fetchWalkerProfile(profile.user_id);
         }

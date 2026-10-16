@@ -51,9 +51,9 @@ export function ProfilePlanCard() {
 
   const handleRestore = async () => {
     setLoading(true);
-    const active = await restorePurchases();
+    const { active, transactionId } = await restorePurchases();
     if (active && walkerProfile) {
-      await syncPlanWithSupabase(walkerProfile.id, true);
+      await syncPlanWithSupabase(walkerProfile.id, true, transactionId);
       await fetchWalkerProfile(walkerProfile.user_id);
       setModalVisible(false);
       Alert.alert('Compra restaurada!', 'Seu Plano Pro foi restaurado com sucesso.');
