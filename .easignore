@@ -1,0 +1,34 @@
+# Quando existe .easignore, o EAS deixa de usar o .gitignore — por isso as regras dele estão repetidas aqui.
+node_modules/
+.expo/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+.env
+.env.local
+.env.production
+android/app/keystore.properties
+private/
+expo-env.d.ts
+CONTEXT.md
+
+# Artefatos de build do Android (android/app/build tem ~1.4 GB)
+android/build/
+android/app/build/
+android/.gradle/
+android/.idea/
+android/app/.cxx/
+android/local.properties
+*.apk
+*.aab
+*.ipa
+*.hprof
+
+# Não necessários para o build
+.git/
+.claude/
