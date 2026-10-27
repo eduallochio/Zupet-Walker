@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   bellBtn: { padding: 4, position: 'relative' },
   bellBadge: {
     position: 'absolute', top: 0, right: 0,
-    backgroundColor: '#EF4444', borderRadius: 10,
+    backgroundColor: Colors.error, borderRadius: 10,
     minWidth: 17, height: 17,
     alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: 3,

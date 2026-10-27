@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 15, fontWeight: '700', color: Colors.text },
   sub: { fontSize: 12, color: Colors.textSecondary },
   badge: {
-    backgroundColor: '#F59E0B', borderRadius: 20,
+    backgroundColor: Colors.warning, borderRadius: 20,
     minWidth: 22, height: 22, paddingHorizontal: 6,
     alignItems: 'center', justifyContent: 'center',
   },

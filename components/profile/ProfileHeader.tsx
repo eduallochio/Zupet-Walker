@@ -80,7 +80,13 @@ export function ProfileHeader() {
       {/* Modal de configurações */}
       <Modal visible={settingsVisible} transparent animationType="fade" onRequestClose={() => setSettingsVisible(false)}>
         <Pressable accessible={false} style={styles.overlay} onPress={() => setSettingsVisible(false)}>
-          <Pressable accessible={false} style={styles.sheet} onPress={() => {}}>
+          <Pressable
+            accessible={false}
+            accessibilityViewIsModal
+            onAccessibilityEscape={() => setSettingsVisible(false)} // gesto "voltar" do VoiceOver (Z com dois dedos) fecha o painel
+            style={styles.sheet}
+            onPress={() => {}}
+          >
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>Configurações</Text>
 
