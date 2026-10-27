@@ -37,7 +37,7 @@ export default function WalkSummaryScreen() {
       started_at:       activeWalk.started_at,
       ended_at:         endedAt,
       duration_minutes: durationMinutes,
-      distance_meters:  Math.round(activeWalk.distance_meters),
+      distance_meters:  Math.round(activeWalk.distance_meters ?? 0), // sem GPS: 0 em vez de NaN
       notes:            activeWalk.notes ?? null,
       photos:           activeWalk.photos ?? [],
       pet_ids:          activeWalk.pet_ids,
@@ -103,7 +103,7 @@ export default function WalkSummaryScreen() {
               owner_id,
               pet_ids:          ownerPetIds,
               duration_minutes: durationMinutes,
-              distance_meters:  Math.round(activeWalk.distance_meters),
+              distance_meters:  Math.round(activeWalk.distance_meters ?? 0),
               pee_count:        peeCount,
               poop_count:       poopCount,
               note_count:       noteCount,
@@ -113,7 +113,7 @@ export default function WalkSummaryScreen() {
 
             // Notificar o tutor que o passeio foi concluído
             const notifTitle = 'Passeio concluído! 🐾';
-            const notifBody  = `${walkerProfile.name ?? 'Seu walker'} finalizou o passeio: ${durationMinutes} min · ${(Math.round(activeWalk.distance_meters) / 1000).toFixed(1)} km`;
+            const notifBody  = `${walkerProfile.name ?? 'Seu walker'} finalizou o passeio: ${durationMinutes} min · ${(Math.round(activeWalk.distance_meters ?? 0) / 1000).toFixed(1)} km`;
             await supabase.from('notifications').insert({
               user_id: owner_id,
               type:    'walk_report',

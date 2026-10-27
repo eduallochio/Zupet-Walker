@@ -22,7 +22,7 @@ export function haversineMeters(
 
 // Task de background — chamada pelo SO com novas localizações
 // useWalkStore é importado via require lazy para evitar require cycle
-TaskManager.defineTask(LOCATION_TASK, ({ data, error }: any) => {
+TaskManager.defineTask(LOCATION_TASK, async ({ data, error }: any) => {
   if (error) {
     console.error('[GPS task error]', error);
     logError({

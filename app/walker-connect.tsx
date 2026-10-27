@@ -96,7 +96,8 @@ export default function WalkerConnectScreen() {
         .maybeSingle(),
     ]);
     setCodes((codesRes.data as InviteCode[]) ?? []);
-    setLinks((linksRes.data as LinkedPet[]) ?? []);
+    // pet e owner são relações N:1, então o Supabase devolve um objeto (a tipagem inferida diz lista)
+    setLinks((linksRes.data as unknown as LinkedPet[]) ?? []);
     setServices((servicesRes.data as WalkerService[]) ?? []);
     setShowPrices(profileRes.data?.show_prices ?? true);
   }, [walkerProfile]);

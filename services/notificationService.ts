@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import type { Router } from 'expo-router';
 import { supabase } from './supabase';
 
 // expo-notifications dispara DevicePushTokenAutoRegistration ao ser importado,
@@ -28,7 +29,8 @@ function isPhysicalDevice(): boolean {
   return Constants.isDevice ?? false;
 }
 
-type RouterLike = { push: (path: string) => void };
+// mesmo push do expo-router (rotas tipadas)
+type RouterLike = Pick<Router, 'push'>;
 
 let _router: RouterLike | null = null;
 

@@ -452,7 +452,7 @@ export default function PetsScreen() {
           {/* Tabs filtro */}
           <View style={styles.tabs}>
             {(['todos', 'active'] as FilterTab[]).map((tab) => {
-              const labels = { todos: 'Todos', active: 'Ativos' };
+              const labels: Record<FilterTab, string> = { todos: 'Todos', active: 'Ativos', pending: 'Pendentes' };
               return (
                 <TouchableOpacity accessibilityRole="button" key={tab} style={[styles.tab, filter === tab && styles.tabActive]} onPress={() => setFilter(tab)}>
                   <Text style={[styles.tabText, filter === tab && styles.tabTextActive]}>{labels[tab]}</Text>
