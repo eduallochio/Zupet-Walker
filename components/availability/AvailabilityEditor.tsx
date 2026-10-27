@@ -62,15 +62,15 @@ export default function AvailabilityEditor({ value, onChange }: Props) {
         return (
           <View key={dayIdx} style={[styles.dayBlock, { borderColor: isActive ? Colors.primary : Colors.border }]}>
             {/* Cabeçalho do dia */}
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[styles.dayHeader, isActive && { backgroundColor: Colors.primary + '10' }]}
               onPress={() => toggleDay(dayIdx)}
               activeOpacity={0.75}
             >
               <View style={[styles.dayCheck, isActive && { backgroundColor: Colors.primary, borderColor: Colors.primary }]}>
-                {isActive && <Ionicons name="checkmark" size={12} color="#fff" />}
+                {isActive && <Ionicons name="checkmark" size={12} color={Colors.onPrimary} />}
               </View>
-              <Text style={[styles.dayName, isActive && { color: Colors.primary, fontWeight: '700' }]}>
+              <Text style={[styles.dayName, isActive && { color: Colors.primaryText, fontWeight: '700' }]}>
                 {dayName}
               </Text>
               {isActive && slots.length > 0 && (
@@ -93,7 +93,7 @@ export default function AvailabilityEditor({ value, onChange }: Props) {
                   {ALL_SLOTS.map((slot) => {
                     const selected = slots.includes(slot);
                     return (
-                      <TouchableOpacity
+                      <TouchableOpacity accessibilityRole="button"
                         key={slot}
                         style={[
                           styles.slotChip,
@@ -104,19 +104,19 @@ export default function AvailabilityEditor({ value, onChange }: Props) {
                         onPress={() => toggleSlot(dayIdx, slot)}
                         activeOpacity={0.75}
                       >
-                        <Text style={[styles.slotText, selected && { color: '#fff' }]}>{slot}</Text>
+                        <Text style={[styles.slotText, selected && { color: Colors.onPrimary }]}>{slot}</Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
 
                 {slots.length > 0 && (
-                  <TouchableOpacity
+                  <TouchableOpacity accessibilityRole="button"
                     style={styles.applyAllBtn}
                     onPress={() => applyToAll(dayIdx)}
                     activeOpacity={0.75}
                   >
-                    <Ionicons name="copy-outline" size={14} color={Colors.primary} />
+                    <Ionicons name="copy-outline" size={14} color={Colors.primaryText} />
                     <Text style={styles.applyAllText}>Aplicar esses horários para todos os dias</Text>
                   </TouchableOpacity>
                 )}
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   dayName: { flex: 1, fontSize: 15, fontWeight: '600', color: Colors.text },
-  slotCount: { fontSize: 12, color: Colors.primary, fontWeight: '600' },
+  slotCount: { fontSize: 12, color: Colors.primaryText, fontWeight: '600' },
   slotCountWarn: { fontSize: 12, color: Colors.warning, fontWeight: '600' },
 
   slotsGrid: {
@@ -166,5 +166,5 @@ const styles = StyleSheet.create({
     backgroundColor: `${Colors.primary}12`,
     borderRadius: 10, borderWidth: 1, borderColor: `${Colors.primary}30`,
   },
-  applyAllText: { fontSize: 13, fontWeight: '600', color: Colors.primary },
+  applyAllText: { fontSize: 13, fontWeight: '600', color: Colors.primaryText },
 });

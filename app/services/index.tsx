@@ -133,7 +133,7 @@ export default function ServicesScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>Meus Serviços</Text>
@@ -141,7 +141,7 @@ export default function ServicesScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color={Colors.primary} style={{ flex: 1 }} />
+        <ActivityIndicator size="large" color={Colors.primaryText} style={{ flex: 1 }} />
       ) : (
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
@@ -179,7 +179,7 @@ export default function ServicesScreen() {
                   const totalSlots = Object.values(svc.available_slots ?? {}).reduce((s, arr) => s + arr.length, 0);
                   return (
                     <View key={svc.id} style={[styles.serviceCard, !svc.active && styles.serviceCardInactive]}>
-                      <TouchableOpacity style={styles.serviceCardInner} onPress={() => openEdit(svc)} activeOpacity={0.8}>
+                      <TouchableOpacity accessibilityRole="button" style={styles.serviceCardInner} onPress={() => openEdit(svc)} activeOpacity={0.8}>
                         <View style={styles.serviceCardLeft}>
                           <Text style={styles.serviceIcon}>{c.icon}</Text>
                         </View>
@@ -235,12 +235,12 @@ export default function ServicesScreen() {
                       </TouchableOpacity>
 
                       <View style={[styles.activeToggleRow, { borderTopColor: Colors.border }]}>
-                        <TouchableOpacity
+                        <TouchableOpacity accessibilityRole="button"
                           style={styles.blockDatesBtn}
                           onPress={() => router.push(`/availability?service_id=${svc.id}` as any)}
                           activeOpacity={0.8}
                         >
-                          <Ionicons name="calendar-outline" size={13} color={Colors.primary} />
+                          <Ionicons name="calendar-outline" size={13} color={Colors.primaryText} />
                           <Text style={styles.blockDatesBtnText}>Bloquear datas</Text>
                         </TouchableOpacity>
                         <View style={styles.activeToggleRight}>
@@ -270,7 +270,7 @@ export default function ServicesScreen() {
               {SERVICE_CATALOG.map((c) => {
                 const already = services.some((s) => s.type === c.type);
                 return (
-                  <TouchableOpacity
+                  <TouchableOpacity accessibilityRole="button"
                     key={c.type}
                     style={[styles.catalogCard, already && styles.catalogCardDim]}
                     onPress={() => openNew(c.type)}
@@ -342,10 +342,10 @@ const styles = StyleSheet.create({
     backgroundColor: `${Colors.primary}15`, borderRadius: 20,
     paddingHorizontal: 8, paddingVertical: 2,
   },
-  priceTagText: { fontSize: 11, fontWeight: '700', color: Colors.primary },
+  priceTagText: { fontSize: 11, fontWeight: '700', color: Colors.primaryText },
   serviceCardMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
   serviceCardMetaText: { fontSize: 11, color: Colors.textSecondary },
-  serviceCardMetaDot: { fontSize: 11, color: Colors.border },
+  serviceCardMetaDot: { fontSize: 11, color: Colors.textSecondary },
   serviceCardDesc: { fontSize: 12, color: Colors.textSecondary, fontStyle: 'italic' },
 
   activeToggleRow: {
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
     backgroundColor: Colors.primary + '10', borderWidth: 1, borderColor: Colors.primary + '30',
   },
-  blockDatesBtnText: { fontSize: 11, fontWeight: '600', color: Colors.primary },
+  blockDatesBtnText: { fontSize: 11, fontWeight: '600', color: Colors.primaryText },
 
   catalogGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   catalogCard: {

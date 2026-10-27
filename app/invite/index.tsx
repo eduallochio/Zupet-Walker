@@ -124,7 +124,7 @@ export default function InviteScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>Códigos de Convite</Text>
@@ -138,7 +138,7 @@ export default function InviteScreen() {
       >
         {/* Explicação */}
         <View style={styles.infoCard}>
-          <Ionicons name="information-circle-outline" size={20} color={Colors.primary} />
+          <Ionicons name="information-circle-outline" size={20} color={Colors.primaryText} />
           <Text style={styles.infoText}>
             Gere um código e envie para o tutor. Ele digita no app Zupet para vincular os pets a você.
             Cada código é válido por 7 dias e pode ser usado até 10 vezes.
@@ -146,24 +146,24 @@ export default function InviteScreen() {
         </View>
 
         {/* Botão gerar */}
-        <TouchableOpacity
+        <TouchableOpacity accessibilityRole="button"
           style={[styles.generateBtn, creating && { opacity: 0.7 }]}
           onPress={createCode}
           disabled={creating}
           activeOpacity={0.85}
         >
           {creating ? (
-            <ActivityIndicator color="#fff" size="small" />
+            <ActivityIndicator color={Colors.onPrimary} size="small" />
           ) : (
             <>
-              <Ionicons name="add-circle-outline" size={20} color="#fff" />
+              <Ionicons name="add-circle-outline" size={20} color={Colors.onPrimary} />
               <Text style={styles.generateBtnText}>Gerar novo código</Text>
             </>
           )}
         </TouchableOpacity>
 
         {loading ? (
-          <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color={Colors.primaryText} style={{ marginTop: 40 }} />
         ) : (
           <>
             {/* Códigos ativos */}
@@ -175,10 +175,10 @@ export default function InviteScreen() {
                     <View style={styles.codeTop}>
                       <Text style={styles.codeText}>{item.code}</Text>
                       <View style={styles.codeActions}>
-                        <TouchableOpacity onPress={() => shareCode(item.code)} style={styles.iconBtn}>
-                          <Ionicons name="share-social-outline" size={18} color={Colors.primary} />
+                        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Compartilhar código" onPress={() => shareCode(item.code)} style={styles.iconBtn}>
+                          <Ionicons name="share-social-outline" size={18} color={Colors.primaryText} />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => revokeCode(item.id, item.code)} style={styles.iconBtn}>
+                        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Revogar código" onPress={() => revokeCode(item.id, item.code)} style={styles.iconBtn}>
                           <Ionicons name="trash-outline" size={18} color={Colors.error} />
                         </TouchableOpacity>
                       </View>
@@ -213,7 +213,7 @@ export default function InviteScreen() {
                   <View key={item.id} style={[styles.codeCard, styles.codeCardExpired]}>
                     <View style={styles.codeTop}>
                       <Text style={[styles.codeText, { color: Colors.textSecondary }]}>{item.code}</Text>
-                      <TouchableOpacity onPress={() => revokeCode(item.id, item.code)} style={styles.iconBtn}>
+                      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Excluir código" onPress={() => revokeCode(item.id, item.code)} style={styles.iconBtn}>
                         <Ionicons name="trash-outline" size={18} color={Colors.textSecondary} />
                       </TouchableOpacity>
                     </View>
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 15,
   },
-  generateBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  generateBtnText: { fontSize: 15, fontWeight: '700', color: Colors.onPrimary },
   section: { gap: 10 },
   sectionTitle: { fontSize: 13, fontWeight: '700', color: Colors.text, textTransform: 'uppercase', letterSpacing: 0.5 },
   codeCard: {

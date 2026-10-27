@@ -28,13 +28,13 @@ export function ProfilePaymentsCard() {
 
   return (
     <View style={styles.section}>
-      <TouchableOpacity
+      <TouchableOpacity accessibilityRole="button"
         style={styles.card}
         onPress={() => router.push('/payments' as any)}
         activeOpacity={0.8}
       >
         <View style={styles.iconWrap}>
-          <Ionicons name="cash-outline" size={22} color={Colors.primary} />
+          <Ionicons name="cash-outline" size={22} color={Colors.primaryText} />
         </View>
         <View style={styles.body}>
           <Text style={styles.label}>Pagamentos</Text>

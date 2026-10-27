@@ -11,12 +11,12 @@ type Props = { item: LinkedPet; onPress: (item: LinkedPet) => void; onUnlink?: (
 export function PetCard({ item, onPress, onUnlink }: Props) {
   const color = STATUS_COLOR[item.status];
   return (
-    <TouchableOpacity style={styles.card} onPress={() => onPress(item)} activeOpacity={0.75}>
+    <TouchableOpacity accessibilityRole="button" style={styles.card} onPress={() => onPress(item)} activeOpacity={0.75}>
       <View style={styles.avatar}>
         {item.pet?.photo_uri ? (
           <Image source={{ uri: item.pet.photo_uri }} style={styles.avatarImg} />
         ) : (
-          <Ionicons name="paw" size={22} color={Colors.primary} />
+          <Ionicons name="paw" size={22} color={Colors.primaryText} />
         )}
       </View>
       <View style={styles.body}>
@@ -33,7 +33,7 @@ export function PetCard({ item, onPress, onUnlink }: Props) {
         </View>
       </View>
       {onUnlink ? (
-        <TouchableOpacity
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Desvincular pet"
           style={styles.unlinkBtn}
           onPress={() => onUnlink(item)}
           activeOpacity={0.7}

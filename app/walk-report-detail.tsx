@@ -139,12 +139,12 @@ export default function WalkReportDetailScreen() {
 
   const Header = () => (
     <View style={styles.header}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.backBtn}>
         <Ionicons name="arrow-back" size={22} color={Colors.text} />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>Detalhes do Passeio</Text>
-      <TouchableOpacity onPress={shareReport} style={styles.backBtn}>
-        <Ionicons name="share-outline" size={22} color={Colors.primary} />
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Compartilhar relatório" onPress={shareReport} style={styles.backBtn}>
+        <Ionicons name="share-outline" size={22} color={Colors.primaryText} />
       </TouchableOpacity>
     </View>
   );
@@ -153,7 +153,7 @@ export default function WalkReportDetailScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <Header />
-        <ActivityIndicator color={Colors.primary} style={{ flex: 1 }} />
+        <ActivityIndicator color={Colors.primaryText} style={{ flex: 1 }} />
       </SafeAreaView>
     );
   }
@@ -190,7 +190,7 @@ export default function WalkReportDetailScreen() {
         <View style={styles.card}>
           <View style={styles.row}>
             <View style={styles.avatar}>
-              <Ionicons name="person-outline" size={20} color={Colors.primary} />
+              <Ionicons name="person-outline" size={20} color={Colors.primaryText} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.ownerName}>{ownerName}</Text>
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B98115', borderRadius: 20,
     paddingHorizontal: 8, paddingVertical: 4,
   },
-  doneText: { fontSize: 11, fontWeight: '600', color: '#10B981' },
+  doneText: { fontSize: 11, fontWeight: '600', color: '#047857' },
 
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   petChip: {
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
 
   statsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' },
   statCell: { alignItems: 'center', gap: 4, flex: 1 },
-  statValue: { fontSize: 20, fontWeight: '800', color: Colors.primary },
+  statValue: { fontSize: 20, fontWeight: '800', color: Colors.primaryText },
   statLabel: { fontSize: 11, color: Colors.textSecondary, fontWeight: '600' },
   statDivider: { width: 1, height: 36, backgroundColor: Colors.border },
 

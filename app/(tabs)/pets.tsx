@@ -363,7 +363,7 @@ export default function PetsScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Pets</Text>
         <View style={styles.headerRight}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={styles.addPetBtn}
             activeOpacity={0.8}
             onPress={() => {
@@ -379,18 +379,18 @@ export default function PetsScreen() {
               router.push('/pets/add');
             }}
           >
-            <Ionicons name="add" size={16} color={Colors.primary} />
+            <Ionicons name="add" size={16} color={Colors.primaryText} />
             <Text style={styles.addPetBtnText}>Cadastrar</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.inviteBtn} onPress={() => router.push('/invite')} activeOpacity={0.8}>
-            <Ionicons name="ticket-outline" size={16} color={Colors.primary} />
+          <TouchableOpacity accessibilityRole="button" style={styles.inviteBtn} onPress={() => router.push('/invite')} activeOpacity={0.8}>
+            <Ionicons name="ticket-outline" size={16} color={Colors.primaryText} />
             <Text style={styles.inviteBtnText}>Convidar</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={Colors.primaryText} style={{ marginTop: 40 }} />
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -408,7 +408,7 @@ export default function PetsScreen() {
                 <View key={pet.id} style={styles.pendingCard}>
                   <View style={styles.pendingPetInfo}>
                     <View style={styles.petAvatar}>
-                      <Ionicons name="paw" size={18} color={Colors.primary} />
+                      <Ionicons name="paw" size={18} color={Colors.primaryText} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.pendingPetName}>{pet.pet?.name ?? '—'}</Text>
@@ -419,7 +419,7 @@ export default function PetsScreen() {
                     </View>
                   </View>
                   <View style={styles.pendingActions}>
-                    <TouchableOpacity
+                    <TouchableOpacity accessibilityRole="button"
                       style={styles.rejectBtn}
                       onPress={() => respondToRequest(pet, false)}
                       disabled={respondingId === pet.id}
@@ -431,15 +431,15 @@ export default function PetsScreen() {
                       }
                       <Text style={styles.rejectBtnText}>Recusar</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
+                    <TouchableOpacity accessibilityRole="button"
                       style={styles.acceptBtn}
                       onPress={() => respondToRequest(pet, true)}
                       disabled={respondingId === pet.id}
                       activeOpacity={0.8}
                     >
                       {respondingId === pet.id
-                        ? <ActivityIndicator size="small" color="#fff" />
-                        : <Ionicons name="checkmark" size={18} color="#fff" />
+                        ? <ActivityIndicator size="small" color={Colors.onPrimary} />
+                        : <Ionicons name="checkmark" size={18} color={Colors.onPrimary} />
                       }
                       <Text style={styles.acceptBtnText}>Aceitar</Text>
                     </TouchableOpacity>
@@ -454,7 +454,7 @@ export default function PetsScreen() {
             {(['todos', 'active'] as FilterTab[]).map((tab) => {
               const labels = { todos: 'Todos', active: 'Ativos' };
               return (
-                <TouchableOpacity key={tab} style={[styles.tab, filter === tab && styles.tabActive]} onPress={() => setFilter(tab)}>
+                <TouchableOpacity accessibilityRole="button" key={tab} style={[styles.tab, filter === tab && styles.tabActive]} onPress={() => setFilter(tab)}>
                   <Text style={[styles.tabText, filter === tab && styles.tabTextActive]}>{labels[tab]}</Text>
                 </TouchableOpacity>
               );
@@ -465,16 +465,16 @@ export default function PetsScreen() {
           {ownPets.length > 0 && (
             <View style={styles.ownSection}>
               <View style={styles.sectionHeader}>
-                <Ionicons name="paw" size={14} color={Colors.primary} />
+                <Ionicons name="paw" size={14} color={Colors.primaryText} />
                 <Text style={styles.sectionTitle}>MEUS PETS ({ownPets.length})</Text>
               </View>
               {ownPets.map((pet) => (
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   key={pet.id} style={styles.ownCard}
                   onPress={() => setSelectedOwnPet(pet)} activeOpacity={0.75}
                 >
                   <View style={styles.petAvatar}>
-                    <Ionicons name="paw" size={18} color={Colors.primary} />
+                    <Ionicons name="paw" size={18} color={Colors.primaryText} />
                   </View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <Text style={styles.pendingPetName}>{pet.name}</Text>
@@ -527,7 +527,7 @@ export default function PetsScreen() {
             </Text>
             <View style={styles.modalServices}>
               {pendingAccept?.services.map((svc) => (
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   key={svc.id}
                   style={styles.serviceOption}
                   onPress={() => confirmAccept(pendingAccept.pet, svc.id)}
@@ -545,7 +545,7 @@ export default function PetsScreen() {
                   </Text>
                 </TouchableOpacity>
               ))}
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={[styles.serviceOption, styles.serviceOptionNone]}
                 onPress={() => confirmAccept(pendingAccept!.pet, null)}
                 activeOpacity={0.8}
@@ -554,7 +554,7 @@ export default function PetsScreen() {
                 <Text style={[styles.servicePrice, { color: Colors.textSecondary }]}>—</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.modalCancel} onPress={() => setPendingAccept(null)}>
+            <TouchableOpacity accessibilityRole="button" style={styles.modalCancel} onPress={() => setPendingAccept(null)}>
               <Text style={styles.modalCancelText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
@@ -576,14 +576,14 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800', color: Colors.text },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   badge: { backgroundColor: `${Colors.primary}18`, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
-  badgeText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
+  badgeText: { fontSize: 12, fontWeight: '600', color: Colors.primaryText },
   inviteBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: `${Colors.primary}15`, borderRadius: 20,
     paddingHorizontal: 12, paddingVertical: 6,
     borderWidth: 1, borderColor: `${Colors.primary}30`,
   },
-  inviteBtnText: { fontSize: 12, fontWeight: '700', color: Colors.primary },
+  inviteBtnText: { fontSize: 12, fontWeight: '700', color: Colors.primaryText },
   scrollContent: { paddingBottom: 32 },
 
   // Pending
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#F59E0B20',
   },
   pendingDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#F59E0B' },
-  pendingTitle: { fontSize: 11, fontWeight: '700', color: '#F59E0B', letterSpacing: 0.8 },
+  pendingTitle: { fontSize: 11, fontWeight: '700', color: '#B45309', letterSpacing: 0.8 },
   pendingCard: {
     paddingHorizontal: 16, paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: '#F59E0B15',
@@ -626,14 +626,14 @@ const styles = StyleSheet.create({
     borderRadius: 10, paddingVertical: 10,
     backgroundColor: Colors.primary,
   },
-  acceptBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  acceptBtnText: { fontSize: 14, fontWeight: '700', color: Colors.onPrimary },
 
   // Tabs
   tabs: { flexDirection: 'row', paddingHorizontal: 20, gap: 8, marginBottom: 12, marginTop: 8 },
   tab: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 20, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border },
   tabActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   tabText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  tabTextActive: { color: '#fff' },
+  tabTextActive: { color: Colors.onPrimary },
 
   addPetBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -641,7 +641,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 6,
     borderWidth: 1, borderColor: `${Colors.primary}30`,
   },
-  addPetBtnText: { fontSize: 12, fontWeight: '700', color: Colors.primary },
+  addPetBtnText: { fontSize: 12, fontWeight: '700', color: Colors.primaryText },
 
   // Own pets section
   ownSection: {
@@ -654,15 +654,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 20, paddingVertical: 10, marginBottom: 4,
   },
-  sectionTitle: { fontSize: 11, fontWeight: '700', color: Colors.primary, letterSpacing: 0.8 },
+  sectionTitle: { fontSize: 11, fontWeight: '700', color: Colors.primaryText, letterSpacing: 0.8 },
   ownCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingHorizontal: 16, paddingVertical: 12,
     borderTopWidth: 1, borderTopColor: Colors.border,
   },
   ownDeleteBtn: { padding: 6 },
-  ownCode: { fontSize: 11, fontWeight: '800', color: Colors.primary, letterSpacing: 2 },
-  ownMergedBadge: { fontSize: 11, fontWeight: '600', color: '#4CAF50' },
+  ownCode: { fontSize: 11, fontWeight: '800', color: Colors.primaryText, letterSpacing: 2 },
+  ownMergedBadge: { fontSize: 11, fontWeight: '600', color: '#2E7D32' },
 
   // List
   empty: { alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 40, paddingTop: 32 },
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
   serviceOptionNone: { borderStyle: 'dashed', borderColor: Colors.border },
   serviceLabel: { fontSize: 15, fontWeight: '700', color: Colors.text },
   serviceBilling: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
-  servicePrice: { fontSize: 16, fontWeight: '800', color: Colors.primary },
+  servicePrice: { fontSize: 16, fontWeight: '800', color: Colors.primaryText },
   modalCancel: { alignItems: 'center', paddingVertical: 8 },
   modalCancelText: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary },
 });

@@ -38,22 +38,22 @@ export function ProfileServices() {
     <View style={styles.section}>
       <View style={styles.titleRow}>
         <Text style={styles.title}>Meus Serviços</Text>
-        <TouchableOpacity onPress={() => router.push('/services')} style={styles.manageBtn} activeOpacity={0.8}>
+        <TouchableOpacity accessibilityRole="button" onPress={() => router.push('/services')} style={styles.manageBtn} activeOpacity={0.8}>
           <Text style={styles.manageBtnText}>Gerenciar</Text>
-          <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+          <Ionicons name="chevron-forward" size={14} color={Colors.primaryText} />
         </TouchableOpacity>
       </View>
 
       {loading ? (
-        <ActivityIndicator size="small" color={Colors.primary} style={{ marginTop: 8 }} />
+        <ActivityIndicator size="small" color={Colors.primaryText} style={{ marginTop: 8 }} />
       ) : services.length === 0 ? (
-        <TouchableOpacity style={styles.emptyCard} onPress={() => router.push('/services')} activeOpacity={0.8}>
+        <TouchableOpacity accessibilityRole="button" style={styles.emptyCard} onPress={() => router.push('/services')} activeOpacity={0.8}>
           <Text style={styles.emptyIcon}>🦮</Text>
           <View style={{ flex: 1 }}>
             <Text style={styles.emptyTitle}>Nenhum serviço cadastrado</Text>
             <Text style={styles.emptySub}>Configure passeios, creche, hospedagem e mais</Text>
           </View>
-          <Ionicons name="add-circle-outline" size={22} color={Colors.primary} />
+          <Ionicons name="add-circle-outline" size={22} color={Colors.primaryText} />
         </TouchableOpacity>
       ) : (
         <>
@@ -70,7 +70,7 @@ export function ProfileServices() {
 
           <View style={styles.serviceList}>
             {services.slice(0, 4).map((svc) => (
-              <TouchableOpacity key={svc.id} style={[styles.serviceRow, !svc.active && styles.serviceRowInactive]}
+              <TouchableOpacity accessibilityRole="button" key={svc.id} style={[styles.serviceRow, !svc.active && styles.serviceRowInactive]}
                 onPress={() => router.push('/services')} activeOpacity={0.8}>
                 <Text style={styles.serviceRowIcon}>{CATALOG_ICONS[svc.type] ?? '🐾'}</Text>
                 <Text style={[styles.serviceRowLabel, !svc.active && { color: Colors.textSecondary }]} numberOfLines={1}>
@@ -87,9 +87,9 @@ export function ProfileServices() {
               </TouchableOpacity>
             ))}
             {services.length > 4 && (
-              <TouchableOpacity style={styles.moreRow} onPress={() => router.push('/services')} activeOpacity={0.8}>
+              <TouchableOpacity accessibilityRole="button" style={styles.moreRow} onPress={() => router.push('/services')} activeOpacity={0.8}>
                 <Text style={styles.moreText}>+{services.length - 4} mais serviços</Text>
-                <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+                <Ionicons name="chevron-forward" size={14} color={Colors.primaryText} />
               </TouchableOpacity>
             )}
           </View>
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   title: { fontSize: 15, fontWeight: '700', color: Colors.text },
   manageBtn: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  manageBtnText: { fontSize: 13, fontWeight: '600', color: Colors.primary },
+  manageBtnText: { fontSize: 13, fontWeight: '600', color: Colors.primaryText },
 
   emptyCard: {
     backgroundColor: Colors.card, borderRadius: 14, borderWidth: 1,
@@ -121,8 +121,8 @@ const styles = StyleSheet.create({
     backgroundColor: `${Colors.primary}08`, borderRadius: 12,
     borderWidth: 1, borderColor: `${Colors.primary}30`, padding: 10,
   },
-  summaryChipNum: { fontSize: 20, fontWeight: '800', color: Colors.primary },
-  summaryChipLabel: { fontSize: 12, color: Colors.primary, fontWeight: '600' },
+  summaryChipNum: { fontSize: 20, fontWeight: '800', color: Colors.primaryText },
+  summaryChipLabel: { fontSize: 12, color: Colors.primaryText, fontWeight: '600' },
 
   serviceList: {
     backgroundColor: Colors.card, borderRadius: 14,
@@ -136,15 +136,15 @@ const styles = StyleSheet.create({
   serviceRowInactive: { opacity: 0.55 },
   serviceRowIcon: { fontSize: 18 },
   serviceRowLabel: { flex: 1, fontSize: 14, fontWeight: '600', color: Colors.text },
-  serviceRowPrice: { fontSize: 14, fontWeight: '700', color: Colors.primary },
+  serviceRowPrice: { fontSize: 14, fontWeight: '700', color: Colors.primaryText },
   inactiveBadge: {
     backgroundColor: `${Colors.textSecondary}18`, borderRadius: 8,
     paddingHorizontal: 6, paddingVertical: 2,
   },
-  inactiveBadgeText: { fontSize: 10, color: Colors.textSecondary, fontWeight: '600' },
+  inactiveBadgeText: { fontSize: 11, color: Colors.textSecondary, fontWeight: '600' },
   moreRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 4, paddingVertical: 12,
   },
-  moreText: { fontSize: 13, color: Colors.primary, fontWeight: '600' },
+  moreText: { fontSize: 13, color: Colors.primaryText, fontWeight: '600' },
 });

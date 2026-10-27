@@ -60,7 +60,7 @@ export default function SlotBlocker({ availableSlots, blockedSlots, onChange }: 
           const hasBlocked = (blockedSlots[key] ?? []).length > 0;
           const hasSlots = (availableSlots[String(day.getDay())] ?? []).length > 0;
           return (
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               key={key}
               style={[
                 styles.dayBtn,
@@ -70,10 +70,10 @@ export default function SlotBlocker({ availableSlots, blockedSlots, onChange }: 
               onPress={() => setSelectedDay(day)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.dayWeekday, isSelected && { color: '#fff' }]}>
+              <Text style={[styles.dayWeekday, isSelected && { color: Colors.onPrimary }]}>
                 {DAYS_PT[day.getDay()]}
               </Text>
-              <Text style={[styles.dayNum, isSelected && { color: '#fff' }]}>
+              <Text style={[styles.dayNum, isSelected && { color: Colors.onPrimary }]}>
                 {day.getDate()}
               </Text>
               {hasBlocked && (
@@ -103,7 +103,7 @@ export default function SlotBlocker({ availableSlots, blockedSlots, onChange }: 
           {slotsForDay.map((slot) => {
             const isBlocked = blockedToday.includes(slot);
             return (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 key={slot}
                 style={[
                   styles.slotChip,

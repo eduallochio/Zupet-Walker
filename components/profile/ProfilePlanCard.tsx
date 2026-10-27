@@ -82,10 +82,10 @@ export function ProfilePlanCard() {
 
   return (
     <View style={styles.section}>
-      <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => setModalVisible(true)}>
+      <TouchableOpacity accessibilityRole="button" style={styles.card} activeOpacity={0.85} onPress={() => setModalVisible(true)}>
         <View style={styles.cardLeft}>
           <View style={styles.iconWrap}>
-            <Ionicons name="star-outline" size={18} color={Colors.primary} />
+            <Ionicons name="star-outline" size={18} color={Colors.primaryText} />
           </View>
           <View style={styles.cardText}>
             <Text style={styles.title}>Plano Gratuito</Text>
@@ -98,8 +98,8 @@ export function ProfilePlanCard() {
       </TouchableOpacity>
 
       <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
-        <Pressable style={styles.backdrop} onPress={() => { if (!loading) setModalVisible(false); }}>
-          <Pressable style={styles.sheet} onPress={() => {}}>
+        <Pressable accessible={false} style={styles.backdrop} onPress={() => { if (!loading) setModalVisible(false); }}>
+          <Pressable accessible={false} style={styles.sheet} onPress={() => {}}>
             <View style={styles.sheetHandle} />
 
             <View style={styles.sheetIconWrap}>
@@ -116,7 +116,7 @@ export function ProfilePlanCard() {
                 'Sem limite de pets por passeio',
               ].map((b) => (
                 <View key={b} style={styles.benefitRow}>
-                  <Ionicons name="checkmark-circle" size={16} color={Colors.primary} />
+                  <Ionicons name="checkmark-circle" size={16} color={Colors.primaryText} />
                   <Text style={styles.benefitText}>{b}</Text>
                 </View>
               ))}
@@ -130,29 +130,29 @@ export function ProfilePlanCard() {
                   </Text>
                   <Text style={styles.priceValue}>{priceLabel}</Text>
                   {priceStatus === 'error' && (
-                    <TouchableOpacity onPress={() => setReloadKey((k) => k + 1)}>
+                    <TouchableOpacity accessibilityRole="button" onPress={() => setReloadKey((k) => k + 1)}>
                       <Text style={styles.linkText}>Tentar novamente</Text>
                     </TouchableOpacity>
                   )}
                 </View>
 
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   style={[styles.confirmBtn, (loading || priceStatus !== 'ready') && styles.confirmBtnDisabled]}
                   onPress={handlePurchase}
                   activeOpacity={0.85}
                   disabled={loading || priceStatus !== 'ready'}
                 >
                   {loading ? (
-                    <ActivityIndicator color="#fff" size="small" />
+                    <ActivityIndicator color={Colors.onPrimary} size="small" />
                   ) : (
                     <>
-                      <Ionicons name="card-outline" size={16} color="#fff" />
+                      <Ionicons name="card-outline" size={16} color={Colors.onPrimary} />
                       <Text style={styles.confirmBtnText}>Assinar via App Store</Text>
                     </>
                   )}
                 </TouchableOpacity>
 
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   style={styles.restoreBtn}
                   onPress={handleRestore}
                   activeOpacity={0.7}
@@ -167,11 +167,11 @@ export function ProfilePlanCard() {
                 </Text>
 
                 <View style={styles.linksRow}>
-                  <TouchableOpacity onPress={() => openLink(TERMS_URL)}>
+                  <TouchableOpacity accessibilityRole="button" onPress={() => openLink(TERMS_URL)}>
                     <Text style={styles.linkText}>Termos de Uso</Text>
                   </TouchableOpacity>
                   <Text style={styles.linkSep}>·</Text>
-                  <TouchableOpacity onPress={() => openLink(PRIVACY_URL)}>
+                  <TouchableOpacity accessibilityRole="button" onPress={() => openLink(PRIVACY_URL)}>
                     <Text style={styles.linkText}>Privacidade</Text>
                   </TouchableOpacity>
                 </View>
@@ -183,14 +183,14 @@ export function ProfilePlanCard() {
                   <Text style={styles.sheetBold}>Dashboard exclusivo do Walker</Text>
                   {' '}no site.
                 </Text>
-                <TouchableOpacity style={styles.confirmBtn} onPress={handleOpenDashboard} activeOpacity={0.85}>
-                  <Ionicons name="open-outline" size={16} color="#fff" />
+                <TouchableOpacity accessibilityRole="button" style={styles.confirmBtn} onPress={handleOpenDashboard} activeOpacity={0.85}>
+                  <Ionicons name="open-outline" size={16} color={Colors.onPrimary} />
                   <Text style={styles.confirmBtnText}>Ir para o Dashboard</Text>
                 </TouchableOpacity>
               </>
             )}
 
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)} activeOpacity={0.7} disabled={loading}>
+            <TouchableOpacity accessibilityRole="button" style={styles.cancelBtn} onPress={() => setModalVisible(false)} activeOpacity={0.7} disabled={loading}>
               <Text style={styles.cancelBtnText}>Agora não</Text>
             </TouchableOpacity>
           </Pressable>
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 14, fontWeight: '700', color: Colors.text },
   sub: { fontSize: 12, color: Colors.textSecondary },
   proBtn: { backgroundColor: Colors.primary, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
-  proBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  proBtnText: { fontSize: 13, fontWeight: '700', color: Colors.onPrimary },
 
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   sheet: {
@@ -244,10 +244,10 @@ const styles = StyleSheet.create({
     height: 50, paddingHorizontal: 24, justifyContent: 'center', width: '100%',
   },
   confirmBtnDisabled: { opacity: 0.6 },
-  confirmBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  confirmBtnText: { color: Colors.onPrimary, fontSize: 15, fontWeight: '700' },
 
   restoreBtn: { paddingVertical: 6 },
-  restoreBtnText: { fontSize: 13, color: Colors.primary, fontWeight: '600' },
+  restoreBtnText: { fontSize: 13, color: Colors.primaryText, fontWeight: '600' },
 
   priceBox: {
     width: '100%', backgroundColor: `${Colors.primary}10`,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   },
 
   linksRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: -4 },
-  linkText: { fontSize: 12, color: Colors.primary, fontWeight: '600' },
+  linkText: { fontSize: 12, color: Colors.primaryText, fontWeight: '600' },
   linkSep: { fontSize: 12, color: Colors.textSecondary },
 
   cancelBtn: { paddingVertical: 8 },

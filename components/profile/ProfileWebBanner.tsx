@@ -29,7 +29,7 @@ export function ProfileWebBanner() {
   return (
     <View style={styles.card}>
       <View style={styles.iconWrap}>
-        <Ionicons name="globe-outline" size={22} color={Colors.primary} />
+        <Ionicons name="globe-outline" size={22} color={Colors.primaryText} />
       </View>
       <View style={styles.textWrap}>
         <View style={styles.titleRow}>
@@ -40,41 +40,41 @@ export function ProfileWebBanner() {
         </Text>
 
         {profileUrl && (
-          <TouchableOpacity style={styles.linkBox} onPress={() => openUrl(profileUrl)} activeOpacity={0.7}>
+          <TouchableOpacity accessibilityRole="button" style={styles.linkBox} onPress={() => openUrl(profileUrl)} activeOpacity={0.7}>
             <Text style={styles.linkText} numberOfLines={1}>{profileUrl}</Text>
-            <Ionicons name="open-outline" size={13} color={Colors.primary} />
+            <Ionicons name="open-outline" size={13} color={Colors.primaryText} />
           </TouchableOpacity>
         )}
 
         <View style={styles.btns}>
           {profileUrl ? (
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.btnPrimary}
               onPress={() => openUrl(profileUrl)}
               activeOpacity={0.8}
             >
-              <Ionicons name="person-circle-outline" size={14} color="#fff" />
+              <Ionicons name="person-circle-outline" size={14} color={Colors.onPrimary} />
               <Text style={styles.btnPrimaryText}>Ver perfil</Text>
             </TouchableOpacity>
           ) : null}
 
           {profileUrl && (
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.btnShare}
               onPress={handleShare}
               activeOpacity={0.8}
             >
-              <Ionicons name="share-social-outline" size={14} color={Colors.primary} />
+              <Ionicons name="share-social-outline" size={14} color={Colors.primaryText} />
               <Text style={styles.btnShareText}>Compartilhar</Text>
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={styles.btnSecondary}
             onPress={() => openUrl(`${BASE_URL}/dashboard/perfil`)}
             activeOpacity={0.8}
           >
-            <Ionicons name="settings-outline" size={14} color={Colors.primary} />
+            <Ionicons name="settings-outline" size={14} color={Colors.primaryText} />
             <Text style={styles.btnSecondaryText}>Editar no painel</Text>
           </TouchableOpacity>
         </View>
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 12,
-    color: '#3D8A7A',
+    color: '#2F6F62',
     lineHeight: 17,
   },
   linkBox: {
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   linkText: {
     flex: 1,
     fontSize: 12,
-    color: Colors.primary,
+    color: Colors.primaryText,
     fontWeight: '600',
   },
   btns: {
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   btnPrimaryText: {
-    color: '#fff',
+    color: Colors.onPrimary,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary + '50',
   },
   btnShareText: {
-    color: Colors.primary,
+    color: Colors.primaryText,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     borderColor: '#B2EDE5',
   },
   btnSecondaryText: {
-    color: Colors.primary,
+    color: Colors.primaryText,
     fontSize: 12,
     fontWeight: '600',
   },

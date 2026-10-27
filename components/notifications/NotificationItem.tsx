@@ -21,10 +21,10 @@ export type NotificationData = {
 
 const TYPE_ICON: Record<string, { name: keyof typeof Ionicons.glyphMap; color: string }> = {
   service_requested:    { name: 'calendar-outline',     color: '#2196F3' },
-  pet_unlinked_by_tutor:{ name: 'close-circle-outline', color: '#EF4444' },
-  pet_linked:           { name: 'link-outline',         color: '#4CAF50' },
-  schedule_confirmed:   { name: 'checkmark-circle-outline', color: '#4CAF50' },
-  schedule_cancelled:   { name: 'close-circle-outline', color: '#EF4444' },
+  pet_unlinked_by_tutor:{ name: 'close-circle-outline', color: '#C62828' },
+  pet_linked:           { name: 'link-outline',         color: '#2E7D32' },
+  schedule_confirmed:   { name: 'checkmark-circle-outline', color: '#2E7D32' },
+  schedule_cancelled:   { name: 'close-circle-outline', color: '#C62828' },
 };
 
 function formatRelative(iso: string): string {
@@ -45,10 +45,10 @@ type Props = {
 
 export default function NotificationItem({ item, onPress }: Props) {
   const isUnread = !item.read_at;
-  const icon = TYPE_ICON[item.type] ?? { name: 'notifications-outline' as any, color: Colors.primary };
+  const icon = TYPE_ICON[item.type] ?? { name: 'notifications-outline' as any, color: Colors.primaryText };
 
   return (
-    <TouchableOpacity
+    <TouchableOpacity accessibilityRole="button"
       style={[styles.row, isUnread && styles.rowUnread]}
       onPress={() => onPress?.(item)}
       activeOpacity={0.75}

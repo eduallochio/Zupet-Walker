@@ -30,7 +30,7 @@ export default function NotAWalkerScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.content}>
         <View style={styles.iconWrap}>
-          <Ionicons name="paw-outline" size={48} color={Colors.primary} />
+          <Ionicons name="paw-outline" size={48} color={Colors.primaryText} />
         </View>
 
         <Text style={styles.title}>Este app é para profissionais de pets</Text>
@@ -42,7 +42,7 @@ export default function NotAWalkerScreen() {
 
         {isTutor && (
           <View style={styles.tutorCard}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
+            <Ionicons name="checkmark-circle" size={20} color={Colors.primaryText} />
             <Text style={styles.cardText}>
               Você já tem uma conta de <Text style={styles.bold}>tutor</Text> no Zupet com este e-mail.
               Pode usar os dois perfis com a mesma conta.
@@ -60,19 +60,19 @@ export default function NotAWalkerScreen() {
           </View>
         )}
 
-        <TouchableOpacity style={styles.primaryBtn} onPress={handleBecomeWalker} activeOpacity={0.85}>
-          <Ionicons name="add-circle-outline" size={20} color="#fff" />
+        <TouchableOpacity accessibilityRole="button" style={styles.primaryBtn} onPress={handleBecomeWalker} activeOpacity={0.85}>
+          <Ionicons name="add-circle-outline" size={20} color={Colors.onPrimary} />
           <Text style={styles.primaryBtnText}>Criar perfil profissional</Text>
         </TouchableOpacity>
 
         {isTutor && (
-          <TouchableOpacity style={styles.tutorBtn} onPress={handleOpenZupet} activeOpacity={0.85}>
-            <Ionicons name="phone-portrait-outline" size={18} color={Colors.primary} />
+          <TouchableOpacity accessibilityRole="button" style={styles.tutorBtn} onPress={handleOpenZupet} activeOpacity={0.85}>
+            <Ionicons name="phone-portrait-outline" size={18} color={Colors.primaryText} />
             <Text style={styles.tutorBtnText}>Abrir o Zupet (tutor)</Text>
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={styles.secondaryBtn} onPress={handleSignOut} activeOpacity={0.85}>
+        <TouchableOpacity accessibilityRole="button" style={styles.secondaryBtn} onPress={handleSignOut} activeOpacity={0.85}>
           <Ionicons name="log-out-outline" size={18} color={Colors.error} />
           <Text style={styles.secondaryBtnText}>Sair da conta</Text>
         </TouchableOpacity>
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     height: 52, paddingHorizontal: 28, justifyContent: 'center',
     width: '100%', marginTop: 8,
   },
-  primaryBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  primaryBtnText: { color: Colors.onPrimary, fontSize: 16, fontWeight: '700' },
   tutorCard: {
     flexDirection: 'row', gap: 10, alignItems: 'flex-start',
     backgroundColor: `${Colors.primary}12`, borderRadius: 14,
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', width: '100%',
     borderWidth: 1.5, borderColor: Colors.primary,
   },
-  tutorBtnText: { color: Colors.primary, fontSize: 15, fontWeight: '600' },
+  tutorBtnText: { color: Colors.primaryText, fontSize: 15, fontWeight: '600' },
   secondaryBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     borderRadius: 12, height: 48, paddingHorizontal: 28,

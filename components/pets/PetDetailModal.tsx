@@ -75,7 +75,7 @@ export function PetDetailModal({ pet, onClose }: Props) {
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fechar" onPress={onClose} style={styles.closeBtn}>
             <Ionicons name="close" size={22} color={Colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Ficha do Pet</Text>
@@ -89,7 +89,7 @@ export function PetDetailModal({ pet, onClose }: Props) {
               {p?.photo_uri ? (
                 <Image source={{ uri: p.photo_uri }} style={styles.avatarImg} />
               ) : (
-                <Ionicons name="paw" size={44} color={Colors.primary} />
+                <Ionicons name="paw" size={44} color={Colors.primaryText} />
               )}
             </View>
             <Text style={styles.petName}>{p?.name ?? '—'}</Text>
@@ -172,7 +172,7 @@ export function PetDetailModal({ pet, onClose }: Props) {
             <Text style={styles.sectionTitle}>💉 VACINAS</Text>
             <View style={styles.card}>
               {loadingVaccines ? (
-                <ActivityIndicator color={Colors.primary} style={{ padding: 20 }} />
+                <ActivityIndicator color={Colors.primaryText} style={{ padding: 20 }} />
               ) : vaccines.length === 0 ? (
                 <View style={styles.emptyVaccines}>
                   <Text style={styles.emptyVaccinesText}>Nenhuma vacina registrada</Text>
@@ -183,7 +183,7 @@ export function PetDetailModal({ pet, onClose }: Props) {
                   const isOverdue = v.next_due_date
                     ? (() => { const parts = v.next_due_date!.split('/'); return new Date(+parts[2], +parts[1]-1, +parts[0]) < today; })()
                     : false;
-                  const statusColor = isOverdue ? '#F59E0B' : '#10B981';
+                  const statusColor = isOverdue ? '#B45309' : '#047857';
                   const statusLabel = isOverdue ? 'Vencida' : 'Em dia';
                   return (
                     <View key={v.id} style={[styles.vaccineRow, i === vaccines.length - 1 && { borderBottomWidth: 0 }]}>
@@ -217,7 +217,7 @@ export function PetDetailModal({ pet, onClose }: Props) {
                     {pet.owner.avatar_url ? (
                       <Image source={{ uri: pet.owner.avatar_url }} style={styles.ownerAvatarImg} />
                     ) : (
-                      <Ionicons name="person" size={22} color={Colors.primary} />
+                      <Ionicons name="person" size={22} color={Colors.primaryText} />
                     )}
                   </View>
                   <View>
@@ -280,14 +280,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C710',
   },
   allergyRow: { padding: 14, gap: 6, borderBottomWidth: 1, borderBottomColor: '#F59E0B20' },
-  allergyLabel: { fontSize: 12, fontWeight: '700', color: '#F59E0B' },
+  allergyLabel: { fontSize: 12, fontWeight: '700', color: '#B45309' },
   allergyText: { fontSize: 13, color: Colors.text, lineHeight: 19 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tag: {
     backgroundColor: '#EF444420', borderRadius: 20,
     paddingHorizontal: 10, paddingVertical: 3,
   },
-  tagText: { fontSize: 12, fontWeight: '600', color: '#EF4444' },
+  tagText: { fontSize: 12, fontWeight: '600', color: '#C62828' },
 
   emptyVaccines: { padding: 20, alignItems: 'center' },
   emptyVaccinesText: { fontSize: 13, color: Colors.textSecondary },

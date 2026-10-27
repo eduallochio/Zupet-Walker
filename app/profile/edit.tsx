@@ -181,13 +181,13 @@ export default function EditProfileScreen() {
 
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.headerBtn}>
             <Ionicons name="arrow-back" size={22} color={Colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Editar Perfil</Text>
-          <TouchableOpacity onPress={handleSave} style={styles.headerBtn} disabled={saving}>
+          <TouchableOpacity accessibilityRole="button" onPress={handleSave} style={styles.headerBtn} disabled={saving}>
             {saving
-              ? <ActivityIndicator size="small" color={Colors.primary} />
+              ? <ActivityIndicator size="small" color={Colors.primaryText} />
               : <Text style={styles.saveBtn}>Salvar</Text>
             }
           </TouchableOpacity>
@@ -197,7 +197,7 @@ export default function EditProfileScreen() {
 
           {/* Foto */}
           <View style={styles.photoSection}>
-            <TouchableOpacity onPress={handlePhotoMenu} activeOpacity={0.8} style={styles.avatarWrap}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Trocar foto do perfil" onPress={handlePhotoMenu} activeOpacity={0.8} style={styles.avatarWrap}>
               {avatarUri ? (
                 <Image source={{ uri: avatarUri }} style={styles.avatar} />
               ) : (
@@ -206,10 +206,10 @@ export default function EditProfileScreen() {
                 </View>
               )}
               <View style={styles.editBadge}>
-                <Ionicons name="camera" size={14} color="#fff" />
+                <Ionicons name="camera" size={14} color={Colors.onPrimary} />
               </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handlePhotoMenu}>
+            <TouchableOpacity accessibilityRole="button" onPress={handlePhotoMenu}>
               <Text style={styles.changePhotoText}>Trocar foto</Text>
             </TouchableOpacity>
           </View>
@@ -337,9 +337,9 @@ export default function EditProfileScreen() {
           </View>
 
           {/* Botão salvar */}
-          <TouchableOpacity style={styles.saveFullBtn} onPress={handleSave} disabled={saving}>
+          <TouchableOpacity accessibilityRole="button" style={styles.saveFullBtn} onPress={handleSave} disabled={saving}>
             {saving
-              ? <ActivityIndicator color="#fff" />
+              ? <ActivityIndicator color={Colors.onPrimary} />
               : <Text style={styles.saveFullBtnText}>Salvar alterações</Text>
             }
           </TouchableOpacity>
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   },
   headerBtn: { width: 60, alignItems: 'flex-start' },
   headerTitle: { fontSize: 16, fontWeight: '700', color: Colors.text },
-  saveBtn: { fontSize: 15, fontWeight: '700', color: Colors.primary, textAlign: 'right', width: 60 },
+  saveBtn: { fontSize: 15, fontWeight: '700', color: Colors.primaryText, textAlign: 'right', width: 60 },
 
   scroll: { padding: 20, gap: 24, paddingBottom: 48 },
 
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center',
     borderWidth: 2, borderColor: Colors.background,
   },
-  changePhotoText: { fontSize: 14, fontWeight: '600', color: Colors.primary },
+  changePhotoText: { fontSize: 14, fontWeight: '600', color: Colors.primaryText },
 
   section: { gap: 14 },
   sectionLabel: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary, letterSpacing: 0.8 },
@@ -399,6 +399,6 @@ const styles = StyleSheet.create({
   rowFields: { flexDirection: 'row', gap: 12 },
 
   saveFullBtn: { backgroundColor: Colors.primary, borderRadius: 14, padding: 16, alignItems: 'center' },
-  saveFullBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  saveFullBtnText: { color: Colors.onPrimary, fontSize: 16, fontWeight: '700' },
 
 });

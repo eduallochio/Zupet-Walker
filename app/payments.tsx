@@ -43,8 +43,8 @@ const SERVICE_TYPE_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  pending:   '#F59E0B',
-  paid:      '#10B981',
+  pending:   '#B45309',
+  paid:      '#047857',
   cancelled: Colors.textSecondary,
 };
 
@@ -150,7 +150,7 @@ export default function PaymentsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>Pagamentos</Text>
@@ -166,12 +166,12 @@ export default function PaymentsScreen() {
         <View style={styles.summaryRow}>
           <View style={[styles.summaryCard, { borderColor: '#F59E0B40' }]}>
             <Ionicons name="time-outline" size={18} color="#F59E0B" />
-            <Text style={[styles.summaryValue, { color: '#F59E0B' }]}>{formatCurrency(totalPending)}</Text>
+            <Text style={[styles.summaryValue, { color: '#B45309' }]}>{formatCurrency(totalPending)}</Text>
             <Text style={styles.summaryLabel}>A receber</Text>
           </View>
           <View style={[styles.summaryCard, { borderColor: '#10B98140' }]}>
             <Ionicons name="checkmark-circle-outline" size={18} color="#10B981" />
-            <Text style={[styles.summaryValue, { color: '#10B981' }]}>{formatCurrency(totalPaid)}</Text>
+            <Text style={[styles.summaryValue, { color: '#047857' }]}>{formatCurrency(totalPaid)}</Text>
             <Text style={styles.summaryLabel}>Recebido</Text>
           </View>
         </View>
@@ -187,12 +187,12 @@ export default function PaymentsScreen() {
         {/* Tabs */}
         <View style={styles.tabs}>
           {(['pending', 'paid', 'all'] as const).map((t) => (
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               key={t}
               style={[styles.tabBtn, tab === t && { backgroundColor: Colors.primary, borderColor: Colors.primary }]}
               onPress={() => setTab(t)}
             >
-              <Text style={[styles.tabText, tab === t && { color: '#fff' }]}>
+              <Text style={[styles.tabText, tab === t && { color: Colors.onPrimary }]}>
                 {t === 'pending' ? 'Pendentes' : t === 'paid' ? 'Pagos' : 'Todos'}
               </Text>
             </TouchableOpacity>
@@ -200,7 +200,7 @@ export default function PaymentsScreen() {
         </View>
 
         {loading ? (
-          <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
+          <ActivityIndicator color={Colors.primaryText} style={{ marginTop: 40 }} />
         ) : filtered.length === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="cash-outline" size={48} color={Colors.border} />
@@ -250,19 +250,19 @@ export default function PaymentsScreen() {
 
                 {payment.status === 'pending' && (
                   <View style={styles.cardActions}>
-                    <TouchableOpacity
+                    <TouchableOpacity accessibilityRole="button"
                       style={[styles.actionBtn, { backgroundColor: '#10B98115', borderColor: '#10B98135' }]}
                       onPress={() => markPaid(payment)}
                     >
                       <Ionicons name="checkmark-circle-outline" size={15} color="#10B981" />
-                      <Text style={[styles.actionText, { color: '#10B981' }]}>Marcar como pago</Text>
+                      <Text style={[styles.actionText, { color: '#047857' }]}>Marcar como pago</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
+                    <TouchableOpacity accessibilityRole="button"
                       style={[styles.actionBtn, { backgroundColor: '#EF444415', borderColor: '#EF444435' }]}
                       onPress={() => cancelPayment(payment.id)}
                     >
                       <Ionicons name="close-circle-outline" size={15} color="#EF4444" />
-                      <Text style={[styles.actionText, { color: '#EF4444' }]}>Cancelar</Text>
+                      <Text style={[styles.actionText, { color: '#C62828' }]}>Cancelar</Text>
                     </TouchableOpacity>
                   </View>
                 )}

@@ -157,7 +157,7 @@ export default function HomeScreen() {
                 : 'Nenhum pet vinculado ainda'}
             </Text>
           </View>
-          <TouchableOpacity style={styles.bellBtn} onPress={() => router.push('/notifications' as any)}>
+          <TouchableOpacity accessibilityRole="button" style={styles.bellBtn} onPress={() => router.push('/notifications' as any)}>
             <Ionicons name="notifications-outline" size={24} color={Colors.text} />
             {unreadCount > 0 && (
               <View style={styles.bellBadge}>
@@ -168,7 +168,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Banner atendimento */}
-        <TouchableOpacity
+        <TouchableOpacity accessibilityRole="button"
           style={[styles.startBanner, activeWalk && styles.startBannerActive]}
           onPress={() => router.push(activeWalk ? '/walk/active' : '/walk/start')}
           activeOpacity={0.85}
@@ -182,7 +182,7 @@ export default function HomeScreen() {
             </Text>
           </View>
           <View style={styles.startBannerBtn}>
-            <Ionicons name={activeWalk ? 'radio-button-on' : 'play'} size={22} color={Colors.primary} />
+            <Ionicons name={activeWalk ? 'radio-button-on' : 'play'} size={22} color={Colors.primaryText} />
           </View>
         </TouchableOpacity>
 
@@ -204,13 +204,13 @@ export default function HomeScreen() {
 
         {/* Ganhos da semana */}
         {weekEarnings !== null && (
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={styles.earningsCard}
             onPress={() => router.push('/(tabs)/financeiro')}
             activeOpacity={0.8}
           >
             <View style={styles.earningsLeft}>
-              <Ionicons name="wallet-outline" size={18} color={Colors.primary} />
+              <Ionicons name="wallet-outline" size={18} color={Colors.primaryText} />
               <View>
                 <Text style={styles.earningsLabel}>Ganhos esta semana</Text>
                 <Text style={styles.earningsValue}>
@@ -218,7 +218,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={Colors.primary} />
+            <Ionicons name="chevron-forward" size={16} color={Colors.primaryText} />
           </TouchableOpacity>
         )}
 
@@ -226,7 +226,7 @@ export default function HomeScreen() {
         {nextSchedule && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>PRÓXIMO SERVIÇO</Text>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.nextCard}
               onPress={() => router.push('/(tabs)/agenda')}
               activeOpacity={0.8}
@@ -235,7 +235,7 @@ export default function HomeScreen() {
                 <Ionicons
                   name={nextSchedule.service_type === 'walk' ? 'footsteps-outline' : 'briefcase-outline'}
                   size={20}
-                  color={Colors.primary}
+                  color={Colors.primaryText}
                 />
               </View>
               <View style={{ flex: 1 }}>
@@ -267,7 +267,7 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>PETS VINCULADOS {pets.length > 0 ? `(${pets.length})` : ''}</Text>
           {loading ? (
-            <ActivityIndicator color={Colors.primary} style={{ marginTop: 16 }} />
+            <ActivityIndicator color={Colors.primaryText} style={{ marginTop: 16 }} />
           ) : pets.length === 0 ? (
             <View style={styles.emptyCard}>
               <Ionicons name="paw-outline" size={32} color={Colors.border} />
@@ -277,12 +277,12 @@ export default function HomeScreen() {
           ) : (
             <View style={styles.petList}>
               {pets.map((pet) => (
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   key={pet.id} style={styles.petRow} activeOpacity={0.7}
                   onPress={() => router.push('/(tabs)/pets')}
                 >
                   <View style={styles.petAvatar}>
-                    <Ionicons name="paw" size={18} color={Colors.primary} />
+                    <Ionicons name="paw" size={18} color={Colors.primaryText} />
                   </View>
                   <View style={styles.petInfo}>
                     <Text style={styles.petName}>{pet.pet?.name ?? '—'}</Text>
@@ -324,8 +324,8 @@ const styles = StyleSheet.create({
   },
   startBannerActive: { backgroundColor: Colors.primaryDark },
   startBannerLeft: { gap: 3 },
-  startBannerTitle: { fontSize: 16, fontWeight: '700', color: '#fff' },
-  startBannerSub: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
+  startBannerTitle: { fontSize: 16, fontWeight: '700', color: Colors.onPrimary },
+  startBannerSub: { fontSize: 12, color: 'rgba(13,41,38,0.8)' },
   startBannerBtn: {
     width: 44, height: 44, borderRadius: 22,
     backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center',
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   },
   earningsLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   earningsLabel: { fontSize: 12, color: Colors.textSecondary },
-  earningsValue: { fontSize: 18, fontWeight: '800', color: Colors.primary, marginTop: 1 },
+  earningsValue: { fontSize: 18, fontWeight: '800', color: Colors.primaryText, marginTop: 1 },
 
   nextCard: {
     backgroundColor: Colors.card, borderRadius: 14,
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
   },
   nextType: { fontSize: 14, fontWeight: '700', color: Colors.text },
   nextTime: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
-  nextPets: { fontSize: 12, color: Colors.primary, marginTop: 2, fontWeight: '500' },
+  nextPets: { fontSize: 12, color: Colors.primaryText, marginTop: 2, fontWeight: '500' },
   nextBadge: {
     backgroundColor: `${Colors.success}18`, borderRadius: 20,
     paddingHorizontal: 9, paddingVertical: 4,

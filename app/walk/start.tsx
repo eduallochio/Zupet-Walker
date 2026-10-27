@@ -141,7 +141,7 @@ export default function WalkStartScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>Iniciar {serviceLabel.charAt(0).toUpperCase() + serviceLabel.slice(1)}</Text>
@@ -151,7 +151,7 @@ export default function WalkStartScreen() {
       <Text style={styles.subtitle}>Selecione os pets para este {serviceLabel}</Text>
 
       {loading ? (
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={Colors.primaryText} style={{ marginTop: 40 }} />
       ) : pets.length === 0 ? (
         <View style={styles.empty}>
           <Ionicons name="paw-outline" size={52} color={Colors.border} />
@@ -163,14 +163,14 @@ export default function WalkStartScreen() {
           {pets.map((item) => {
             const isSelected = selected.has(item.pet_id);
             return (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 key={item.pet_id}
                 style={[styles.card, isSelected && styles.cardSelected]}
                 onPress={() => toggle(item.pet_id)}
                 activeOpacity={0.75}
               >
                 <View style={[styles.avatar, isSelected && styles.avatarSelected]}>
-                  <Ionicons name="paw" size={22} color={isSelected ? '#fff' : Colors.primary} />
+                  <Ionicons name="paw" size={22} color={isSelected ? Colors.onPrimary : Colors.primary} />
                 </View>
                 <View style={styles.petInfo}>
                   <View style={styles.petNameRow}>
@@ -184,7 +184,7 @@ export default function WalkStartScreen() {
                   <Text style={styles.petBreed}>{item.pet?.breed ?? 'Raça não informada'}</Text>
                 </View>
                 <View style={[styles.check, isSelected && styles.checkSelected]}>
-                  {isSelected && <Ionicons name="checkmark" size={16} color="#fff" />}
+                  {isSelected && <Ionicons name="checkmark" size={16} color={Colors.onPrimary} />}
                 </View>
               </TouchableOpacity>
             );
@@ -194,12 +194,12 @@ export default function WalkStartScreen() {
 
       {pets.length > 0 && (
         <View style={styles.footer}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={[styles.startBtn, selected.size === 0 && styles.startBtnDisabled]}
             onPress={handleStart}
             activeOpacity={0.85}
           >
-            <Ionicons name="play" size={20} color="#fff" />
+            <Ionicons name="play" size={20} color={Colors.onPrimary} />
             <Text style={styles.startBtnText}>
               Iniciar{selected.size > 0 ? ` com ${selected.size} pet${selected.size > 1 ? 's' : ''}` : ` ${serviceLabel}`}
             </Text>
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     backgroundColor: `${Colors.primary}20`, borderRadius: 6,
     paddingHorizontal: 6, paddingVertical: 2,
   },
-  ownBadgeText: { fontSize: 10, fontWeight: '700', color: Colors.primary },
+  ownBadgeText: { fontSize: 11, fontWeight: '700', color: Colors.primaryText },
   card: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     backgroundColor: Colors.card, borderRadius: 16,
@@ -255,5 +255,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10,
   },
   startBtnDisabled: { backgroundColor: Colors.border },
-  startBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  startBtnText: { color: Colors.onPrimary, fontSize: 16, fontWeight: '700' },
 });

@@ -70,14 +70,14 @@ export function TodaySchedule() {
       });
   }, [walkerProfile?.id]);
 
-  if (loading) return <ActivityIndicator color={Colors.primary} style={{ marginTop: 8 }} />;
+  if (loading) return <ActivityIndicator color={Colors.primaryText} style={{ marginTop: 8 }} />;
   if (schedules.length === 0) return null;
 
   return (
     <View style={styles.section}>
       <View style={styles.titleRow}>
         <Text style={styles.title}>Agenda de Hoje</Text>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/agenda')} activeOpacity={0.8}>
+        <TouchableOpacity accessibilityRole="button" onPress={() => router.push('/(tabs)/agenda')} activeOpacity={0.8}>
           <Text style={styles.seeAll}>Ver tudo</Text>
         </TouchableOpacity>
       </View>
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   section: { paddingHorizontal: 20 },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   title: { fontSize: 15, fontWeight: '700', color: Colors.text },
-  seeAll: { fontSize: 13, fontWeight: '600', color: Colors.primary },
+  seeAll: { fontSize: 13, fontWeight: '600', color: Colors.primaryText },
   list: {
     backgroundColor: Colors.card, borderRadius: 14,
     borderWidth: 1, borderColor: Colors.border, overflow: 'hidden',
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     backgroundColor: `${Colors.primary}15`, borderRadius: 10,
     paddingHorizontal: 7, paddingVertical: 2,
   },
-  typeChipText: { fontSize: 10, fontWeight: '600', color: Colors.primary },
+  typeChipText: { fontSize: 11, fontWeight: '600', color: Colors.primaryText },
   petCount: { fontSize: 12, color: Colors.textSecondary, marginTop: 1 },
   statusChip: { borderRadius: 20, paddingHorizontal: 9, paddingVertical: 4 },
   statusText: { fontSize: 11, fontWeight: '600' },

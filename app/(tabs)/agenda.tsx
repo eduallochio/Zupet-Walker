@@ -42,7 +42,7 @@ const statusConfig: Record<ScheduleStatus, { label: string; color: string; borde
   cancelled: { label: 'Cancelado',  color: Colors.error,   border: Colors.error   },
   done:      { label: 'Concluído',  color: Colors.textSecondary, border: Colors.border },
   overdue:      { label: 'Atrasado',      color: Colors.error,   border: Colors.error   },
-  rescheduled:  { label: 'Reagendando',  color: Colors.primary, border: Colors.primary },
+  rescheduled:  { label: 'Reagendando',  color: Colors.primaryText, border: Colors.primary },
 };
 
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
@@ -73,12 +73,12 @@ function RescheduleCalendar({ initialDate, initialTimeStr, saving, onSubmit, onC
     <View>
       {/* Cabeçalho mês */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <TouchableOpacity onPress={() => setCalendarMonth(new Date(y, mo - 1, 1))} style={{ padding: 6 }}>
-          <Ionicons name="chevron-back" size={18} color={Colors.primary} />
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Mês anterior" onPress={() => setCalendarMonth(new Date(y, mo - 1, 1))} style={{ padding: 6 }}>
+          <Ionicons name="chevron-back" size={18} color={Colors.primaryText} />
         </TouchableOpacity>
         <Text style={{ fontWeight: '700', color: Colors.text, fontSize: 14 }}>{MONTHS_PT[mo]} {y}</Text>
-        <TouchableOpacity onPress={() => setCalendarMonth(new Date(y, mo + 1, 1))} style={{ padding: 6 }}>
-          <Ionicons name="chevron-forward" size={18} color={Colors.primary} />
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Próximo mês" onPress={() => setCalendarMonth(new Date(y, mo + 1, 1))} style={{ padding: 6 }}>
+          <Ionicons name="chevron-forward" size={18} color={Colors.primaryText} />
         </TouchableOpacity>
       </View>
       {/* Dias da semana */}
@@ -96,7 +96,7 @@ function RescheduleCalendar({ initialDate, initialTimeStr, saving, onSubmit, onC
             const isPast = cellDate < today;
             const isSelected = cellDate.getTime() === selDate.getTime();
             return (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 key={col}
                 disabled={isPast}
                 onPress={() => setSelectedDate(new Date(y, mo, day))}
@@ -147,18 +147,18 @@ function RescheduleCalendar({ initialDate, initialTimeStr, saving, onSubmit, onC
         />
       </View>
       {/* Botões */}
-      <TouchableOpacity
+      <TouchableOpacity accessibilityRole="button"
         style={{ backgroundColor: Colors.primary, borderRadius: 12, height: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
         onPress={() => onSubmit(selectedDate, timeStr, notes)}
         disabled={saving}
         activeOpacity={0.8}
       >
         {saving
-          ? <ActivityIndicator size="small" color="#fff" />
-          : <><Ionicons name="calendar-outline" size={14} color="#fff" /><Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Enviar proposta</Text></>
+          ? <ActivityIndicator size="small" color={Colors.onPrimary} />
+          : <><Ionicons name="calendar-outline" size={14} color={Colors.onPrimary} /><Text style={{ color: Colors.onPrimary, fontWeight: '700', fontSize: 15 }}>Enviar proposta</Text></>
         }
       </TouchableOpacity>
-      <TouchableOpacity onPress={onCancel} style={{ alignItems: 'center', paddingVertical: 12 }}>
+      <TouchableOpacity accessibilityRole="button" onPress={onCancel} style={{ alignItems: 'center', paddingVertical: 12 }}>
         <Text style={{ color: Colors.textSecondary, fontSize: 14 }}>Cancelar</Text>
       </TouchableOpacity>
     </View>
@@ -528,12 +528,12 @@ export default function AgendaScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Agenda</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <TouchableOpacity style={styles.totalBadge} onPress={() => setHistoryModal(true)} activeOpacity={0.75}>
+            <TouchableOpacity accessibilityRole="button" style={styles.totalBadge} onPress={() => setHistoryModal(true)} activeOpacity={0.75}>
               <Text style={styles.totalText}>{schedules.filter((s) => s.status !== 'cancelled').length} agendamentos</Text>
-              <Ionicons name="time-outline" size={13} color={Colors.primary} />
+              <Ionicons name="time-outline" size={13} color={Colors.primaryText} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.addBtn} onPress={() => setNewScheduleModal(true)} activeOpacity={0.8}>
-              <Ionicons name="add" size={20} color="#fff" />
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Novo agendamento" style={styles.addBtn} onPress={() => setNewScheduleModal(true)} activeOpacity={0.8}>
+              <Ionicons name="add" size={20} color={Colors.onPrimary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -572,7 +572,7 @@ export default function AgendaScreen() {
                             <Image key={i} source={{ uri }} style={styles.petAvatar} />
                           ) : (
                             <View key={i} style={styles.petAvatarPlaceholder}>
-                              <Ionicons name="paw" size={10} color={Colors.primary} />
+                              <Ionicons name="paw" size={10} color={Colors.primaryText} />
                             </View>
                           )
                         )}
@@ -582,9 +582,9 @@ export default function AgendaScreen() {
                             : `${item.pet_ids.length} pet${item.pet_ids.length !== 1 ? 's' : ''}`}
                         </Text>
                       </View>
-                      <TouchableOpacity style={styles.finalizeBtn} onPress={() => finalizeService(item)} activeOpacity={0.75}>
-                        <Ionicons name="checkmark-circle-outline" size={14} color="#fff" />
-                        <Text style={[styles.actionBtnText, { color: '#fff' }]}>Finalizar serviço</Text>
+                      <TouchableOpacity accessibilityRole="button" style={styles.finalizeBtn} onPress={() => finalizeService(item)} activeOpacity={0.75}>
+                        <Ionicons name="checkmark-circle-outline" size={14} color={Colors.onPrimary} />
+                        <Text style={[styles.actionBtnText, { color: Colors.onPrimary }]}>Finalizar serviço</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -601,7 +601,7 @@ export default function AgendaScreen() {
             const isToday = isSameDay(day, new Date());
             const hasSched = schedules.some((s) => isSameDay(new Date(s.scheduled_at), day));
             return (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 key={day.toISOString()}
                 style={[styles.dayBtn, isSelected && styles.dayBtnActive]}
                 onPress={() => setSelectedDay(day)}
@@ -626,7 +626,7 @@ export default function AgendaScreen() {
           </Text>
 
           {loading ? (
-            <ActivityIndicator color={Colors.primary} style={{ marginTop: 20 }} />
+            <ActivityIndicator color={Colors.primaryText} style={{ marginTop: 20 }} />
           ) : daySchedules.length === 0 ? (
             <View style={styles.emptyDay}>
               <Ionicons name="calendar-outline" size={32} color={Colors.border} />
@@ -638,7 +638,7 @@ export default function AgendaScreen() {
                 const cfg = statusConfig[item.status];
                 const time = new Date(item.scheduled_at);
                 return (
-                  <TouchableOpacity key={item.id} style={[styles.card, { borderLeftColor: cfg.border }]} onPress={() => setDetailModal(item)} activeOpacity={0.85}>
+                  <TouchableOpacity accessibilityRole="button" key={item.id} style={[styles.card, { borderLeftColor: cfg.border }]} onPress={() => setDetailModal(item)} activeOpacity={0.85}>
                     <View style={styles.cardLeft}>
                       <Text style={styles.cardTime}>
                         {time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -662,7 +662,7 @@ export default function AgendaScreen() {
                             <Image key={i} source={{ uri }} style={styles.petAvatar} />
                           ) : (
                             <View key={i} style={styles.petAvatarPlaceholder}>
-                              <Ionicons name="paw" size={10} color={Colors.primary} />
+                              <Ionicons name="paw" size={10} color={Colors.primaryText} />
                             </View>
                           )
                         )}
@@ -675,7 +675,7 @@ export default function AgendaScreen() {
                       {item.notes ? <Text style={styles.cardNotes} numberOfLines={1}>{item.notes}</Text> : null}
                       {item.status === 'rescheduled' && (
                         <View style={styles.rescheduledBadge}>
-                          <Ionicons name="time-outline" size={13} color={Colors.primary} />
+                          <Ionicons name="time-outline" size={13} color={Colors.primaryText} />
                           <Text style={styles.rescheduledText}>Aguardando tutor aceitar</Text>
                         </View>
                       )}
@@ -695,7 +695,7 @@ export default function AgendaScreen() {
               {upcomingDays.slice(0, 4).map((d) => {
                 const count = schedules.filter((s) => isSameDay(new Date(s.scheduled_at), d)).length;
                 return (
-                  <TouchableOpacity key={d.toISOString()} style={styles.upcomingChip} onPress={() => setSelectedDay(d)}>
+                  <TouchableOpacity accessibilityRole="button" key={d.toISOString()} style={styles.upcomingChip} onPress={() => setSelectedDay(d)}>
                     <Text style={styles.upcomingDay}>{WEEKDAYS[d.getDay()]}</Text>
                     <Text style={styles.upcomingDate}>{d.getDate()}</Text>
                     <View style={styles.upcomingCount}>
@@ -714,7 +714,7 @@ export default function AgendaScreen() {
           <View style={[styles.modalBox, { maxHeight: '85%' }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
               <Text style={styles.modalTitle}>Histórico</Text>
-              <TouchableOpacity onPress={() => setHistoryModal(false)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fechar" onPress={() => setHistoryModal(false)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                 <Ionicons name="close" size={22} color={Colors.textSecondary} />
               </TouchableOpacity>
             </View>
@@ -751,7 +751,7 @@ export default function AgendaScreen() {
                             <Image key={i} source={{ uri }} style={styles.petAvatar} />
                           ) : (
                             <View key={i} style={styles.petAvatarPlaceholder}>
-                              <Ionicons name="paw" size={10} color={Colors.primary} />
+                              <Ionicons name="paw" size={10} color={Colors.primaryText} />
                             </View>
                           )
                         )}
@@ -781,7 +781,7 @@ export default function AgendaScreen() {
             {(['cash', 'pix', 'card'] as const).map((method) => {
               const labels = { cash: '💵 Dinheiro', pix: '📲 PIX', card: '💳 Cartão' };
               return (
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   key={method}
                   style={styles.paymentBtn}
                   onPress={() => doFinalize(method)}
@@ -789,14 +789,14 @@ export default function AgendaScreen() {
                   activeOpacity={0.8}
                 >
                   {paymentModal?.saving
-                    ? <ActivityIndicator size="small" color={Colors.primary} />
+                    ? <ActivityIndicator size="small" color={Colors.primaryText} />
                     : <Text style={styles.paymentBtnText}>{labels[method]}</Text>
                   }
                 </TouchableOpacity>
               );
             })}
 
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.skipBtn}
               onPress={() => doFinalize('skip')}
               disabled={paymentModal?.saving}
@@ -805,7 +805,7 @@ export default function AgendaScreen() {
               <Text style={styles.skipBtnText}>Finalizar sem lançar no financeiro</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => setPaymentModal(null)} style={styles.cancelBtn}>
+            <TouchableOpacity accessibilityRole="button" onPress={() => setPaymentModal(null)} style={styles.cancelBtn}>
               <Text style={styles.cancelBtnText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
@@ -847,7 +847,7 @@ export default function AgendaScreen() {
                 <>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                     <Text style={styles.modalTitle}>Detalhes</Text>
-                    <TouchableOpacity onPress={() => setDetailModal(null)}>
+                    <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fechar" onPress={() => setDetailModal(null)}>
                       <Ionicons name="close" size={22} color={Colors.textSecondary} />
                     </TouchableOpacity>
                   </View>
@@ -896,7 +896,7 @@ export default function AgendaScreen() {
                           <Image key={i} source={{ uri }} style={[styles.petAvatar, { width: 32, height: 32, borderRadius: 16 }]} />
                         ) : (
                           <View key={i} style={[styles.petAvatarPlaceholder, { width: 32, height: 32, borderRadius: 16 }]}>
-                            <Ionicons name="paw" size={14} color={Colors.primary} />
+                            <Ionicons name="paw" size={14} color={Colors.primaryText} />
                           </View>
                         )
                       )}
@@ -917,11 +917,11 @@ export default function AgendaScreen() {
                   {/* Botões aceitar/recusar — só para agendamentos propostos pelo tutor */}
                   {item.status === 'proposed' && item.proposed_by !== 'walker' && (
                     <View style={styles.actionRow}>
-                      <TouchableOpacity style={styles.rejectBtn} onPress={() => { updateStatus(item.id, 'cancelled'); setDetailModal(null); }} activeOpacity={0.75}>
+                      <TouchableOpacity accessibilityRole="button" style={styles.rejectBtn} onPress={() => { updateStatus(item.id, 'cancelled'); setDetailModal(null); }} activeOpacity={0.75}>
                         <Ionicons name="close" size={14} color={Colors.error} />
                         <Text style={[styles.actionBtnText, { color: Colors.error }]}>Recusar</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.acceptBtn} onPress={() => { updateStatus(item.id, 'confirmed'); setDetailModal(null); }} activeOpacity={0.75}>
+                      <TouchableOpacity accessibilityRole="button" style={styles.acceptBtn} onPress={() => { updateStatus(item.id, 'confirmed'); setDetailModal(null); }} activeOpacity={0.75}>
                         <Ionicons name="checkmark" size={14} color="#fff" />
                         <Text style={[styles.actionBtnText, { color: '#fff' }]}>Aceitar</Text>
                       </TouchableOpacity>
@@ -929,7 +929,7 @@ export default function AgendaScreen() {
                   )}
                   {/* Agendamento próprio pendente — confirmar direto */}
                   {item.status === 'proposed' && item.proposed_by === 'walker' && (
-                    <TouchableOpacity style={styles.acceptBtn} onPress={() => { updateStatus(item.id, 'confirmed'); setDetailModal(null); }} activeOpacity={0.75}>
+                    <TouchableOpacity accessibilityRole="button" style={styles.acceptBtn} onPress={() => { updateStatus(item.id, 'confirmed'); setDetailModal(null); }} activeOpacity={0.75}>
                       <Ionicons name="checkmark" size={14} color="#fff" />
                       <Text style={[styles.actionBtnText, { color: '#fff' }]}>Confirmar</Text>
                     </TouchableOpacity>
@@ -937,20 +937,20 @@ export default function AgendaScreen() {
 
                   {(item.status === 'confirmed' || item.status === 'overdue') && (
                     <View style={styles.actionRow}>
-                      <TouchableOpacity style={styles.rescheduleBtn} onPress={() => { setDetailModal(null); openReschedule(item); }} activeOpacity={0.75}>
-                        <Ionicons name="calendar-outline" size={13} color={Colors.primary} />
-                        <Text style={[styles.actionBtnText, { color: Colors.primary }]}>Reagendar</Text>
+                      <TouchableOpacity accessibilityRole="button" style={styles.rescheduleBtn} onPress={() => { setDetailModal(null); openReschedule(item); }} activeOpacity={0.75}>
+                        <Ionicons name="calendar-outline" size={13} color={Colors.primaryText} />
+                        <Text style={[styles.actionBtnText, { color: Colors.primaryText }]}>Reagendar</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={[styles.finalizeBtn, { flex: 1 }]} onPress={() => { setDetailModal(null); finalizeService(item); }} activeOpacity={0.75}>
-                        <Ionicons name="checkmark-circle-outline" size={14} color="#fff" />
-                        <Text style={[styles.actionBtnText, { color: '#fff' }]}>Finalizar</Text>
+                      <TouchableOpacity accessibilityRole="button" style={[styles.finalizeBtn, { flex: 1 }]} onPress={() => { setDetailModal(null); finalizeService(item); }} activeOpacity={0.75}>
+                        <Ionicons name="checkmark-circle-outline" size={14} color={Colors.onPrimary} />
+                        <Text style={[styles.actionBtnText, { color: Colors.onPrimary }]}>Finalizar</Text>
                       </TouchableOpacity>
                     </View>
                   )}
 
                   {item.status === 'rescheduled' && (
                     <View style={styles.rescheduledBadge}>
-                      <Ionicons name="time-outline" size={13} color={Colors.primary} />
+                      <Ionicons name="time-outline" size={13} color={Colors.primaryText} />
                       <Text style={styles.rescheduledText}>Aguardando tutor aceitar novo horário</Text>
                     </View>
                   )}
@@ -980,7 +980,7 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 22, fontWeight: '800', color: Colors.text },
   totalBadge: { backgroundColor: `${Colors.primary}18`, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 5 },
-  totalText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
+  totalText: { fontSize: 12, fontWeight: '600', color: Colors.primaryText },
   addBtn: {
     width: 34, height: 34, borderRadius: 17,
     backgroundColor: Colors.primary,
@@ -996,7 +996,7 @@ const styles = StyleSheet.create({
   dayBtnActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   dayBtnWeekday: { fontSize: 11, fontWeight: '600', color: Colors.textSecondary },
   dayBtnNum: { fontSize: 16, fontWeight: '800', color: Colors.text },
-  dayBtnTextActive: { color: '#fff' },
+  dayBtnTextActive: { color: Colors.onPrimary },
   todayDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: Colors.primary },
   schedDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: Colors.warning },
   schedDotActive: { backgroundColor: 'rgba(255,255,255,0.8)' },
@@ -1052,7 +1052,7 @@ const styles = StyleSheet.create({
     marginLeft: 6, backgroundColor: `${Colors.primary}15`,
     borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2,
   },
-  serviceChipText: { fontSize: 10, fontWeight: '600', color: Colors.primary },
+  serviceChipText: { fontSize: 11, fontWeight: '600', color: Colors.primaryText },
 
   rescheduleBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
@@ -1065,7 +1065,7 @@ const styles = StyleSheet.create({
     backgroundColor: `${Colors.primary}10`, borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 6, marginTop: 4,
   },
-  rescheduledText: { fontSize: 12, color: Colors.primary, fontWeight: '500', flex: 1 },
+  rescheduledText: { fontSize: 12, color: Colors.primaryText, fontWeight: '500', flex: 1 },
   rescheduleField: { gap: 4 },
   rescheduleLabel: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
   rescheduleInput: {
@@ -1089,7 +1089,7 @@ const styles = StyleSheet.create({
     backgroundColor: `${Colors.primary}18`, borderRadius: 10,
     paddingHorizontal: 8, paddingVertical: 2,
   },
-  upcomingCountText: { fontSize: 11, fontWeight: '700', color: Colors.primary },
+  upcomingCountText: { fontSize: 11, fontWeight: '700', color: Colors.primaryText },
 
   modalOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',

@@ -216,7 +216,7 @@ export default function WalkSummaryScreen() {
         {/* Ícone de status */}
         <View style={styles.iconWrap}>
           {saveState === 'saving' ? (
-            <ActivityIndicator size="large" color={Colors.primary} />
+            <ActivityIndicator size="large" color={Colors.primaryText} />
           ) : saveState === 'saved' ? (
             <View style={styles.successCircle}>
               <Ionicons name="checkmark" size={44} color="#fff" />
@@ -286,8 +286,8 @@ export default function WalkSummaryScreen() {
 
       {saveState !== 'saving' && (
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.homeBtn} onPress={() => router.replace('/(tabs)')}>
-            <Ionicons name="home-outline" size={18} color="#fff" />
+          <TouchableOpacity accessibilityRole="button" style={styles.homeBtn} onPress={() => router.replace('/(tabs)')}>
+            <Ionicons name="home-outline" size={18} color={Colors.onPrimary} />
             <Text style={styles.homeBtnText}>Voltar ao início</Text>
           </TouchableOpacity>
         </View>
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   statsTitle: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary, letterSpacing: 0.8 },
   statsGrid: { flexDirection: 'row', justifyContent: 'space-around' },
   statItem: { alignItems: 'center', gap: 4 },
-  statValue: { fontSize: 32, fontWeight: '800', color: Colors.primary },
+  statValue: { fontSize: 32, fontWeight: '800', color: Colors.primaryText },
   statLabel: { fontSize: 12, color: Colors.textSecondary, fontWeight: '600' },
 
   eventSummary: {
@@ -332,5 +332,5 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary, borderRadius: 14, padding: 16,
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10,
   },
-  homeBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  homeBtnText: { color: Colors.onPrimary, fontSize: 16, fontWeight: '700' },
 });

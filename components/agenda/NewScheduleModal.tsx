@@ -208,7 +208,7 @@ export function NewScheduleModal({ visible, onClose, onCreated }: Props) {
 
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>Novo agendamento</Text>
-            <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fechar" onPress={handleClose} style={styles.closeBtn}>
               <Ionicons name="close" size={22} color={Colors.textSecondary} />
             </TouchableOpacity>
           </View>
@@ -221,7 +221,7 @@ export function NewScheduleModal({ visible, onClose, onCreated }: Props) {
               {SERVICE_OPTIONS.map((opt) => {
                 const active = opt.type === serviceType;
                 return (
-                  <TouchableOpacity
+                  <TouchableOpacity accessibilityRole="button"
                     key={opt.type}
                     style={[styles.serviceChip, active && styles.serviceChipActive]}
                     onPress={() => setServiceType(opt.type)}
@@ -280,7 +280,7 @@ export function NewScheduleModal({ visible, onClose, onCreated }: Props) {
             {/* Pets vinculados */}
             <Text style={styles.label}>Pets <Text style={styles.labelSub}>(opcional)</Text></Text>
             {loadingPets ? (
-              <ActivityIndicator color={Colors.primary} style={{ marginVertical: 8 }} />
+              <ActivityIndicator color={Colors.primaryText} style={{ marginVertical: 8 }} />
             ) : pets.length === 0 ? (
               <Text style={styles.noPets}>Nenhum pet vinculado a você no Zupet.</Text>
             ) : (
@@ -288,26 +288,26 @@ export function NewScheduleModal({ visible, onClose, onCreated }: Props) {
                 {pets.map((pet) => {
                   const sel = selectedPets.has(pet.pet_id);
                   return (
-                    <TouchableOpacity
+                    <TouchableOpacity accessibilityRole="button"
                       key={pet.pet_id}
                       style={[styles.petRow, sel && styles.petRowSelected]}
                       onPress={() => togglePet(pet.pet_id)}
                       activeOpacity={0.75}
                     >
                       <View style={[styles.petAvatar, sel && styles.petAvatarSelected]}>
-                        <Ionicons name="paw" size={16} color={sel ? '#fff' : Colors.primary} />
+                        <Ionicons name="paw" size={16} color={sel ? Colors.onPrimary : Colors.primary} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.petName}>{pet.name}</Text>
                         {pet.breed ? <Text style={styles.petBreed}>{pet.breed}</Text> : null}
                         {pet.owner_name ? (
                           <View style={styles.ownerTag}>
-                            <Ionicons name="person-outline" size={10} color={Colors.primary} />
+                            <Ionicons name="person-outline" size={10} color={Colors.primaryText} />
                             <Text style={styles.ownerTagText}>{pet.owner_name} · tutor no Zupet</Text>
                           </View>
                         ) : null}
                       </View>
-                      {sel && <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />}
+                      {sel && <Ionicons name="checkmark-circle" size={20} color={Colors.primaryText} />}
                     </TouchableOpacity>
                   );
                 })}
@@ -317,7 +317,7 @@ export function NewScheduleModal({ visible, onClose, onCreated }: Props) {
             {/* Aviso de notificação ao tutor */}
             {selectedPets.size > 0 && pets.some((p) => selectedPets.has(p.pet_id) && p.owner_id) && (
               <View style={styles.notifHint}>
-                <Ionicons name="notifications-outline" size={14} color={Colors.primary} />
+                <Ionicons name="notifications-outline" size={14} color={Colors.primaryText} />
                 <Text style={styles.notifHintText}>
                   O tutor será notificado sobre este agendamento.
                 </Text>
@@ -338,17 +338,17 @@ export function NewScheduleModal({ visible, onClose, onCreated }: Props) {
             />
 
             {/* Botão salvar */}
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
               onPress={handleSave}
               activeOpacity={0.85}
               disabled={saving}
             >
               {saving ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={Colors.onPrimary} />
               ) : (
                 <>
-                  <Ionicons name="calendar-outline" size={18} color="#fff" />
+                  <Ionicons name="calendar-outline" size={18} color={Colors.onPrimary} />
                   <Text style={styles.saveBtnText}>Criar agendamento</Text>
                 </>
               )}
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   serviceChipActive: { borderColor: Colors.primary, backgroundColor: `${Colors.primary}15` },
   serviceChipIcon: { fontSize: 16 },
   serviceChipText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  serviceChipTextActive: { color: Colors.primary },
+  serviceChipTextActive: { color: Colors.primaryText },
 
   row: { flexDirection: 'row', gap: 12 },
   halfField: { flex: 1, gap: 4 },
@@ -430,14 +430,14 @@ const styles = StyleSheet.create({
   petName: { fontSize: 14, fontWeight: '700', color: Colors.text },
   petBreed: { fontSize: 12, color: Colors.textSecondary },
   ownerTag: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
-  ownerTagText: { fontSize: 11, color: Colors.primary, fontWeight: '600' },
+  ownerTagText: { fontSize: 11, color: Colors.primaryText, fontWeight: '600' },
 
   notifHint: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: `${Colors.primary}12`,
     borderRadius: 10, padding: 10,
   },
-  notifHintText: { fontSize: 12, color: Colors.primary, fontWeight: '600', flex: 1 },
+  notifHintText: { fontSize: 12, color: Colors.primaryText, fontWeight: '600', flex: 1 },
 
   saveBtn: {
     backgroundColor: Colors.primary, borderRadius: 14, padding: 16,
@@ -445,5 +445,5 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   saveBtnDisabled: { opacity: 0.6 },
-  saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  saveBtnText: { color: Colors.onPrimary, fontSize: 16, fontWeight: '700' },
 });

@@ -65,28 +65,28 @@ export function ProfileHeader() {
 
   return (
     <View style={styles.header}>
-      <TouchableOpacity style={styles.connectBtn} onPress={() => router.push('/walker-connect')}>
-        <Ionicons name="link-outline" size={16} color="rgba(255,255,255,0.9)" />
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Conectar com tutores" style={styles.connectBtn} onPress={() => router.push('/walker-connect')}>
+        <Ionicons name="link-outline" size={16} color="rgba(13,41,38,0.9)" />
       </TouchableOpacity>
       <View style={styles.rightBtns}>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/profile/edit')}>
-          <Ionicons name="pencil" size={16} color="rgba(255,255,255,0.9)" />
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Editar perfil" style={styles.iconBtn} onPress={() => router.push('/profile/edit')}>
+          <Ionicons name="pencil" size={16} color="rgba(13,41,38,0.9)" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => setSettingsVisible(true)}>
-          <Ionicons name="settings-outline" size={16} color="rgba(255,255,255,0.9)" />
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Configurações" style={styles.iconBtn} onPress={() => setSettingsVisible(true)}>
+          <Ionicons name="settings-outline" size={16} color="rgba(13,41,38,0.9)" />
         </TouchableOpacity>
       </View>
 
       {/* Modal de configurações */}
       <Modal visible={settingsVisible} transparent animationType="fade" onRequestClose={() => setSettingsVisible(false)}>
-        <Pressable style={styles.overlay} onPress={() => setSettingsVisible(false)}>
-          <Pressable style={styles.sheet} onPress={() => {}}>
+        <Pressable accessible={false} style={styles.overlay} onPress={() => setSettingsVisible(false)}>
+          <Pressable accessible={false} style={styles.sheet} onPress={() => {}}>
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>Configurações</Text>
 
-            <TouchableOpacity style={styles.sheetRow} onPress={() => navigate('/profile/edit')} activeOpacity={0.7}>
+            <TouchableOpacity accessibilityRole="button" style={styles.sheetRow} onPress={() => navigate('/profile/edit')} activeOpacity={0.7}>
               <View style={[styles.sheetIcon, { backgroundColor: `${Colors.primary}18` }]}>
-                <Ionicons name="person-outline" size={18} color={Colors.primary} />
+                <Ionicons name="person-outline" size={18} color={Colors.primaryText} />
               </View>
               <Text style={styles.sheetLabel}>Editar perfil</Text>
               <Ionicons name="chevron-forward" size={16} color={Colors.textSecondary} />
@@ -94,7 +94,7 @@ export function ProfileHeader() {
 
             <View style={styles.sheetDivider} />
 
-            <TouchableOpacity style={styles.sheetRow} onPress={() => navigate('/services')} activeOpacity={0.7}>
+            <TouchableOpacity accessibilityRole="button" style={styles.sheetRow} onPress={() => navigate('/services')} activeOpacity={0.7}>
               <View style={[styles.sheetIcon, { backgroundColor: '#10B98118' }]}>
                 <Ionicons name="calendar-outline" size={18} color="#10B981" />
               </View>
@@ -104,7 +104,7 @@ export function ProfileHeader() {
 
             <View style={styles.sheetDivider} />
 
-            <TouchableOpacity style={styles.sheetRow} onPress={() => navigate('/services')} activeOpacity={0.7}>
+            <TouchableOpacity accessibilityRole="button" style={styles.sheetRow} onPress={() => navigate('/services')} activeOpacity={0.7}>
               <View style={[styles.sheetIcon, { backgroundColor: '#F59E0B18' }]}>
                 <Ionicons name="briefcase-outline" size={18} color="#F59E0B" />
               </View>
@@ -114,7 +114,7 @@ export function ProfileHeader() {
 
             <View style={styles.sheetDivider} />
 
-            <TouchableOpacity style={styles.sheetRow} onPress={handleNotifications} activeOpacity={0.7}>
+            <TouchableOpacity accessibilityRole="button" style={styles.sheetRow} onPress={handleNotifications} activeOpacity={0.7}>
               <View style={[styles.sheetIcon, { backgroundColor: '#6366F118' }]}>
                 <Ionicons name="notifications-outline" size={18} color="#6366F1" />
               </View>
@@ -124,7 +124,7 @@ export function ProfileHeader() {
 
             <View style={styles.sheetDivider} />
 
-            <TouchableOpacity style={styles.sheetRow} onPress={handleSupport} activeOpacity={0.7}>
+            <TouchableOpacity accessibilityRole="button" style={styles.sheetRow} onPress={handleSupport} activeOpacity={0.7}>
               <View style={[styles.sheetIcon, { backgroundColor: '#E1306C18' }]}>
                 <Ionicons name="logo-instagram" size={18} color="#E1306C" />
               </View>
@@ -148,7 +148,7 @@ export function ProfileHeader() {
               <>
                 <View style={styles.sheetRow}>
                   <View style={[styles.sheetIcon, { backgroundColor: `${Colors.primary}18` }]}>
-                    <Ionicons name="mail-outline" size={18} color={Colors.primary} />
+                    <Ionicons name="mail-outline" size={18} color={Colors.primaryText} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.sheetLabel}>Conta</Text>
@@ -159,7 +159,7 @@ export function ProfileHeader() {
               </>
             )}
 
-            <TouchableOpacity style={styles.sheetRow} onPress={handleSignOut} activeOpacity={0.7}>
+            <TouchableOpacity accessibilityRole="button" style={styles.sheetRow} onPress={handleSignOut} activeOpacity={0.7}>
               <View style={[styles.sheetIcon, { backgroundColor: '#EF444418' }]}>
                 <Ionicons name="log-out-outline" size={18} color={Colors.error} />
               </View>
@@ -168,7 +168,7 @@ export function ProfileHeader() {
 
             <View style={styles.sheetDivider} />
 
-            <TouchableOpacity style={styles.sheetRow} onPress={() => { setSettingsVisible(false); setTimeout(() => setConfirmVisible(true), 300); }} activeOpacity={0.7}>
+            <TouchableOpacity accessibilityRole="button" style={styles.sheetRow} onPress={() => { setSettingsVisible(false); setTimeout(() => setConfirmVisible(true), 300); }} activeOpacity={0.7}>
               <View style={[styles.sheetIcon, { backgroundColor: '#C6282818' }]}>
                 <Ionicons name="person-remove-outline" size={18} color="#C62828" />
               </View>
@@ -192,10 +192,10 @@ export function ProfileHeader() {
             <Text style={styles.confirmMsg}>
               Esta ação não pode ser desfeita. Todo o seu perfil profissional, agenda, histórico de atendimentos e avaliações serão deletados para sempre.
             </Text>
-            <TouchableOpacity style={styles.confirmDeleteBtn} onPress={handleDeleteAccount}>
+            <TouchableOpacity accessibilityRole="button" style={styles.confirmDeleteBtn} onPress={handleDeleteAccount}>
               <Text style={styles.confirmDeleteText}>Excluir permanentemente</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.confirmCancelBtn} onPress={() => setConfirmVisible(false)}>
+            <TouchableOpacity accessibilityRole="button" style={styles.confirmCancelBtn} onPress={() => setConfirmVisible(false)}>
               <Text style={styles.confirmCancelText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
@@ -206,17 +206,17 @@ export function ProfileHeader() {
       {isDeleting && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color={Colors.primary} />
+            <ActivityIndicator size="large" color={Colors.primaryText} />
             <Text style={styles.loadingText}>Excluindo conta...</Text>
           </View>
         </View>
       )}
 
-      <TouchableOpacity onPress={() => router.push('/profile/edit')} style={styles.avatarWrap}>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Editar perfil" onPress={() => router.push('/profile/edit')} style={styles.avatarWrap}>
         {walkerProfile?.avatar_url ? (
           <Image source={{ uri: walkerProfile.avatar_url }} style={styles.avatarImg} />
         ) : (
-          <Ionicons name="person" size={36} color="#fff" />
+          <Ionicons name="person" size={36} color={Colors.onPrimary} />
         )}
       </TouchableOpacity>
 
@@ -234,12 +234,12 @@ export function ProfileHeader() {
       <View style={styles.chipsRow}>
         {location ? (
           <View style={styles.chip}>
-            <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.85)" />
+            <Ionicons name="location-outline" size={13} color="rgba(13,41,38,0.9)" />
             <Text style={styles.chipText}>{location}</Text>
           </View>
         ) : null}
         <View style={styles.chip}>
-          <Ionicons name={isPro ? 'star' : 'star-outline'} size={13} color="rgba(255,255,255,0.85)" />
+          <Ionicons name={isPro ? 'star' : 'star-outline'} size={13} color="rgba(13,41,38,0.9)" />
           <Text style={styles.chipText}>Plano {isPro ? 'Pro' : 'Gratuito'}</Text>
         </View>
       </View>
@@ -270,16 +270,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden', borderWidth: 3, borderColor: 'rgba(255,255,255,0.4)',
   },
   avatarImg: { width: 84, height: 84, borderRadius: 42 },
-  name: { fontSize: 20, fontWeight: '800', color: '#fff' },
+  name: { fontSize: 20, fontWeight: '800', color: Colors.onPrimary },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  ratingText: { fontSize: 13, color: 'rgba(255,255,255,0.9)', marginLeft: 4 },
+  ratingText: { fontSize: 13, color: 'rgba(13,41,38,0.9)', marginLeft: 4 },
   chipsRow: { flexDirection: 'row', gap: 8, marginTop: 2, flexWrap: 'wrap', justifyContent: 'center', paddingHorizontal: 16 },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20,
     paddingHorizontal: 12, paddingVertical: 4,
   },
-  chipText: { fontSize: 12, color: 'rgba(255,255,255,0.9)', fontWeight: '600' },
+  chipText: { fontSize: 12, color: 'rgba(13,41,38,0.9)', fontWeight: '600' },
   // Settings modal
   overlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',

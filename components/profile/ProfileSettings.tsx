@@ -38,9 +38,9 @@ export function ProfileSettings() {
       <Text style={styles.sectionTitle}>CONFIGURAÇÕES</Text>
 
       <View style={styles.card}>
-        <TouchableOpacity style={styles.row} onPress={() => router.push('/profile/edit')} activeOpacity={0.7}>
+        <TouchableOpacity accessibilityRole="button" style={styles.row} onPress={() => router.push('/profile/edit')} activeOpacity={0.7}>
           <View style={[styles.iconWrap, { backgroundColor: `${Colors.primary}18` }]}>
-            <Ionicons name="person-outline" size={18} color={Colors.primary} />
+            <Ionicons name="person-outline" size={18} color={Colors.primaryText} />
           </View>
           <Text style={styles.rowLabel}>Editar perfil</Text>
           <Ionicons name="chevron-forward" size={16} color={Colors.textSecondary} />
@@ -58,7 +58,7 @@ export function ProfileSettings() {
 
         <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.row} onPress={handleSignOut} activeOpacity={0.7}>
+        <TouchableOpacity accessibilityRole="button" style={styles.row} onPress={handleSignOut} activeOpacity={0.7}>
           <View style={[styles.iconWrap, { backgroundColor: '#EF444418' }]}>
             <Ionicons name="log-out-outline" size={18} color={Colors.error} />
           </View>
@@ -67,7 +67,7 @@ export function ProfileSettings() {
 
         <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.row} onPress={() => setConfirmVisible(true)} activeOpacity={0.7}>
+        <TouchableOpacity accessibilityRole="button" style={styles.row} onPress={() => setConfirmVisible(true)} activeOpacity={0.7}>
           <View style={[styles.iconWrap, { backgroundColor: '#C6282818' }]}>
             <Ionicons name="person-remove-outline" size={18} color="#C62828" />
           </View>
@@ -89,10 +89,10 @@ export function ProfileSettings() {
             <Text style={styles.modalMsg}>
               Esta ação não pode ser desfeita. Todo o seu perfil de walker, agenda, histórico de passeios e avaliações serão deletados para sempre.
             </Text>
-            <TouchableOpacity style={styles.modalDeleteBtn} onPress={handleDeleteAccount}>
+            <TouchableOpacity accessibilityRole="button" style={styles.modalDeleteBtn} onPress={handleDeleteAccount}>
               <Text style={styles.modalDeleteText}>Excluir permanentemente</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setConfirmVisible(false)}>
+            <TouchableOpacity accessibilityRole="button" style={styles.modalCancelBtn} onPress={() => setConfirmVisible(false)}>
               <Text style={styles.modalCancelText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
@@ -103,7 +103,7 @@ export function ProfileSettings() {
       {isDeleting && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color={Colors.primary} />
+            <ActivityIndicator size="large" color={Colors.primaryText} />
             <Text style={styles.loadingText}>Excluindo conta...</Text>
           </View>
         </View>

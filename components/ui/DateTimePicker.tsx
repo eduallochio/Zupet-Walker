@@ -75,22 +75,22 @@ export function DatePickerButton({ value, onChange }: DatePickerProps) {
 
   return (
     <>
-      <TouchableOpacity style={styles.trigger} onPress={() => setOpen(true)} activeOpacity={0.8}>
-        <Ionicons name="calendar-outline" size={16} color={Colors.primary} />
+      <TouchableOpacity accessibilityRole="button" style={styles.trigger} onPress={() => setOpen(true)} activeOpacity={0.8}>
+        <Ionicons name="calendar-outline" size={16} color={Colors.primaryText} />
         <Text style={[styles.triggerText, !value && styles.triggerPlaceholder]}>{label}</Text>
         <Ionicons name="chevron-down" size={14} color={Colors.textSecondary} />
       </TouchableOpacity>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => setOpen(false)} />
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fechar" style={styles.backdrop} activeOpacity={1} onPress={() => setOpen(false)} />
         <View style={styles.calendarCard}>
           {/* Navegação mês */}
           <View style={styles.calNav}>
-            <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Mês anterior" onPress={prevMonth} style={styles.navBtn}>
               <Ionicons name="chevron-back" size={20} color={Colors.text} />
             </TouchableOpacity>
             <Text style={styles.calNavTitle}>{MONTHS[viewMonth]} {viewYear}</Text>
-            <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Próximo mês" onPress={nextMonth} style={styles.navBtn}>
               <Ionicons name="chevron-forward" size={20} color={Colors.text} />
             </TouchableOpacity>
           </View>
@@ -109,7 +109,7 @@ export function DatePickerButton({ value, onChange }: DatePickerProps) {
               const past = isPast(day);
               const sel  = isSelected(day);
               return (
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   key={i}
                   style={[styles.cell, styles.dayCell, sel && styles.dayCellSelected, past && styles.dayCellPast]}
                   onPress={() => !past && selectDay(day)}
@@ -150,14 +150,14 @@ export function TimePickerButton({ hour, minute, onChange }: TimePickerProps) {
 
   return (
     <>
-      <TouchableOpacity style={styles.trigger} onPress={() => { setSelH(hour); setSelM(minute); setOpen(true); }} activeOpacity={0.8}>
-        <Ionicons name="time-outline" size={16} color={Colors.primary} />
+      <TouchableOpacity accessibilityRole="button" style={styles.trigger} onPress={() => { setSelH(hour); setSelM(minute); setOpen(true); }} activeOpacity={0.8}>
+        <Ionicons name="time-outline" size={16} color={Colors.primaryText} />
         <Text style={styles.triggerText}>{label}</Text>
         <Ionicons name="chevron-down" size={14} color={Colors.textSecondary} />
       </TouchableOpacity>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => setOpen(false)} />
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fechar" style={styles.backdrop} activeOpacity={1} onPress={() => setOpen(false)} />
         <View style={styles.timeCard}>
           <Text style={styles.timeTitle}>Selecionar horário</Text>
 
@@ -167,7 +167,7 @@ export function TimePickerButton({ hour, minute, onChange }: TimePickerProps) {
               <Text style={styles.timeColLabel}>Hora</Text>
               <ScrollView style={styles.timeScroll} showsVerticalScrollIndicator={false}>
                 {HOURS.map((h) => (
-                  <TouchableOpacity
+                  <TouchableOpacity accessibilityRole="button"
                     key={h}
                     style={[styles.timeItem, selH === h && styles.timeItemSelected]}
                     onPress={() => setSelH(h)}
@@ -188,7 +188,7 @@ export function TimePickerButton({ hour, minute, onChange }: TimePickerProps) {
               <Text style={styles.timeColLabel}>Min</Text>
               <ScrollView style={styles.timeScroll} showsVerticalScrollIndicator={false}>
                 {MINUTES.map((m) => (
-                  <TouchableOpacity
+                  <TouchableOpacity accessibilityRole="button"
                     key={m}
                     style={[styles.timeItem, selM === m && styles.timeItemSelected]}
                     onPress={() => setSelM(m)}
@@ -203,7 +203,7 @@ export function TimePickerButton({ hour, minute, onChange }: TimePickerProps) {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.confirmBtn} onPress={confirm} activeOpacity={0.85}>
+          <TouchableOpacity accessibilityRole="button" style={styles.confirmBtn} onPress={confirm} activeOpacity={0.85}>
             <Text style={styles.confirmBtnText}>Confirmar</Text>
           </TouchableOpacity>
         </View>
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   },
   dayCellPast: { opacity: 0.3 },
   dayText: { fontSize: 14, fontWeight: '600', color: Colors.text },
-  dayTextSelected: { color: '#fff' },
+  dayTextSelected: { color: Colors.onPrimary },
   dayTextPast: { color: Colors.textSecondary },
 
   // Time
@@ -278,11 +278,11 @@ const styles = StyleSheet.create({
   },
   timeItemSelected: { backgroundColor: Colors.primary },
   timeItemText: { fontSize: 18, fontWeight: '700', color: Colors.text },
-  timeItemTextSelected: { color: '#fff' },
+  timeItemTextSelected: { color: Colors.onPrimary },
   timeSep: { fontSize: 24, fontWeight: '800', color: Colors.text, marginTop: 20 },
   confirmBtn: {
     backgroundColor: Colors.primary, borderRadius: 12,
     paddingVertical: 12, alignItems: 'center', marginTop: 16,
   },
-  confirmBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  confirmBtnText: { color: Colors.onPrimary, fontSize: 15, fontWeight: '700' },
 });

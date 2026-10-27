@@ -108,33 +108,33 @@ export default function BlockedDaysScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.headerBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>Dias de Folga</Text>
           <Text style={styles.subtitle}>Toque em um dia para bloquear/liberar</Text>
         </View>
-        <TouchableOpacity onPress={save} style={styles.saveBtn} disabled={saving}>
+        <TouchableOpacity accessibilityRole="button" onPress={save} style={styles.saveBtn} disabled={saving}>
           {saving
-            ? <ActivityIndicator size="small" color={Colors.primary} />
+            ? <ActivityIndicator size="small" color={Colors.primaryText} />
             : <Text style={styles.saveText}>Salvar</Text>
           }
         </TouchableOpacity>
       </View>
 
       {loading ? (
-        <ActivityIndicator color={Colors.primary} style={{ flex: 1 }} />
+        <ActivityIndicator color={Colors.primaryText} style={{ flex: 1 }} />
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
           {/* Navegação de mês */}
           <View style={styles.monthNav}>
-            <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Mês anterior" onPress={prevMonth} style={styles.navBtn}>
               <Ionicons name="chevron-back" size={20} color={Colors.text} />
             </TouchableOpacity>
             <Text style={styles.monthLabel}>{MONTHS[viewMonth]} {viewYear}</Text>
-            <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Próximo mês" onPress={nextMonth} style={styles.navBtn}>
               <Ionicons name="chevron-forward" size={20} color={Colors.text} />
             </TouchableOpacity>
           </View>
@@ -155,7 +155,7 @@ export default function BlockedDaysScreen() {
               const isToday = toDateKey(date) === toDateKey(today);
               const isBlocked = blockedDays.has(key);
               return (
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   key={key}
                   style={[
                     styles.cell,
@@ -206,7 +206,7 @@ export default function BlockedDaysScreen() {
                       <Text style={styles.blockedDate}>
                         {WEEKDAYS[d.getDay()]}, {d.getDate()} de {MONTHS[d.getMonth()]}
                       </Text>
-                      <TouchableOpacity onPress={() => toggleDay(d)} style={styles.removeBtn}>
+                      <TouchableOpacity accessibilityRole="button" onPress={() => toggleDay(d)} style={styles.removeBtn}>
                         <Text style={styles.removeBtnText}>Remover</Text>
                       </TouchableOpacity>
                     </View>
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 16, fontWeight: '700', color: Colors.text },
   subtitle: { fontSize: 11, color: Colors.textSecondary, marginTop: 1 },
   saveBtn: { minWidth: 52, alignItems: 'flex-end' },
-  saveText: { fontSize: 15, fontWeight: '700', color: Colors.primary },
+  saveText: { fontSize: 15, fontWeight: '700', color: Colors.primaryText },
   scroll: { padding: 20, paddingBottom: 48, gap: 20 },
 
   monthNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   cellBlocked: { backgroundColor: `${Colors.error}15` },
   cellPast: { opacity: 0.35 },
   cellText: { fontSize: 14, fontWeight: '600', color: Colors.text },
-  cellTextToday: { color: Colors.primary, fontWeight: '800' },
+  cellTextToday: { color: Colors.primaryText, fontWeight: '800' },
   cellTextBlocked: { color: Colors.error },
   cellTextPast: { color: Colors.textSecondary },
   blockedDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.error },

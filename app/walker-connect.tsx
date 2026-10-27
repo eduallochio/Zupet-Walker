@@ -164,7 +164,7 @@ export default function WalkerConnectScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Meu Perfil Público</Text>
@@ -177,7 +177,7 @@ export default function WalkerConnectScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
       >
         {loading ? (
-          <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
+          <ActivityIndicator color={Colors.primaryText} style={{ marginTop: 40 }} />
         ) : (
           <>
             {/* Preview do perfil público */}
@@ -189,7 +189,7 @@ export default function WalkerConnectScreen() {
                     <Image source={{ uri: walkerProfile.avatar_url }} style={styles.profileAvatar} />
                   ) : (
                     <View style={[styles.profileAvatar, styles.profileAvatarPlaceholder]}>
-                      <Ionicons name="person" size={32} color={Colors.primary} />
+                      <Ionicons name="person" size={32} color={Colors.primaryText} />
                     </View>
                   )}
                   <View style={{ flex: 1 }}>
@@ -222,7 +222,7 @@ export default function WalkerConnectScreen() {
                   <View style={{ marginTop: 12, gap: 6 }}>
                     {((walkerProfile as any).summary_items as string[]).map((item: string, i: number) => (
                       <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-                        <Text style={{ color: Colors.primary, fontSize: 14, lineHeight: 20 }}>✓</Text>
+                        <Text style={{ color: Colors.primaryText, fontSize: 14, lineHeight: 20 }}>✓</Text>
                         <Text style={{ flex: 1, fontSize: 13, color: Colors.text, lineHeight: 20 }}>{item}</Text>
                       </View>
                     ))}
@@ -241,7 +241,7 @@ export default function WalkerConnectScreen() {
                         const handle = isPhone ? raw.replace(/\D/g, '') : raw;
                         const displayLabel = isPhone ? handle : `@${handle}`;
                         return (
-                          <TouchableOpacity
+                          <TouchableOpacity accessibilityRole="button"
                             key={key}
                             style={[styles.socialBtn, { backgroundColor: `${color}15`, borderColor: `${color}30` }]}
                             onPress={() => Linking.openURL(`${prefix}${handle}`)}
@@ -293,16 +293,16 @@ export default function WalkerConnectScreen() {
             <View style={styles.section}>
               <View style={styles.sectionRow}>
                 <Text style={styles.sectionTitle}>CÓDIGOS DE CONVITE</Text>
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   style={[styles.generateBtn, generating && { opacity: 0.6 }]}
                   onPress={generateCode}
                   disabled={generating}
                   activeOpacity={0.8}
                 >
                   {generating
-                    ? <ActivityIndicator size="small" color="#fff" />
+                    ? <ActivityIndicator size="small" color={Colors.onPrimary} />
                     : <>
-                        <Ionicons name="add" size={16} color="#fff" />
+                        <Ionicons name="add" size={16} color={Colors.onPrimary} />
                         <Text style={styles.generateBtnText}>Gerar código</Text>
                       </>
                   }
@@ -331,10 +331,10 @@ export default function WalkerConnectScreen() {
                           </View>
                         </View>
                         <View style={styles.codeActions}>
-                          <TouchableOpacity style={styles.codeShareBtn} onPress={() => shareCode(c.code)} activeOpacity={0.8}>
-                            <Ionicons name="share-outline" size={18} color={Colors.primary} />
+                          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Compartilhar código" style={styles.codeShareBtn} onPress={() => shareCode(c.code)} activeOpacity={0.8}>
+                            <Ionicons name="share-outline" size={18} color={Colors.primaryText} />
                           </TouchableOpacity>
-                          <TouchableOpacity style={styles.codeRevokeBtn} onPress={() => revokeCode(c.id)} activeOpacity={0.8}>
+                          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Revogar código" style={styles.codeRevokeBtn} onPress={() => revokeCode(c.id)} activeOpacity={0.8}>
                             <Ionicons name="trash-outline" size={16} color={Colors.error} />
                           </TouchableOpacity>
                         </View>
@@ -353,8 +353,8 @@ export default function WalkerConnectScreen() {
                         <Text style={[styles.codeText, styles.codeTextExpired]}>{c.code}</Text>
                         <Text style={styles.codeUses}>{c.used_count}/{c.max_uses} usos</Text>
                       </View>
-                      <TouchableOpacity style={styles.codeRevokeBtn} onPress={() => revokeCode(c.id)} activeOpacity={0.8}>
-                        <Ionicons name="trash-outline" size={16} color={Colors.border} />
+                      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Excluir código" style={styles.codeRevokeBtn} onPress={() => revokeCode(c.id)} activeOpacity={0.8}>
+                        <Ionicons name="trash-outline" size={16} color={Colors.textSecondary} />
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -375,7 +375,7 @@ export default function WalkerConnectScreen() {
                   {links.map((link) => (
                     <View key={link.id} style={styles.linkRow}>
                       <View style={styles.linkPetIcon}>
-                        <Ionicons name="paw" size={16} color={Colors.primary} />
+                        <Ionicons name="paw" size={16} color={Colors.primaryText} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.linkPetName}>{link.pet?.name ?? '—'}</Text>
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   profileRating: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
   profileRatingText: { fontSize: 13, fontWeight: '700', color: Colors.text },
   profileBio: { fontSize: 13, color: Colors.textSecondary, lineHeight: 19 },
-  profileBioEmpty: { fontSize: 13, color: Colors.border, fontStyle: 'italic' },
+  profileBioEmpty: { fontSize: 13, color: Colors.textSecondary, fontStyle: 'italic' },
   socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   socialBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
   socialHandle: { fontSize: 12, fontWeight: '600' },
 
   serviceList: { gap: 8, marginTop: 4 },
-  serviceListLabel: { fontSize: 10, fontWeight: '700', color: Colors.textSecondary, letterSpacing: 0.8, marginBottom: 2 },
+  serviceListLabel: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary, letterSpacing: 0.8, marginBottom: 2 },
   serviceRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: Colors.background, borderRadius: 12,
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
   serviceRowBody: { flex: 1, gap: 2 },
   serviceRowName: { fontSize: 14, fontWeight: '700', color: Colors.text },
   serviceRowMeta: { fontSize: 11, color: Colors.textSecondary },
-  serviceRowPrice: { fontSize: 15, fontWeight: '800', color: Colors.primary },
+  serviceRowPrice: { fontSize: 15, fontWeight: '800', color: Colors.primaryText },
 
   // Codes
   generateBtn: {
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary, borderRadius: 20,
     paddingHorizontal: 14, paddingVertical: 7,
   },
-  generateBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  generateBtnText: { fontSize: 13, fontWeight: '700', color: Colors.onPrimary },
 
   codeList: { gap: 10 },
   codeCard: {
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
   },
 
   expiredSection: { marginTop: 16, gap: 8 },
-  expiredLabel: { fontSize: 10, fontWeight: '700', color: Colors.border, letterSpacing: 0.8 },
+  expiredLabel: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary, letterSpacing: 0.8 },
 
   emptyCard: {
     backgroundColor: Colors.card, borderRadius: 14, borderWidth: 1, borderColor: Colors.border,

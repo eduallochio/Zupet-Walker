@@ -46,14 +46,14 @@ export function OwnPetModal({ pet, onClose }: Props) {
 
   return (
     <Modal visible={!!pet} transparent animationType="fade" onRequestClose={onClose}>
-      <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
-        <TouchableOpacity style={styles.card} activeOpacity={1} onPress={() => {}}>
+      <TouchableOpacity accessible={false} style={styles.overlay} activeOpacity={1} onPress={onClose}>
+        <TouchableOpacity accessible={false} style={styles.card} activeOpacity={1} onPress={() => {}}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.petIcon}>
-              <Ionicons name="paw" size={28} color={Colors.primary} />
+              <Ionicons name="paw" size={28} color={Colors.primaryText} />
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fechar" onPress={onClose} style={styles.closeBtn}>
               <Ionicons name="close" size={22} color={Colors.textSecondary} />
             </TouchableOpacity>
           </View>
@@ -83,13 +83,13 @@ export function OwnPetModal({ pet, onClose }: Props) {
               </Text>
 
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.actionBtn} onPress={copyCode} activeOpacity={0.8}>
-                  <Ionicons name="copy-outline" size={20} color={Colors.primary} />
+                <TouchableOpacity accessibilityRole="button" style={styles.actionBtn} onPress={copyCode} activeOpacity={0.8}>
+                  <Ionicons name="copy-outline" size={20} color={Colors.primaryText} />
                   <Text style={styles.actionBtnText}>Copiar</Text>
                 </TouchableOpacity>
                 <View style={styles.actionDivider} />
-                <TouchableOpacity style={styles.actionBtn} onPress={shareCode} activeOpacity={0.8}>
-                  <Ionicons name="share-social-outline" size={20} color={Colors.primary} />
+                <TouchableOpacity accessibilityRole="button" style={styles.actionBtn} onPress={shareCode} activeOpacity={0.8}>
+                  <Ionicons name="share-social-outline" size={20} color={Colors.primaryText} />
                   <Text style={styles.actionBtnText}>Compartilhar</Text>
                 </TouchableOpacity>
               </View>
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2, marginTop: 4,
   },
   codeValue: {
-    fontSize: 40, fontWeight: '900', color: Colors.primary,
+    fontSize: 40, fontWeight: '900', color: Colors.primaryText,
     letterSpacing: 8, marginVertical: 4,
   },
   codeSub: {
@@ -144,9 +144,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center', gap: 8, paddingVertical: 14,
   },
   actionDivider: { width: 1, backgroundColor: Colors.border },
-  actionBtnText: { fontSize: 15, fontWeight: '700', color: Colors.primary },
+  actionBtnText: { fontSize: 15, fontWeight: '700', color: Colors.primaryText },
 
   mergedBox: { alignItems: 'center', gap: 8, paddingVertical: 12 },
-  mergedTitle: { fontSize: 18, fontWeight: '800', color: '#4CAF50' },
+  mergedTitle: { fontSize: 18, fontWeight: '800', color: '#2E7D32' },
   mergedSub: { fontSize: 13, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
 });

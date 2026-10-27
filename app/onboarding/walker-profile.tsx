@@ -226,16 +226,16 @@ export default function WalkerProfileOnboarding() {
                 subtitle="Essas informações serão visíveis para os donos de pets"
               />
 
-              <TouchableOpacity onPress={handlePhotoMenu} activeOpacity={0.8} style={styles.avatarSection}>
+              <TouchableOpacity accessibilityRole="button" onPress={handlePhotoMenu} activeOpacity={0.8} style={styles.avatarSection}>
                 {avatarUri ? (
                   <Image source={{ uri: avatarUri }} style={styles.avatar} />
                 ) : (
                   <View style={styles.avatarPlaceholder}>
-                    <Ionicons name="camera" size={32} color={Colors.primary} />
+                    <Ionicons name="camera" size={32} color={Colors.primaryText} />
                   </View>
                 )}
                 <View style={styles.avatarBadge}>
-                  <Ionicons name="camera" size={13} color="#fff" />
+                  <Ionicons name="camera" size={13} color={Colors.onPrimary} />
                 </View>
                 <Text style={styles.avatarLabel}>{avatarUri ? 'Trocar foto' : 'Adicionar foto'}</Text>
               </TouchableOpacity>
@@ -249,7 +249,7 @@ export default function WalkerProfileOnboarding() {
                   <View style={styles.inputRow}>
                     <TextInput style={[styles.input, { flex: 1 }]} value={cep} onChangeText={handleCepChange}
                       placeholder="00000-000" placeholderTextColor={Colors.textSecondary} keyboardType="number-pad" maxLength={8} />
-                    {cepLoading && <ActivityIndicator style={styles.cepSpinner} color={Colors.primary} size="small" />}
+                    {cepLoading && <ActivityIndicator style={styles.cepSpinner} color={Colors.primaryText} size="small" />}
                   </View>
                 </Field>
                 <Field label="Rua / Logradouro">
@@ -286,7 +286,7 @@ export default function WalkerProfileOnboarding() {
                 </Field>
               </View>
 
-              <TouchableOpacity style={styles.nextBtn} onPress={goNext}>
+              <TouchableOpacity accessibilityRole="button" style={styles.nextBtn} onPress={goNext}>
                 <Text style={styles.nextBtnText}>Próximo →</Text>
               </TouchableOpacity>
             </>
@@ -318,11 +318,11 @@ export default function WalkerProfileOnboarding() {
                 </Field>
               </View>
               <View style={styles.btnRow}>
-                <TouchableOpacity style={styles.backBtn} onPress={goBack}>
-                  <Ionicons name="arrow-back" size={18} color={Colors.primary} />
+                <TouchableOpacity accessibilityRole="button" style={styles.backBtn} onPress={goBack}>
+                  <Ionicons name="arrow-back" size={18} color={Colors.primaryText} />
                   <Text style={styles.backBtnText}>Voltar</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.nextBtn, { flex: 1 }]} onPress={goNext}>
+                <TouchableOpacity accessibilityRole="button" style={[styles.nextBtn, { flex: 1 }]} onPress={goNext}>
                   <Text style={styles.nextBtnText}>Próximo →</Text>
                 </TouchableOpacity>
               </View>
@@ -339,7 +339,7 @@ export default function WalkerProfileOnboarding() {
               />
               <View style={styles.form}>
                 <View style={styles.infoCard}>
-                  <Ionicons name="information-circle-outline" size={18} color={Colors.primary} />
+                  <Ionicons name="information-circle-outline" size={18} color={Colors.primaryText} />
                   <Text style={styles.infoCardText}>
                     Seus serviços e preços podem ser configurados depois no menu "Meus Serviços".
                   </Text>
@@ -358,11 +358,11 @@ export default function WalkerProfileOnboarding() {
                 </View>
               </View>
               <View style={styles.btnRow}>
-                <TouchableOpacity style={styles.backBtn} onPress={goBack}>
-                  <Ionicons name="arrow-back" size={18} color={Colors.primary} />
+                <TouchableOpacity accessibilityRole="button" style={styles.backBtn} onPress={goBack}>
+                  <Ionicons name="arrow-back" size={18} color={Colors.primaryText} />
                   <Text style={styles.backBtnText}>Voltar</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.nextBtn, { flex: 1 }]} onPress={goNext}>
+                <TouchableOpacity accessibilityRole="button" style={[styles.nextBtn, { flex: 1 }]} onPress={goNext}>
                   <Text style={styles.nextBtnText}>Próximo →</Text>
                 </TouchableOpacity>
               </View>
@@ -383,7 +383,7 @@ export default function WalkerProfileOnboarding() {
                   {DAYS.map((d, i) => {
                     const active = availableDays.includes(i);
                     return (
-                      <TouchableOpacity key={d} style={[styles.dayChip, active && styles.dayChipActive]}
+                      <TouchableOpacity accessibilityRole="button" key={d} style={[styles.dayChip, active && styles.dayChipActive]}
                         onPress={() => toggleDay(i)} activeOpacity={0.8}>
                         <Text style={[styles.dayChipText, active && styles.dayChipTextActive]}>{d}</Text>
                       </TouchableOpacity>
@@ -406,11 +406,11 @@ export default function WalkerProfileOnboarding() {
                 </View>
               </View>
               <View style={styles.btnRow}>
-                <TouchableOpacity style={styles.backBtn} onPress={goBack}>
-                  <Ionicons name="arrow-back" size={18} color={Colors.primary} />
+                <TouchableOpacity accessibilityRole="button" style={styles.backBtn} onPress={goBack}>
+                  <Ionicons name="arrow-back" size={18} color={Colors.primaryText} />
                   <Text style={styles.backBtnText}>Voltar</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.nextBtn, { flex: 1 }]} onPress={goNext}>
+                <TouchableOpacity accessibilityRole="button" style={[styles.nextBtn, { flex: 1 }]} onPress={goNext}>
                   <Text style={styles.nextBtnText}>Próximo →</Text>
                 </TouchableOpacity>
               </View>
@@ -431,9 +431,9 @@ export default function WalkerProfileOnboarding() {
                     placeholder="000.000.000-00" placeholderTextColor={Colors.textSecondary} keyboardType="number-pad" />
                 </Field>
 
-                <TouchableOpacity style={styles.termsRow} onPress={() => setTerms((v) => !v)} activeOpacity={0.8}>
+                <TouchableOpacity accessibilityRole="button" style={styles.termsRow} onPress={() => setTerms((v) => !v)} activeOpacity={0.8}>
                   <View style={[styles.checkbox, termsAccepted && styles.checkboxActive]}>
-                    {termsAccepted && <Ionicons name="checkmark" size={14} color="#fff" />}
+                    {termsAccepted && <Ionicons name="checkmark" size={14} color={Colors.onPrimary} />}
                   </View>
                   <Text style={styles.termsText}>
                     Li e aceito os{' '}
@@ -450,14 +450,14 @@ export default function WalkerProfileOnboarding() {
               </View>
 
               <View style={styles.btnRow}>
-                <TouchableOpacity style={styles.backBtn} onPress={goBack}>
-                  <Ionicons name="arrow-back" size={18} color={Colors.primary} />
+                <TouchableOpacity accessibilityRole="button" style={styles.backBtn} onPress={goBack}>
+                  <Ionicons name="arrow-back" size={18} color={Colors.primaryText} />
                   <Text style={styles.backBtnText}>Voltar</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.nextBtn, { flex: 1 }, !termsAccepted && styles.nextBtnDisabled]}
+                <TouchableOpacity accessibilityRole="button" style={[styles.nextBtn, { flex: 1 }, !termsAccepted && styles.nextBtnDisabled]}
                   onPress={handleSave} disabled={saving || !termsAccepted}>
                   {saving
-                    ? <ActivityIndicator color="#fff" size="small" />
+                    ? <ActivityIndicator color={Colors.onPrimary} size="small" />
                     : <Text style={styles.nextBtnText}>Criar meu perfil ✓</Text>
                   }
                 </TouchableOpacity>
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
   progressBarActive: { backgroundColor: Colors.primary },
 
   stepHeader: { gap: 4 },
-  stepLabel: { fontSize: 12, fontWeight: '700', color: Colors.primary, letterSpacing: 0.8 },
+  stepLabel: { fontSize: 12, fontWeight: '700', color: Colors.primaryText, letterSpacing: 0.8 },
   stepTitle: { fontSize: 24, fontWeight: '800', color: Colors.text, lineHeight: 30 },
   stepSub: { fontSize: 14, color: Colors.textSecondary, lineHeight: 20 },
 
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center',
     borderWidth: 2, borderColor: Colors.background,
   },
-  avatarLabel: { fontSize: 14, fontWeight: '600', color: Colors.primary },
+  avatarLabel: { fontSize: 14, fontWeight: '600', color: Colors.primaryText },
 
   form: { gap: 16 },
   field: { gap: 5 },
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
   },
   dayChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   dayChipText: { fontSize: 11, fontWeight: '600', color: Colors.textSecondary },
-  dayChipTextActive: { color: '#fff' },
+  dayChipTextActive: { color: Colors.onPrimary },
 
   // Termos
   termsRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
   },
   checkboxActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   termsText: { flex: 1, fontSize: 13, color: Colors.textSecondary, lineHeight: 20 },
-  termsLink: { color: Colors.primary, fontWeight: '600' },
+  termsLink: { color: Colors.primaryText, fontWeight: '600' },
   privacyNote: { fontSize: 12, color: Colors.textSecondary, lineHeight: 18, textAlign: 'center' },
 
   // Botões
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   nextBtnDisabled: { backgroundColor: Colors.border },
-  nextBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  nextBtnText: { color: Colors.onPrimary, fontSize: 16, fontWeight: '700' },
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 15, paddingHorizontal: 4 },
-  backBtnText: { color: Colors.primary, fontSize: 15, fontWeight: '600' },
+  backBtnText: { color: Colors.primaryText, fontSize: 15, fontWeight: '600' },
 });

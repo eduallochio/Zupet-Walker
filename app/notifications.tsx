@@ -62,12 +62,12 @@ export default function NotificationsScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.headerBtn}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>Notificações</Text>
         {unreadCount > 0 ? (
-          <TouchableOpacity onPress={markAllRead} style={styles.headerBtn}>
+          <TouchableOpacity accessibilityRole="button" onPress={markAllRead} style={styles.headerBtn}>
             <Text style={styles.markAllText}>Todas lidas</Text>
           </TouchableOpacity>
         ) : (
@@ -77,7 +77,7 @@ export default function NotificationsScreen() {
 
       {unreadCount > 0 && (
         <View style={styles.unreadBanner}>
-          <Ionicons name="mail-unread-outline" size={15} color={Colors.primary} />
+          <Ionicons name="mail-unread-outline" size={15} color={Colors.primaryText} />
           <Text style={styles.unreadBannerText}>
             {unreadCount} não lida{unreadCount > 1 ? 's' : ''}
           </Text>
@@ -85,7 +85,7 @@ export default function NotificationsScreen() {
       )}
 
       {loading ? (
-        <ActivityIndicator size="large" color={Colors.primary} style={{ flex: 1 }} />
+        <ActivityIndicator size="large" color={Colors.primaryText} style={{ flex: 1 }} />
       ) : (
         <FlatList
           data={items}
@@ -116,14 +116,14 @@ const styles = StyleSheet.create({
   },
   headerBtn: { width: 80, alignItems: 'center', justifyContent: 'center', paddingVertical: 6 },
   title: { fontSize: 18, fontWeight: '700', color: Colors.text },
-  markAllText: { fontSize: 13, fontWeight: '600', color: Colors.primary },
+  markAllText: { fontSize: 13, fontWeight: '600', color: Colors.primaryText },
   unreadBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 20, paddingVertical: 8,
     backgroundColor: `${Colors.primary}12`,
     borderBottomWidth: 1, borderBottomColor: `${Colors.primary}20`,
   },
-  unreadBannerText: { fontSize: 13, fontWeight: '600', color: Colors.primary },
+  unreadBannerText: { fontSize: 13, fontWeight: '600', color: Colors.primaryText },
   empty: { alignItems: 'center', paddingTop: 80, gap: 10, paddingHorizontal: 40 },
   emptyTitle: { fontSize: 16, fontWeight: '700', color: Colors.text },
   emptyText: { fontSize: 13, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },

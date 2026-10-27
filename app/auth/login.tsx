@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { supabase } from '../../services/supabase';
 import { Colors } from '../../constants/colors';
 
@@ -139,20 +140,20 @@ export default function LoginScreen() {
                   value={password}
                   onChangeText={setPassword}
                 />
-                <TouchableOpacity onPress={() => setShowPass((v) => !v)} style={styles.eyeBtn}>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel={showPass ? "Ocultar senha" : "Mostrar senha"} onPress={() => setShowPass((v) => !v)} style={styles.eyeBtn}>
                   <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={18} color={Colors.textSecondary} />
                 </TouchableOpacity>
               </View>
             </View>
 
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.primaryBtn}
               onPress={showRegister ? handleRegister : handleLogin}
               disabled={loading}
               activeOpacity={0.85}
             >
               {loading
-                ? <ActivityIndicator color="#fff" />
+                ? <ActivityIndicator color={Colors.onPrimary} />
                 : <Text style={styles.primaryBtnText}>{showRegister ? 'Criar conta' : 'Entrar'}</Text>
               }
             </TouchableOpacity>
@@ -167,7 +168,7 @@ export default function LoginScreen() {
 
           {/* Social */}
           <View style={styles.socialGroup}>
-            <TouchableOpacity style={styles.socialBtn} onPress={handleGoogle} activeOpacity={0.85} disabled={!!socialLoading}>
+            <TouchableOpacity accessibilityRole="button" style={styles.socialBtn} onPress={handleGoogle} activeOpacity={0.85} disabled={!!socialLoading}>
               {socialLoading === 'google'
                 ? <ActivityIndicator color={Colors.text} size="small" />
                 : <>
@@ -177,19 +178,36 @@ export default function LoginScreen() {
               }
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.appleBtn} onPress={handleApple} activeOpacity={0.85} disabled={!!socialLoading}>
-              {socialLoading === 'apple'
-                ? <ActivityIndicator color="#fff" size="small" />
-                : <>
-                    <Ionicons name="logo-apple" size={20} color="#fff" />
-                    <Text style={styles.appleBtnText}>Continuar com Apple</Text>
-                  </>
-              }
-            </TouchableOpacity>
+            {/* iOS: botão nativo da Apple (padrão exigido pela Apple); Android: botão próprio no mesmo estilo */}
+            {Platform.OS === 'ios' ? (
+              socialLoading === 'apple' ? (
+                <View style={[styles.appleBtn, { justifyContent: 'center' }]}>
+                  <ActivityIndicator color="#fff" size="small" />
+                </View>
+              ) : (
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                  cornerRadius={12}
+                  style={{ width: '100%', height: 52 }}
+                  onPress={() => { if (!socialLoading) handleApple(); }}
+                />
+              )
+            ) : (
+              <TouchableOpacity accessibilityRole="button" style={styles.appleBtn} onPress={handleApple} activeOpacity={0.85} disabled={!!socialLoading}>
+                {socialLoading === 'apple'
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <>
+                      <Ionicons name="logo-apple" size={20} color="#fff" />
+                      <Text style={styles.appleBtnText}>Continuar com Apple</Text>
+                    </>
+                }
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Toggle modo */}
-          <TouchableOpacity onPress={() => setShowRegister((v) => !v)} style={styles.toggleWrap}>
+          <TouchableOpacity accessibilityRole="button" onPress={() => setShowRegister((v) => !v)} style={styles.toggleWrap}>
             <Text style={styles.toggleText}>
               {showRegister ? 'Já tem conta? ' : 'Não tem conta? '}
               <Text style={styles.toggleLink}>
@@ -256,12 +274,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary, borderRadius: 12,
     height: 52, justifyContent: 'center', alignItems: 'center', marginTop: 4,
   },
-  primaryBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  primaryBtnText: { color: Colors.onPrimary, fontSize: 16, fontWeight: '700' },
 
   toggleWrap: { alignItems: 'center' },
   toggleText: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center' },
-  toggleLink: { color: Colors.primary, fontWeight: '700' },
+  toggleLink: { color: Colors.primaryText, fontWeight: '700' },
 
   footer: { fontSize: 11, color: Colors.textSecondary, textAlign: 'center' },
-  footerLink: { color: Colors.primary, fontWeight: '500' },
+  footerLink: { color: Colors.primaryText, fontWeight: '500' },
 });

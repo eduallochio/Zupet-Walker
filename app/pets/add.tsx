@@ -124,7 +124,7 @@ export default function AddPetScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.headerBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>{linkCode ? 'Pet cadastrado!' : 'Cadastrar Pet'}</Text>
@@ -135,7 +135,7 @@ export default function AddPetScreen() {
       {linkCode ? (
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <View style={styles.successIcon}>
-            <Ionicons name="checkmark-circle" size={64} color={Colors.primary} />
+            <Ionicons name="checkmark-circle" size={64} color={Colors.primaryText} />
           </View>
           <Text style={styles.successTitle}>{name.trim()} cadastrado!</Text>
           <Text style={styles.successSub}>
@@ -146,26 +146,26 @@ export default function AddPetScreen() {
             <Text style={styles.codeLabel}>CÓDIGO DE VÍNCULO</Text>
             <Text style={styles.codeValue}>{linkCode}</Text>
             <View style={styles.codeActions}>
-              <TouchableOpacity style={styles.codeBtn} onPress={copyCode} activeOpacity={0.8}>
-                <Ionicons name="copy-outline" size={18} color={Colors.primary} />
+              <TouchableOpacity accessibilityRole="button" style={styles.codeBtn} onPress={copyCode} activeOpacity={0.8}>
+                <Ionicons name="copy-outline" size={18} color={Colors.primaryText} />
                 <Text style={styles.codeBtnText}>Copiar</Text>
               </TouchableOpacity>
               <View style={styles.codeDivider} />
-              <TouchableOpacity style={styles.codeBtn} onPress={shareCode} activeOpacity={0.8}>
-                <Ionicons name="share-outline" size={18} color={Colors.primary} />
+              <TouchableOpacity accessibilityRole="button" style={styles.codeBtn} onPress={shareCode} activeOpacity={0.8}>
+                <Ionicons name="share-outline" size={18} color={Colors.primaryText} />
                 <Text style={styles.codeBtnText}>Compartilhar</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.infoBox}>
-            <Ionicons name="information-circle-outline" size={16} color={Colors.primary} />
+            <Ionicons name="information-circle-outline" size={16} color={Colors.primaryText} />
             <Text style={styles.infoText}>
               O tutor digita este código em "Adicionar pet" no app Zupet. Os dados são importados automaticamente e os registros são associados.
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.saveBtn} onPress={() => router.back()} activeOpacity={0.85}>
+          <TouchableOpacity accessibilityRole="button" style={styles.saveBtn} onPress={() => router.back()} activeOpacity={0.85}>
             <Text style={styles.saveBtnText}>Voltar para meus pets</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -173,7 +173,7 @@ export default function AddPetScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Foto */}
-        <TouchableOpacity style={styles.photoPicker} onPress={pickPhoto} activeOpacity={0.8}>
+        <TouchableOpacity accessibilityRole="button" style={styles.photoPicker} onPress={pickPhoto} activeOpacity={0.8}>
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles.photo} />
           ) : (
@@ -201,7 +201,7 @@ export default function AddPetScreen() {
           <Text style={styles.label}>Espécie</Text>
           <View style={styles.chips}>
             {SPECIES.map((s) => (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 key={s}
                 style={[styles.chip, species === s && styles.chipActive]}
                 onPress={() => setSpecies(s)}
@@ -229,7 +229,7 @@ export default function AddPetScreen() {
           <Text style={styles.label}>Gênero</Text>
           <View style={styles.chips}>
             {GENDERS.map((g) => (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 key={g}
                 style={[styles.chip, gender === g && styles.chipActive]}
                 onPress={() => setGender(g)}
@@ -241,9 +241,9 @@ export default function AddPetScreen() {
         </View>
 
         {/* Castrado */}
-        <TouchableOpacity style={styles.toggle} onPress={() => setCastrated((v) => !v)} activeOpacity={0.8}>
+        <TouchableOpacity accessibilityRole="button" style={styles.toggle} onPress={() => setCastrated((v) => !v)} activeOpacity={0.8}>
           <View style={[styles.toggleBox, castrated && styles.toggleBoxActive]}>
-            {castrated && <Ionicons name="checkmark" size={14} color="#fff" />}
+            {castrated && <Ionicons name="checkmark" size={14} color={Colors.onPrimary} />}
           </View>
           <Text style={styles.toggleLabel}>Castrado / Castrada</Text>
         </TouchableOpacity>
@@ -290,23 +290,23 @@ export default function AddPetScreen() {
         </View>
 
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle-outline" size={16} color={Colors.primary} />
+          <Ionicons name="information-circle-outline" size={16} color={Colors.primaryText} />
           <Text style={styles.infoText}>
             Este pet fica vinculado à sua conta. Se o tutor criar uma conta no Zupet, você poderá associar os registros ao se vincular.
           </Text>
         </View>
 
-        <TouchableOpacity
+        <TouchableOpacity accessibilityRole="button"
           style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
           onPress={save}
           disabled={saving}
           activeOpacity={0.85}
         >
           {saving ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={Colors.onPrimary} />
           ) : (
             <>
-              <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+              <Ionicons name="checkmark-circle-outline" size={20} color={Colors.onPrimary} />
               <Text style={styles.saveBtnText}>Cadastrar pet</Text>
             </>
           )}
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   },
   chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   chipText: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary },
-  chipTextActive: { color: '#fff' },
+  chipTextActive: { color: Colors.onPrimary },
 
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   toggleBox: {
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10,
   },
   saveBtnDisabled: { backgroundColor: Colors.border },
-  saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  saveBtnText: { color: Colors.onPrimary, fontSize: 16, fontWeight: '700' },
 
   // Tela de sucesso
   successIcon: { alignItems: 'center', marginBottom: 8, marginTop: 8 },
@@ -384,9 +384,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary, overflow: 'hidden', alignItems: 'center', paddingTop: 20, paddingBottom: 0,
   },
   codeLabel: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary, letterSpacing: 1, marginBottom: 8 },
-  codeValue: { fontSize: 36, fontWeight: '900', color: Colors.primary, letterSpacing: 6, marginBottom: 16 },
+  codeValue: { fontSize: 36, fontWeight: '900', color: Colors.primaryText, letterSpacing: 6, marginBottom: 16 },
   codeActions: { flexDirection: 'row', width: '100%', borderTopWidth: 1, borderTopColor: Colors.border },
   codeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },
   codeDivider: { width: 1, backgroundColor: Colors.border },
-  codeBtnText: { fontSize: 14, fontWeight: '700', color: Colors.primary },
+  codeBtnText: { fontSize: 14, fontWeight: '700', color: Colors.primaryText },
 });

@@ -57,7 +57,7 @@ export default function AvailabilityScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        <ActivityIndicator size="large" color={Colors.primary} style={{ flex: 1 }} />
+        <ActivityIndicator size="large" color={Colors.primaryText} style={{ flex: 1 }} />
       </SafeAreaView>
     );
   }
@@ -65,16 +65,16 @@ export default function AvailabilityScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.headerBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>Bloquear Horários</Text>
           {serviceLabel ? <Text style={styles.subtitle}>{serviceLabel}</Text> : null}
         </View>
-        <TouchableOpacity onPress={save} style={styles.saveBtn} disabled={saving}>
+        <TouchableOpacity accessibilityRole="button" onPress={save} style={styles.saveBtn} disabled={saving}>
           {saving
-            ? <ActivityIndicator size="small" color={Colors.primary} />
+            ? <ActivityIndicator size="small" color={Colors.primaryText} />
             : <Text style={styles.saveText}>Salvar</Text>
           }
         </TouchableOpacity>
@@ -102,6 +102,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 16, fontWeight: '700', color: Colors.text },
   subtitle: { fontSize: 12, color: Colors.textSecondary, marginTop: 1 },
   saveBtn: { minWidth: 52, alignItems: 'flex-end' },
-  saveText: { fontSize: 15, fontWeight: '700', color: Colors.primary },
+  saveText: { fontSize: 15, fontWeight: '700', color: Colors.primaryText },
   scroll: { padding: 20, paddingBottom: 48 },
 });

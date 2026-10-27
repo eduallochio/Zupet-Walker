@@ -96,7 +96,7 @@ export function ProfileRatings() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="small" color={Colors.primary} style={{ marginTop: 8 }} />
+        <ActivityIndicator size="small" color={Colors.primaryText} style={{ marginTop: 8 }} />
       ) : ratings.length === 0 ? (
         <View style={styles.emptyCard}>
           <Ionicons name="star-outline" size={18} color={Colors.textSecondary} />
@@ -133,9 +133,9 @@ export function ProfileRatings() {
           </View>
 
           {ratings.length > 3 && (
-            <TouchableOpacity style={styles.showMoreBtn} onPress={() => setShowAll((v) => !v)} activeOpacity={0.7}>
+            <TouchableOpacity accessibilityRole="button" style={styles.showMoreBtn} onPress={() => setShowAll((v) => !v)} activeOpacity={0.7}>
               <Text style={styles.showMoreText}>{showAll ? 'Ver menos' : `Ver todas (${ratings.length})`}</Text>
-              <Ionicons name={showAll ? 'chevron-up' : 'chevron-down'} size={14} color={Colors.primary} />
+              <Ionicons name={showAll ? 'chevron-up' : 'chevron-down'} size={14} color={Colors.primaryText} />
             </TouchableOpacity>
           )}
         </>
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   },
   ownerName: { fontSize: 13, fontWeight: '700', color: Colors.text },
   ratingDate: { fontSize: 11, color: Colors.textSecondary },
-  serviceTag: { fontSize: 10, color: Colors.primary, fontWeight: '600' },
+  serviceTag: { fontSize: 11, color: Colors.primaryText, fontWeight: '600' },
   comment: { fontSize: 13, color: Colors.textSecondary, lineHeight: 20, fontStyle: 'italic', marginLeft: 42 },
 
   emptyCard: {
@@ -175,5 +175,5 @@ const styles = StyleSheet.create({
   emptyText: { flex: 1, fontSize: 13, color: Colors.textSecondary, lineHeight: 18 },
 
   showMoreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 10 },
-  showMoreText: { fontSize: 13, fontWeight: '600', color: Colors.primary },
+  showMoreText: { fontSize: 13, fontWeight: '600', color: Colors.primaryText },
 });

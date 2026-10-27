@@ -228,11 +228,11 @@ export default function HistoricoScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Histórico</Text>
         <View style={styles.monthNav}>
-          <TouchableOpacity onPress={prevMonth} style={styles.monthNavBtn}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Mês anterior" onPress={prevMonth} style={styles.monthNavBtn}>
             <Ionicons name="chevron-back" size={20} color={Colors.text} />
           </TouchableOpacity>
           <Text style={styles.monthNavLabel}>{MONTHS_PT[viewMonth]} {viewYear}</Text>
-          <TouchableOpacity onPress={nextMonth} style={styles.monthNavBtn} disabled={isCurrentMonth}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Próximo mês" onPress={nextMonth} style={styles.monthNavBtn} disabled={isCurrentMonth}>
             <Ionicons name="chevron-forward" size={20} color={isCurrentMonth ? Colors.border : Colors.text} />
           </TouchableOpacity>
         </View>
@@ -260,16 +260,16 @@ export default function HistoricoScreen() {
               {monthEarnings.prev > 0 && (
                 <View style={[
                   styles.monthDelta,
-                  { backgroundColor: monthEarnings.current >= monthEarnings.prev ? '#10B98115' : '#EF444415' },
+                  { backgroundColor: '#FFFFFF' }, // fundo branco: verde/vermelho legíveis sobre o cartão turquesa
                 ]}>
                   <Ionicons
                     name={monthEarnings.current >= monthEarnings.prev ? 'trending-up' : 'trending-down'}
                     size={14}
-                    color={monthEarnings.current >= monthEarnings.prev ? '#10B981' : '#EF4444'}
+                    color={monthEarnings.current >= monthEarnings.prev ? '#047857' : '#C62828'}
                   />
                   <Text style={[
                     styles.monthDeltaText,
-                    { color: monthEarnings.current >= monthEarnings.prev ? '#10B981' : '#EF4444' },
+                    { color: monthEarnings.current >= monthEarnings.prev ? '#047857' : '#C62828' },
                   ]}>
                     {monthEarnings.prev > 0
                       ? `${((monthEarnings.current - monthEarnings.prev) / monthEarnings.prev * 100).toFixed(0)}%`
@@ -289,17 +289,17 @@ export default function HistoricoScreen() {
         {/* Totais do filtro */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Ionicons name="paw-outline" size={16} color={Colors.primary} />
+            <Ionicons name="paw-outline" size={16} color={Colors.primaryText} />
             <Text style={styles.statValue}>{filtered.length}</Text>
             <Text style={styles.statLabel}>serviços</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons name="time-outline" size={16} color={Colors.primary} />
+            <Ionicons name="time-outline" size={16} color={Colors.primaryText} />
             <Text style={styles.statValue}>{formatDuration(totalMinutes)}</Text>
             <Text style={styles.statLabel}>no total</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons name="location-outline" size={16} color={Colors.primary} />
+            <Ionicons name="location-outline" size={16} color={Colors.primaryText} />
             <Text style={styles.statValue}>{(totalDistance / 1000).toFixed(1)} km</Text>
             <Text style={styles.statLabel}>percorridos</Text>
           </View>
@@ -308,14 +308,14 @@ export default function HistoricoScreen() {
         {/* Filtro por tipo de serviço — só aparece se houver mais de 1 tipo */}
         {serviceTypes.length > 1 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[styles.filterChip, selectedService === null && styles.filterChipActive]}
               onPress={() => setSelectedService(null)}
             >
               <Text style={[styles.filterChipText, selectedService === null && styles.filterChipTextActive]}>Todos</Text>
             </TouchableOpacity>
             {serviceTypes.map((type) => (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 key={type}
                 style={[styles.filterChip, selectedService === type && styles.filterChipActive]}
                 onPress={() => setSelectedService(selectedService === type ? null : type)}
@@ -335,7 +335,7 @@ export default function HistoricoScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filterRow}
           >
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[styles.filterChip, selectedPet === null && styles.filterChipActive]}
               onPress={() => setSelectedPet(null)}
             >
@@ -344,7 +344,7 @@ export default function HistoricoScreen() {
               </Text>
             </TouchableOpacity>
             {pets.map((pet) => (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 key={pet.id}
                 style={[styles.filterChip, selectedPet === pet.id && styles.filterChipActive]}
                 onPress={() => setSelectedPet(selectedPet === pet.id ? null : pet.id)}
@@ -358,7 +358,7 @@ export default function HistoricoScreen() {
         )}
 
         {loading ? (
-          <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
+          <ActivityIndicator color={Colors.primaryText} style={{ marginTop: 40 }} />
         ) : filtered.length === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="paw-outline" size={48} color={Colors.border} />
@@ -374,7 +374,7 @@ export default function HistoricoScreen() {
         ) : (
           <View style={styles.list}>
             {filtered.map((report) => (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 key={report.id}
                 style={styles.card}
                 activeOpacity={report.source === 'report' ? 0.75 : 1}
@@ -383,7 +383,7 @@ export default function HistoricoScreen() {
                 {/* Topo */}
                 <View style={styles.cardTop}>
                   <View style={styles.cardAvatar}>
-                    <Ionicons name="person-outline" size={16} color={Colors.primary} />
+                    <Ionicons name="person-outline" size={16} color={Colors.primaryText} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.cardOwner}>{report.owner_name}</Text>
@@ -486,12 +486,12 @@ const styles = StyleSheet.create({
     padding: 18, gap: 10,
   },
   monthCardTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  monthLabel: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.75)', textTransform: 'capitalize', marginBottom: 4 },
-  monthValue: { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
-  monthSub: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  monthLabel: { fontSize: 12, fontWeight: '600', color: 'rgba(13,41,38,0.8)', textTransform: 'capitalize', marginBottom: 4 },
+  monthValue: { fontSize: 28, fontWeight: '900', color: Colors.onPrimary, letterSpacing: -0.5 },
+  monthSub: { fontSize: 12, color: 'rgba(13,41,38,0.8)', marginTop: 2 },
   monthDelta: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5, flexDirection: 'row', alignItems: 'center', gap: 4 },
   monthDeltaText: { fontSize: 13, fontWeight: '700' },
-  monthPrev: { fontSize: 12, color: 'rgba(255,255,255,0.65)' },
+  monthPrev: { fontSize: 12, color: 'rgba(13,41,38,0.8)' },
   planBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     marginHorizontal: 20, marginBottom: 4, marginTop: 4,
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 8,
     borderWidth: 1, borderColor: 'rgba(245,158,11,0.25)',
   },
-  planBannerText: { flex: 1, fontSize: 12, color: '#F59E0B', fontWeight: '500' },
+  planBannerText: { flex: 1, fontSize: 12, color: '#B45309', fontWeight: '500' },
   title: { fontSize: 22, fontWeight: '800', color: Colors.text },
   scroll: { paddingHorizontal: 20, paddingBottom: 40, gap: 14 },
 
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
     padding: 12, alignItems: 'center', gap: 4,
   },
   statValue: { fontSize: 15, fontWeight: '800', color: Colors.text },
-  statLabel: { fontSize: 10, color: Colors.textSecondary, fontWeight: '600' },
+  statLabel: { fontSize: 11, color: Colors.textSecondary, fontWeight: '600' },
 
   filterRow: { gap: 8, paddingBottom: 2 },
   filterChip: {
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
   },
   filterChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   filterChipText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary, flexShrink: 0 },
-  filterChipTextActive: { color: '#fff' },
+  filterChipTextActive: { color: Colors.onPrimary },
 
   list: { gap: 12 },
   card: {
@@ -541,13 +541,13 @@ const styles = StyleSheet.create({
     backgroundColor: `${Colors.primary}15`, borderRadius: 20,
     paddingHorizontal: 8, paddingVertical: 3,
   },
-  serviceTypeText: { fontSize: 11, fontWeight: '600', color: Colors.primary },
+  serviceTypeText: { fontSize: 11, fontWeight: '600', color: Colors.primaryText },
   completedBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: '#10B98115', borderRadius: 20,
     paddingHorizontal: 8, paddingVertical: 3,
   },
-  completedText: { fontSize: 11, fontWeight: '600', color: '#10B981' },
+  completedText: { fontSize: 11, fontWeight: '600', color: '#047857' },
 
   petsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   petTag: {

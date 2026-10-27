@@ -26,14 +26,14 @@ export function ProfileAvailability() {
     <View style={styles.section}>
       <View style={styles.titleRow}>
         <Text style={styles.title}>Disponibilidade</Text>
-        <TouchableOpacity onPress={() => router.push('/services')} style={styles.editLink} activeOpacity={0.8}>
+        <TouchableOpacity accessibilityRole="button" onPress={() => router.push('/services')} style={styles.editLink} activeOpacity={0.8}>
           <Text style={styles.editLinkText}>Editar</Text>
-          <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+          <Ionicons name="chevron-forward" size={14} color={Colors.primaryText} />
         </TouchableOpacity>
       </View>
 
       {!hasData ? (
-        <TouchableOpacity style={styles.emptyCard} onPress={() => router.push('/services')} activeOpacity={0.8}>
+        <TouchableOpacity accessibilityRole="button" style={styles.emptyCard} onPress={() => router.push('/services')} activeOpacity={0.8}>
           <Ionicons name="calendar-outline" size={18} color={Colors.textSecondary} />
           <Text style={styles.emptyText}>Configure seus dias e horários em Serviços</Text>
           <Ionicons name="chevron-forward" size={16} color={Colors.border} />
@@ -62,7 +62,7 @@ export function ProfileAvailability() {
       )}
 
       {/* Dias de folga */}
-      <TouchableOpacity style={styles.vacationBtn} onPress={() => router.push('/blocked-days' as any)} activeOpacity={0.8}>
+      <TouchableOpacity accessibilityRole="button" style={styles.vacationBtn} onPress={() => router.push('/blocked-days' as any)} activeOpacity={0.8}>
         <Ionicons name="close-circle-outline" size={16} color={Colors.error} />
         <View style={{ flex: 1 }}>
           <Text style={styles.vacationText}>
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   title: { fontSize: 15, fontWeight: '700', color: Colors.text },
   editLink: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  editLinkText: { fontSize: 13, fontWeight: '600', color: Colors.primary },
+  editLinkText: { fontSize: 13, fontWeight: '600', color: Colors.primaryText },
 
   card: {
     backgroundColor: Colors.card, borderRadius: 14,
@@ -103,8 +103,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.border, alignItems: 'center',
   },
   dayChipActive: { backgroundColor: `${Colors.primary}18`, borderColor: Colors.primary },
-  dayChipText: { fontSize: 10, fontWeight: '600', color: Colors.textSecondary },
-  dayChipTextActive: { color: Colors.primary },
+  dayChipText: { fontSize: 11, fontWeight: '600', color: Colors.textSecondary },
+  dayChipTextActive: { color: Colors.primaryText },
   timeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   timeText: { fontSize: 13, color: Colors.textSecondary },
 

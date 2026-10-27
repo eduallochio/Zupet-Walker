@@ -210,14 +210,14 @@ export default function ActiveWalkScreen() {
         </View>
         <Text style={styles.timer}>{formatElapsed(activeWalk.started_at)}</Text>
         <View style={styles.headerRight}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Anotação do passeio"
             style={[styles.walkNoteBtn, activeWalk.notes ? styles.walkNoteBtnActive : null]}
             onPress={() => { setWalkNoteText(activeWalk.notes ?? ''); setWalkNoteModal(true); }}
             activeOpacity={0.8}
           >
-            <Ionicons name="document-text-outline" size={16} color="#fff" />
+            <Ionicons name="document-text-outline" size={16} color={Colors.onPrimary} />
           </TouchableOpacity>
-          <Ionicons name="paw" size={14} color="rgba(255,255,255,0.7)" />
+          <Ionicons name="paw" size={14} color="rgba(13,41,38,0.8)" />
           <Text style={styles.petsCount}>{activeWalk.pet_ids.length} pets</Text>
         </View>
       </View>
@@ -283,7 +283,7 @@ export default function ActiveWalkScreen() {
           <View key={petId} style={styles.petSection}>
             <View style={styles.petHeader}>
               <View style={styles.petAvatar}>
-                <Ionicons name="paw" size={16} color={Colors.primary} />
+                <Ionicons name="paw" size={16} color={Colors.primaryText} />
               </View>
               <Text style={styles.petName}>{getPetName(petId)}</Text>
               <Text style={styles.petEventCount}>
@@ -295,7 +295,7 @@ export default function ActiveWalkScreen() {
               {(EVENT_BUTTONS_BY_SERVICE[activeWalk.service_type ?? 'walk'] ?? EVENT_BUTTONS_BY_SERVICE.walk).map((btn) => {
                 const count = eventCountForPet(petId, btn.type);
                 return (
-                  <TouchableOpacity
+                  <TouchableOpacity accessibilityRole="button"
                     key={btn.type}
                     style={styles.eventBtn}
                     onPress={() => handleEventBtn(petId, btn.type)}
@@ -319,7 +319,7 @@ export default function ActiveWalkScreen() {
       {/* Barra de ações */}
       <View style={styles.actionBar}>
         {/* Câmera desabilitada — storage não disponível no plano atual */}
-        <TouchableOpacity
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Enviar foto (em breve)"
           style={[styles.cameraBtn, styles.cameraBtnDisabled]}
           onPress={() => Alert.alert('Em breve', 'O envio de fotos estará disponível em breve.')}
           activeOpacity={0.6}
@@ -327,7 +327,7 @@ export default function ActiveWalkScreen() {
           <Ionicons name="camera-outline" size={20} color={Colors.textSecondary} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.finishBtn} onPress={handleFinish} activeOpacity={0.85}>
+        <TouchableOpacity accessibilityRole="button" style={styles.finishBtn} onPress={handleFinish} activeOpacity={0.85}>
           <Ionicons name="stop-circle-outline" size={20} color="#fff" />
           <Text style={styles.finishText}>Finalizar {serviceLabel}</Text>
         </TouchableOpacity>
@@ -349,10 +349,10 @@ export default function ActiveWalkScreen() {
               maxLength={500}
             />
             <View style={styles.modalBtns}>
-              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setWalkNoteModal(false)}>
+              <TouchableOpacity accessibilityRole="button" style={styles.modalCancelBtn} onPress={() => setWalkNoteModal(false)}>
                 <Text style={styles.modalCancelText}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={styles.modalSaveBtn}
                 onPress={() => {
                   setNotes(walkNoteText.trim());
@@ -384,10 +384,10 @@ export default function ActiveWalkScreen() {
               maxLength={300}
             />
             <View style={styles.modalBtns}>
-              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setNoteModal(null)}>
+              <TouchableOpacity accessibilityRole="button" style={styles.modalCancelBtn} onPress={() => setNoteModal(null)}>
                 <Text style={styles.modalCancelText}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalSaveBtn} onPress={handleSaveNote}>
+              <TouchableOpacity accessibilityRole="button" style={styles.modalSaveBtn} onPress={handleSaveNote}>
                 <Text style={styles.modalSaveText}>Salvar</Text>
               </TouchableOpacity>
             </View>
@@ -407,11 +407,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' },
-  liveText: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.85)', letterSpacing: 1 },
-  timer: { fontSize: 40, fontWeight: '800', color: '#fff', fontVariant: ['tabular-nums'] },
+  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.onPrimary },
+  liveText: { fontSize: 11, fontWeight: '800', color: 'rgba(13,41,38,0.9)', letterSpacing: 1 },
+  timer: { fontSize: 40, fontWeight: '800', color: Colors.onPrimary, fontVariant: ['tabular-nums'] },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  petsCount: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '600' },
+  petsCount: { fontSize: 12, color: 'rgba(13,41,38,0.8)', fontWeight: '600' },
   walkNoteBtn: {
     padding: 6, borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
     minWidth: 20, height: 20, justifyContent: 'center', alignItems: 'center',
     paddingHorizontal: 4,
   },
-  countText: { fontSize: 11, fontWeight: '800', color: '#fff' },
+  countText: { fontSize: 11, fontWeight: '800', color: Colors.onPrimary },
 
   actionBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
@@ -515,5 +515,5 @@ const styles = StyleSheet.create({
     flex: 1, borderRadius: 12, padding: 14,
     backgroundColor: Colors.primary, alignItems: 'center',
   },
-  modalSaveText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  modalSaveText: { fontSize: 15, fontWeight: '700', color: Colors.onPrimary },
 });

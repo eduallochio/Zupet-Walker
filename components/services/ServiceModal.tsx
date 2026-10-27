@@ -144,16 +144,16 @@ export default function ServiceModal({ visible, initial, onClose, onSave, onDele
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
 
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={onClose} style={styles.modalHeaderBtn}>
+            <TouchableOpacity accessibilityRole="button" onPress={onClose} style={styles.modalHeaderBtn}>
               <Text style={{ fontSize: 15, color: Colors.error }}>Cancelar</Text>
             </TouchableOpacity>
             <Text style={styles.modalTitle}>
               {cat.icon} {isNew ? 'Novo serviço' : 'Editar serviço'}
             </Text>
-            <TouchableOpacity onPress={handleSave} style={styles.modalHeaderBtn} disabled={saving}>
+            <TouchableOpacity accessibilityRole="button" onPress={handleSave} style={styles.modalHeaderBtn} disabled={saving}>
               {saving
-                ? <ActivityIndicator size="small" color={Colors.primary} />
-                : <Text style={{ fontSize: 15, fontWeight: '700', color: Colors.primary }}>Salvar</Text>
+                ? <ActivityIndicator size="small" color={Colors.primaryText} />
+                : <Text style={{ fontSize: 15, fontWeight: '700', color: Colors.primaryText }}>Salvar</Text>
               }
             </TouchableOpacity>
           </View>
@@ -166,14 +166,14 @@ export default function ServiceModal({ visible, initial, onClose, onSave, onDele
                 <Text style={styles.formLabel}>TIPO DE SERVIÇO</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
                   {SERVICE_CATALOG.map((c) => (
-                    <TouchableOpacity
+                    <TouchableOpacity accessibilityRole="button"
                       key={c.type}
                       style={[styles.typeChip, form.type === c.type && styles.typeChipActive]}
                       onPress={() => setForm((f) => ({ ...defaultForm(c.type), active: f.active }))}
                       activeOpacity={0.8}
                     >
                       <Text style={styles.typeChipIcon}>{c.icon}</Text>
-                      <Text style={[styles.typeChipText, form.type === c.type && { color: '#fff' }]}>{c.label}</Text>
+                      <Text style={[styles.typeChipText, form.type === c.type && { color: Colors.onPrimary }]}>{c.label}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
@@ -272,14 +272,14 @@ export default function ServiceModal({ visible, initial, onClose, onSave, onDele
               <Text style={styles.formLabel}>CAPACIDADE</Text>
               <Text style={styles.fieldLabel}>Máximo de pets por atendimento</Text>
               <View style={styles.counterRow}>
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Diminuir capacidade"
                   style={styles.counterBtn}
                   onPress={() => setForm((f) => ({ ...f, max_pets: Math.max(1, f.max_pets - 1) }))}
                 >
                   <Ionicons name="remove" size={20} color={Colors.text} />
                 </TouchableOpacity>
                 <Text style={styles.counterValue}>{form.max_pets}</Text>
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Aumentar capacidade"
                   style={styles.counterBtn}
                   onPress={() => setForm((f) => ({ ...f, max_pets: Math.min(20, f.max_pets + 1) }))}
                 >
@@ -306,7 +306,7 @@ export default function ServiceModal({ visible, initial, onClose, onSave, onDele
 
             {/* Excluir */}
             {!isNew && onDelete && (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={styles.deleteBtn}
                 onPress={() => {
                   Alert.alert('Excluir serviço', 'Tem certeza? Esta ação não pode ser desfeita.', [

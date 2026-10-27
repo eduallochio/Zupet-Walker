@@ -24,7 +24,7 @@ export function ProfileBio() {
 
   if (!hasContent) {
     return (
-      <TouchableOpacity style={styles.emptyCard} onPress={() => router.push('/profile/edit')} activeOpacity={0.8}>
+      <TouchableOpacity accessibilityRole="button" style={styles.emptyCard} onPress={() => router.push('/profile/edit')} activeOpacity={0.8}>
         <Ionicons name="create-outline" size={18} color={Colors.textSecondary} />
         <Text style={styles.emptyText}>Adicione uma bio para se apresentar aos tutores</Text>
         <Ionicons name="chevron-forward" size={16} color={Colors.border} />
@@ -42,7 +42,7 @@ export function ProfileBio() {
         <View style={styles.summaryList}>
           {summaryItems.map((item, i) => (
             <View key={i} style={styles.summaryRow}>
-              <Ionicons name="checkmark-circle" size={15} color={Colors.primary} />
+              <Ionicons name="checkmark-circle" size={15} color={Colors.primaryText} />
               <Text style={styles.summaryText}>{item}</Text>
             </View>
           ))}
@@ -54,20 +54,20 @@ export function ProfileBio() {
         <View style={styles.badgesRow}>
           {maxDistanceKm ? (
             <View style={styles.badge}>
-              <Ionicons name="navigate-outline" size={12} color={Colors.primary} />
+              <Ionicons name="navigate-outline" size={12} color={Colors.primaryText} />
               <Text style={styles.badgeText}>Até {maxDistanceKm}km</Text>
             </View>
           ) : null}
           {acceptedSizes.length > 0 && acceptedSizes.length < 4 && (
             <View style={styles.badge}>
-              <Ionicons name="paw-outline" size={12} color={Colors.primary} />
+              <Ionicons name="paw-outline" size={12} color={Colors.primaryText} />
               <Text style={styles.badgeText}>{acceptedSizes.map(s => SIZE_LABELS[s]?.split(' ')[0] ?? s).join(' · ')}</Text>
             </View>
           )}
           {acceptsLastMinute && (
             <View style={[styles.badge, styles.badgeYellow]}>
               <Ionicons name="flash-outline" size={12} color="#D97706" />
-              <Text style={[styles.badgeText, { color: '#D97706' }]}>Aceita última hora</Text>
+              <Text style={[styles.badgeText, { color: '#B45309' }]}>Aceita última hora</Text>
             </View>
           )}
         </View>
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
     borderColor: '#FDE68A',
   },
-  badgeText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
+  badgeText: { fontSize: 12, fontWeight: '600', color: Colors.primaryText },
   emptyCard: {
     marginHorizontal: 20, backgroundColor: Colors.card,
     borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
