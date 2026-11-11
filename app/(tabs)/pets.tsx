@@ -480,7 +480,7 @@ export default function PetsScreen() {
                     <Text style={styles.pendingPetName}>{pet.name}</Text>
                     <Text style={styles.pendingPetMeta}>
                       {pet.breed ?? 'Raça não informada'}
-                      {pet.species ? ` · ${pet.species === 'dog' ? 'Cão' : pet.species === 'cat' ? 'Gato' : 'Outro'}` : ''}
+                      {pet.species ? ` · ${pet.species === 'dog' || pet.species === 'Cachorro' ? 'Cão' : pet.species === 'cat' || pet.species === 'Gato' ? 'Gato' : 'Outro'}` : ''}
                     </Text>
                     {pet.isMerged ? (
                       <Text style={styles.ownMergedBadge}>Vinculado ao tutor</Text>

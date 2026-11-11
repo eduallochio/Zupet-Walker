@@ -39,8 +39,8 @@ export function OwnPetModal({ pet, onClose }: Props) {
   };
 
   const speciesLabel = () => {
-    if (pet.species === 'dog') return 'Cão';
-    if (pet.species === 'cat') return 'Gato';
+    if (pet.species === 'dog' || pet.species === 'Cachorro') return 'Cão';
+    if (pet.species === 'cat' || pet.species === 'Gato') return 'Gato';
     return pet.species ?? '—';
   };
 
@@ -60,7 +60,7 @@ export function OwnPetModal({ pet, onClose }: Props) {
 
           <Text style={styles.petName}>{pet.name}</Text>
           <Text style={styles.petMeta}>
-            {[speciesLabel(), pet.breed, pet.gender === 'male' ? 'Macho' : pet.gender === 'female' ? 'Fêmea' : null]
+            {[speciesLabel(), pet.breed, pet.gender === 'male' ? 'Macho' : pet.gender === 'female' ? 'Fêmea' : pet.gender]
               .filter(Boolean).join(' · ')}
           </Text>
 
